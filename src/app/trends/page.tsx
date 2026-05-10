@@ -5,6 +5,7 @@ import { TrendCard } from "@/components/trends/trend-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { NodeLeft, NodeRight } from "@/components/ui/node-icons";
 
 const categoryTabs = [
   { label: "全部", value: "" },
@@ -38,7 +39,11 @@ export default function TrendsPage() {
     <div className="max-w-6xl mx-auto px-6 py-10">
       {/* Page header */}
       <div className="mb-8">
-        <p className="text-[11px] text-purple-400 font-semibold mb-2 tracking-widest uppercase">Discover</p>
+        <div className="flex items-center gap-3 mb-2">
+          <NodeLeft className="text-purple-500/60" />
+          <p className="text-[11px] text-purple-400 font-semibold tracking-widest uppercase">Discover</p>
+          <NodeRight className="text-purple-500/60" />
+        </div>
         <h1 className="text-3xl font-bold tracking-tight">🔥 趋势发现</h1>
       </div>
 
