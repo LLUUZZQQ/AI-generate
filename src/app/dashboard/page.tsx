@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { NodeLeft, NodeRight } from "@/components/ui/node-icons";
 
 export default function DashboardPage() {
   const { data, isLoading } = useQuery({
@@ -19,7 +20,11 @@ export default function DashboardPage() {
   return (
     <div className="max-w-4xl mx-auto px-6 py-10">
       <div className="mb-8">
-        <p className="text-[11px] text-purple-400 font-semibold mb-2 tracking-widest uppercase">Dashboard</p>
+        <div className="flex items-center gap-3 mb-2">
+          <NodeLeft className="text-purple-500/60" />
+          <p className="text-[11px] text-purple-400 font-semibold tracking-widest uppercase">Dashboard</p>
+          <NodeRight className="text-purple-500/60" />
+        </div>
         <h1 className="text-3xl font-bold tracking-tight">个人中心</h1>
       </div>
 

@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PublishPanel } from "@/components/library/publish-panel";
+import { NodeLink } from "@/components/ui/node-icons";
 
 export default function LibraryDetailPage() {
   const params = useParams();

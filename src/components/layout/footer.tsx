@@ -1,9 +1,13 @@
 import Link from "next/link";
+import { NodeLink } from "@/components/ui/node-icons";
 
 export function Footer() {
   return (
     <footer className="border-t border-white/[0.06] mt-auto">
       <div className="max-w-6xl mx-auto px-6 py-10">
+        <div className="flex items-center justify-center mb-6">
+          <NodeLink className="text-white/[0.06]" />
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
           <div>
             <h4 className="font-semibold text-sm mb-3">

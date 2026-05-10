@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { NodeLeft, NodeRight, NodeLink } from "@/components/ui/node-icons";
 import { ModelSelector } from "@/components/generate/model-selector";
 import { PromptInput } from "@/components/generate/prompt-input";
 import { ProgressTracker } from "@/components/generate/progress-tracker";
@@ -91,13 +92,19 @@ export default function GeneratePage() {
 
       {/* Model Selector */}
       <section className="mb-8">
-        <h2 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">选择模型</h2>
+        <div className="flex items-center gap-2 mb-3">
+          <NodeLink className="text-purple-500/50" />
+          <h2 className="text-xs font-semibold text-white/40 uppercase tracking-wider">选择模型</h2>
+        </div>
         <ModelSelector type={type} selected={modelId} onSelect={(id, cost) => { setModelId(id); setCostPerGen(cost); }} />
       </section>
 
       {/* Prompt Input */}
       <section className="mb-4">
-        <h2 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">提示词</h2>
+        <div className="flex items-center gap-2 mb-3">
+          <NodeLink className="text-purple-500/50" />
+          <h2 className="text-xs font-semibold text-white/40 uppercase tracking-wider">提示词</h2>
+        </div>
         <PromptInput prompt={prompt} onChange={setPrompt} negativePrompt={negativePrompt} onNegativeChange={setNegativePrompt} />
       </section>
 
