@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,6 +17,8 @@ export default function LibraryDetailPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const id = params.id as string;
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.email === "lzq13328903829@163.com";
   const [showDelete, setShowDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -84,13 +87,15 @@ export default function LibraryDetailPage() {
               <span className="text-xl shrink-0">⚠️</span>
               <div>
                 <h3 className="font-semibold text-red-400 text-sm mb-1">生成失败</h3>
-                <p className="text-xs text-white/40 leading-relaxed">
-                  {content.metadata?.error || "发生未知错误，请稍后重试"}
-                </p>
-                <p className="text-[10px] text-white/20 mt-2">
-                  常见原因：API 余额不足、网络超时、模型不可用。
-                  <a href="/settings" className="text-purple-400 hover:text-purple-300 ml-1 underline">检查设置 →</a>
-                </p>
+                {isAdmin ? (
+                  <p className="text-xs text-red-300/80 leading-relaxed font-mono">
+                    {content.metadata?.rawError || content.metadata?.error || "未知错误"}
+                  </p>
+                ) : (
+                  <p className="text-xs text-white/40 leading-relaxed">
+                    生成失败，请稍后重试。如多次失败，请联系客服。
+                  </p>
+                )}
               </div>
             </div>
           </div>
