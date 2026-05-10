@@ -50,7 +50,8 @@
       "Bash(vercel whoami *)",
       "Bash(npx vercel *)",
       "Bash(vercel *)",
-      "Bash(railway login *)"
+      "Bash(railway login *)",
+      "Bash(DATABASE_URL=\"postgresql://postgres:U6c%2An%2C3KZH5AUz8@db.gkyjbmzsoydcolzjblly.supabase.co:5432/postgres\" npx prisma *)"
     ]
   }
 }

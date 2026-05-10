@@ -18,6 +18,8 @@ model User {
 
   transactions CreditTransaction[]
   contents      Content[]
+  accounts      Account[]
+  sessions      Session[]
 
   @@map("users")
 }
