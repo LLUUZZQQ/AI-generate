@@ -1,7 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-
 interface SuggestionData {
   bestTimes?: string[];
   caption?: string;
@@ -16,70 +12,59 @@ interface PublishPanelProps {
 export function PublishPanel({ suggestion }: PublishPanelProps) {
   if (!suggestion) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">发布建议</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">发布建议生成中...</p>
-        </CardContent>
-      </Card>
+      <div className="glass rounded-xl p-6">
+        <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">📝 AI 发布建议</h3>
+        <div className="flex items-center gap-3 text-sm text-white/20">
+          <div className="size-4 rounded-full border-2 border-white/10 border-t-purple-400 animate-spin" />
+          生成中...
+        </div>
+      </div>
     );
   }
 
-  const bestTimes = suggestion.bestTimes ?? [];
-  const caption = suggestion.caption ?? "";
-  const hashtags = suggestion.hashtags ?? [];
-  const bgm = suggestion.bgm ?? [];
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">发布建议</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Best Times */}
+    <div className="glass rounded-xl p-6 space-y-5">
+      <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider">📝 AI 发布建议</h3>
+
+      {suggestion.bestTimes && suggestion.bestTimes.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium mb-2">⏰ 最佳发布时间</h4>
+          <h4 className="text-[11px] font-medium text-white/50 mb-2">⏰ 最佳发布时间</h4>
           <div className="flex flex-wrap gap-1.5">
-            {bestTimes.map((time, i) => (
-              <Badge key={i} variant="outline">{time}</Badge>
+            {suggestion.bestTimes.map((t, i) => (
+              <span key={i} className="text-[11px] px-2 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] text-white/60">{t}</span>
             ))}
           </div>
         </div>
+      )}
 
-        <Separator />
-
-        {/* Caption */}
+      {suggestion.caption && (
         <div>
-          <h4 className="text-sm font-medium mb-2">✍️ 推荐文案</h4>
-          <p className="text-sm text-muted-foreground">{caption}</p>
+          <h4 className="text-[11px] font-medium text-white/50 mb-2">✍️ 推荐配文</h4>
+          <p className="text-sm text-white/70 leading-relaxed bg-white/[0.02] rounded-lg p-3 border border-white/[0.04]">{suggestion.caption}</p>
         </div>
+      )}
 
-        <Separator />
-
-        {/* Hashtags */}
+      {suggestion.hashtags && suggestion.hashtags.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium mb-2">#️⃣ 推荐标签</h4>
+          <h4 className="text-[11px] font-medium text-white/50 mb-2">#️⃣ 推荐标签</h4>
           <div className="flex flex-wrap gap-1.5">
-            {hashtags.map((tag, i) => (
-              <Badge key={i} variant="secondary">{tag}</Badge>
+            {suggestion.hashtags.map((t, i) => (
+              <span key={i} className="text-[11px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/15">{t}</span>
             ))}
           </div>
         </div>
+      )}
 
-        <Separator />
-
-        {/* BGM */}
+      {suggestion.bgm && suggestion.bgm.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium mb-2">🎵 推荐BGM</h4>
+          <h4 className="text-[11px] font-medium text-white/50 mb-2">🎵 推荐 BGM</h4>
           <div className="flex flex-wrap gap-1.5">
-            {bgm.map((item, i) => (
-              <Badge key={i} variant="outline">{item.name}</Badge>
+            {suggestion.bgm.map((b, i) => (
+              <span key={i} className="text-[11px] px-2 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/15">{b.name}</span>
             ))}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 }
