@@ -127,7 +127,32 @@
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
   }
+
+  /* View Transition API for page navigation */
+  ::view-transition-old(root) {
+    animation: fade-out 0.15s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+  ::view-transition-new(root) {
+    animation: fade-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+
+  @keyframes fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+}
+
+/* Physics-based easing classes */
+.ease-spring {
+  transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.ease-smooth {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ease-bounce {
+  transition-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 /* Subtle grid background texture */
@@ -183,14 +208,14 @@ body::before {
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.08);
   backdrop-filter: blur(16px);
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass:hover {
   background: rgba(255,255,255,0.05);
   border-color: rgba(255,255,255,0.12);
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0,0,0,0.3), 0 0 20px rgba(168,85,247,0.05);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3), 0 0 20px rgba(168,85,247,0.08);
 }
 
 /* Gradient text */

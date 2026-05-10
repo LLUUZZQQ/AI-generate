@@ -24,11 +24,11 @@ export function AccordionCard({ title, desc, details }: AccordionCardProps) {
           </div>
           <p className="text-xs text-white/30 pl-[72px]">{desc}</p>
         </div>
-        <span className={`text-white/30 text-lg transition-transform duration-300 shrink-0 ${open ? "rotate-45" : ""}`}>
+        <span className={`text-white/30 text-lg transition-all duration-500 ease-spring shrink-0 ${open ? "rotate-45 scale-110 text-purple-400" : ""}`}>
           +
         </span>
       </button>
-      <div className={`transition-all duration-300 overflow-hidden ${open ? "max-h-60 pb-6" : "max-h-0"}`}>
+      <div className={`transition-all duration-500 ease-smooth overflow-hidden ${open ? "max-h-60 pb-6 opacity-100" : "max-h-0 opacity-0"}`}>
         <p className="text-xs text-white/40 leading-relaxed px-6 pl-[72px]">{details}</p>
       </div>
     </div>

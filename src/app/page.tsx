@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Marquee } from "@/components/ui/marquee";
 import { AccordionCard } from "@/components/ui/accordion-card";
+import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { NodeLeft, NodeRight, NodeUnion, NodeLink } from "@/components/ui/node-icons";
 import { prisma } from "@/lib/db";
 
@@ -65,6 +66,7 @@ export default async function LandingPage() {
       </section>
 
       {/* ======== TRUST MARQUEE ======== */}
+      <ScrollReveal>
       <section className="py-8">
         <div className="glass rounded-2xl max-w-3xl mx-6 sm:mx-auto overflow-hidden">
           <Marquee items={[
@@ -73,8 +75,10 @@ export default async function LandingPage() {
           ]} />
         </div>
       </section>
+      </ScrollReveal>
 
       {/* ======== ACCORDION FEATURES ======== */}
+      <ScrollReveal>
       <section className="max-w-3xl mx-auto px-6 py-16">
         <div className="flex items-center gap-3 mb-2">
           <NodeLeft className="text-purple-500/60" />
@@ -103,9 +107,11 @@ export default async function LandingPage() {
           />
         </div>
       </section>
+      </ScrollReveal>
 
       {/* ======== HOT TOPICS ======== */}
       {hotTopics.length > 0 && (
+        <ScrollReveal>
         <section className="max-w-5xl mx-auto px-6 py-16">
           <div className="flex items-center gap-3 mb-2">
             <NodeLeft className="text-amber-500/60" />
@@ -143,9 +149,11 @@ export default async function LandingPage() {
             ))}
           </div>
         </section>
+        </ScrollReveal>
       )}
 
       {/* ======== HOW IT WORKS ======== */}
+      <ScrollReveal>
       <section className="max-w-3xl mx-auto px-6 py-16">
         <div className="flex items-center gap-3 mb-2">
           <NodeLeft className="text-purple-500/60" />
@@ -170,8 +178,10 @@ export default async function LandingPage() {
           ))}
         </div>
       </section>
+      </ScrollReveal>
 
       {/* ======== CLOSING ======== */}
+      <ScrollReveal>
       <section className="max-w-3xl mx-auto px-6 py-20 text-center">
         <div className="flex items-center justify-center gap-6 mb-8">
           <NodeLeft className="text-purple-500/50 w-8 h-8" />
@@ -196,6 +206,7 @@ export default async function LandingPage() {
           <NodeLink className="opacity-30" />
         </div>
       </section>
+      </ScrollReveal>
     </div>
   );
 }

@@ -61,7 +61,7 @@ export function TrendCard({ id, title, category, heatScore, status, fetchedAt }:
             <img
               src={imageUrl}
               alt={title}
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-smooth"
               onError={() => setImgError(true)}
               loading="lazy"
             />
