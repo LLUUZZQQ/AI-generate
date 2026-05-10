@@ -72,8 +72,8 @@ export default function GeneratePage() {
   return (
     <div className="max-w-2xl mx-auto px-6 py-10">
       <div className="mb-8">
-        <p className="text-xs text-purple-400 font-medium mb-2 tracking-wider uppercase">Create</p>
-        <h1 className="text-2xl font-bold">AI 内容生成</h1>
+        <p className="text-[11px] text-purple-400 font-semibold mb-2 tracking-widest uppercase">Create</p>
+        <h1 className="text-3xl font-bold tracking-tight">AI 内容生成</h1>
       </div>
 
       {/* Type Switch */}

@@ -19,8 +19,8 @@ export default function DashboardPage() {
   return (
     <div className="max-w-4xl mx-auto px-6 py-10">
       <div className="mb-8">
-        <p className="text-xs text-purple-400 font-medium mb-2 tracking-wider uppercase">Dashboard</p>
-        <h1 className="text-2xl font-bold">个人中心</h1>
+        <p className="text-[11px] text-purple-400 font-semibold mb-2 tracking-widest uppercase">Dashboard</p>
+        <h1 className="text-3xl font-bold tracking-tight">个人中心</h1>
       </div>
 
       {isLoading ? (

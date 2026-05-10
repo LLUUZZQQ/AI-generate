@@ -38,8 +38,8 @@ export default function TrendsPage() {
     <div className="max-w-6xl mx-auto px-6 py-10">
       {/* Page header */}
       <div className="mb-8">
-        <p className="text-xs text-purple-400 font-medium mb-2 tracking-wider uppercase">Discover</p>
-        <h1 className="text-2xl font-bold">🔥 趋势发现</h1>
+        <p className="text-[11px] text-purple-400 font-semibold mb-2 tracking-widest uppercase">Discover</p>
+        <h1 className="text-3xl font-bold tracking-tight">🔥 趋势发现</h1>
       </div>
 
       {/* Filters */}
