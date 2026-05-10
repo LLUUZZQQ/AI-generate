@@ -4,8 +4,8 @@ import { ModelAdapter, GenParams, GenResult } from "./types";
 export class OpenAIAdapter implements ModelAdapter {
   private client: OpenAI;
 
-  constructor(config: { apiKey: string }) {
-    this.client = new OpenAI({ apiKey: config.apiKey });
+  constructor(_config: unknown) {
+    this.client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
   }
 
   async generateImage(params: GenParams): Promise<GenResult> {

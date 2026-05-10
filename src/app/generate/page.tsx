@@ -128,7 +128,7 @@ export default function GeneratePage() {
           <NodeLink className="text-purple-500/50" />
           <h2 className="text-xs font-semibold text-white/40 uppercase tracking-wider">选择模型</h2>
         </div>
-        <ModelSelector type={type} selected={modelId} onSelect={(id, cost) => { setModelId(id); setCostPerGen(cost); }} />
+        <ModelSelector type={mode === "swap" ? "swap" : type} selected={modelId} onSelect={(id, cost) => { setModelId(id); setCostPerGen(cost); }} />
       </section>
 
       {/* Prompt Input */}

@@ -4,8 +4,8 @@ import { ModelAdapter, GenParams, GenResult } from "./types";
 export class ReplicateAdapter implements ModelAdapter {
   private client: Replicate;
 
-  constructor(config: { apiToken: string }) {
-    this.client = new Replicate({ auth: config.apiToken });
+  constructor(_config: unknown) {
+    this.client = new Replicate({ auth: process.env.REPLICATE_API_TOKEN! });
   }
 
   async generateImage(params: GenParams & { referenceImage?: string }): Promise<GenResult> {

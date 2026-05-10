@@ -15,6 +15,8 @@ async function main() {
     { id: "tongyi-wanxiang", name: "通义万相", type: "image", provider: "tongyi", costPerGen: 2, isActive: false, config: {} },
     { id: "sora", name: "Sora", type: "video", provider: "openai", costPerGen: 15, isActive: false, config: {} },
     { id: "jimeng", name: "即梦", type: "video", provider: "jimeng", costPerGen: 5, isActive: false, config: {} },
+    { id: "replicate-sdxl", name: "SDXL 参考生图", type: "image", provider: "replicate", costPerGen: 2, isActive: true, config: {} },
+    { id: "replicate-swap", name: "AI 人物替换", type: "swap", provider: "replicate", costPerGen: 10, isActive: true, config: {} },
   ];
 
   for (const m of models) {

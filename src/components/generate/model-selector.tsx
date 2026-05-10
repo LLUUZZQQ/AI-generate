@@ -8,7 +8,7 @@ interface Model {
 }
 
 interface ModelSelectorProps {
-  type: "image" | "video";
+  type: "image" | "video" | "swap";
   selected: string;
   onSelect: (id: string, cost: number) => void;
 }
@@ -35,7 +35,7 @@ export function ModelSelector({ type, selected, onSelect }: ModelSelectorProps) 
   }
 
   if (error) return <p className="text-sm text-red-400">加载失败: {(error as Error).message}</p>;
-  if (models.length === 0) return <p className="text-sm text-white/30">暂无可用的{type === "image" ? "图片" : "视频"}生成模型</p>;
+  if (models.length === 0) return <p className="text-sm text-white/30">暂无可用的{type === "image" ? "图片" : type === "video" ? "视频" : "人物替换"}生成模型</p>;
 
   return (
     <div className="grid grid-cols-1 gap-2">
