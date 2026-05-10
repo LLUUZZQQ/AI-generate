@@ -1,0 +1,12 @@
+{
+  "name": "AI爆款 - 抖音热点AI内容生成",
+  "short_name": "AI爆款",
+  "description": "追踪抖音热门话题，AI自动生成爆款图片和视频",
+  "start_url": "/trends",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#a855f7",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "512x512", "type": "image/svg+xml" }
+  ]
+}
