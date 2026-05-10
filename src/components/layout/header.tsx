@@ -11,60 +11,59 @@ export function Header() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
-      <div className="flex h-14 items-center justify-between px-4 md:px-6">
-        <Link href={session ? "/trends" : "/"} className="text-lg font-bold shrink-0">
-          AI爆款
+    <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-background/80 backdrop-blur-xl">
+      <div className="flex h-14 items-center justify-between px-4 md:px-6 max-w-7xl mx-auto">
+        <Link href={session ? "/trends" : "/"} className="text-lg font-bold shrink-0 tracking-tight">
+          <span className="gradient-text">AI</span><span className="text-white/80">爆款</span>
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-4">
+        <nav className="hidden md:flex items-center gap-1">
           {session ? (
             <>
               <CreditsDisplay />
-              <Link href="/trends"><Button variant="ghost" size="sm">趋势</Button></Link>
-              <Link href="/generate"><Button variant="ghost" size="sm">生成</Button></Link>
-              <Link href="/library"><Button variant="ghost" size="sm">内容库</Button></Link>
-              <Link href="/dashboard"><Button variant="ghost" size="sm">我的</Button></Link>
+              <Link href="/trends"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">趋势</Button></Link>
+              <Link href="/generate"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">生成</Button></Link>
+              <Link href="/library"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">内容库</Button></Link>
+              <Link href="/dashboard"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">我的</Button></Link>
               <ThemeToggle />
-              <Button variant="outline" size="sm" onClick={() => signOut()}>退出</Button>
+              <Button variant="outline" size="sm" className="border-white/10 hover:bg-white/5 ml-2" onClick={() => signOut()}>退出</Button>
             </>
           ) : (
             <>
-              <Link href="/login"><Button variant="ghost" size="sm">登录</Button></Link>
-              <Link href="/register"><Button size="sm">注册</Button></Link>
+              <Link href="/login"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">登录</Button></Link>
+              <Link href="/register"><Button size="sm" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0">注册</Button></Link>
             </>
           )}
         </nav>
 
-        {/* Mobile hamburger + credits */}
+        {/* Mobile */}
         <div className="flex md:hidden items-center gap-2">
           {session && <CreditsDisplay />}
-          <Button variant="ghost" size="sm" onClick={() => setOpen(!open)}>
+          <Button variant="ghost" size="sm" onClick={() => setOpen(!open)} className="text-white/60">
             {open ? "✕" : "☰"}
           </Button>
         </div>
       </div>
 
-      {/* Mobile dropdown */}
       {open && (
-        <div className="md:hidden border-t bg-background px-4 py-3 space-y-2">
+        <div className="md:hidden border-t border-white/[0.06] bg-background/95 backdrop-blur-xl px-4 py-3 space-y-1">
           {session ? (
             <>
-              <Link href="/trends" onClick={() => setOpen(false)} className="block py-2 text-sm font-medium">🔥 趋势</Link>
-              <Link href="/generate" onClick={() => setOpen(false)} className="block py-2 text-sm font-medium">🎨 生成</Link>
-              <Link href="/library" onClick={() => setOpen(false)} className="block py-2 text-sm font-medium">📦 内容库</Link>
-              <Link href="/dashboard" onClick={() => setOpen(false)} className="block py-2 text-sm font-medium">👤 我的</Link>
+              <Link href="/trends" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">🔥 趋势</Link>
+              <Link href="/generate" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">🎨 生成</Link>
+              <Link href="/library" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">📦 内容库</Link>
+              <Link href="/dashboard" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">👤 我的</Link>
               <div className="py-2"><ThemeToggle /></div>
-              <Button variant="outline" size="sm" className="w-full" onClick={() => signOut()}>退出</Button>
+              <Button variant="outline" size="sm" className="w-full border-white/10" onClick={() => signOut()}>退出</Button>
             </>
           ) : (
             <div className="flex gap-2">
               <Link href="/login" className="flex-1" onClick={() => setOpen(false)}>
-                <Button variant="outline" size="sm" className="w-full">登录</Button>
+                <Button variant="outline" size="sm" className="w-full border-white/10">登录</Button>
               </Link>
               <Link href="/register" className="flex-1" onClick={() => setOpen(false)}>
-                <Button size="sm" className="w-full">注册</Button>
+                <Button size="sm" className="w-full bg-gradient-to-r from-purple-500 to-pink-500 border-0">注册</Button>
               </Link>
             </div>
           )}

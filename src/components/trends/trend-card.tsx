@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 interface TrendCardProps {
@@ -17,22 +16,25 @@ const categoryLabels: Record<string, string> = {
   challenge: "挑战赛", music: "BGM", hashtag: "话题", event: "事件",
 };
 
-const statusBadge: Record<string, string> = {
-  rising: "📈 上升", peak: "🔥 爆火", falling: "📉 降温",
+const statusStyle: Record<string, string> = {
+  rising: "text-emerald-400 bg-emerald-400/10",
+  peak: "text-amber-400 bg-amber-400/10",
+  falling: "text-white/40 bg-white/5",
 };
 
-const gradients: Record<string, string> = {
-  challenge: "from-orange-500 to-red-500",
-  music: "from-purple-500 to-pink-500",
-  hashtag: "from-blue-500 to-cyan-500",
-  event: "from-emerald-500 to-teal-500",
+const statusEmoji: Record<string, string> = {
+  rising: "📈", peak: "🔥", falling: "📉",
 };
 
 const icons: Record<string, string> = {
-  challenge: "🏆",
-  music: "🎵",
-  hashtag: "#️⃣",
-  event: "📅",
+  challenge: "🏆", music: "🎵", hashtag: "#️⃣", event: "📅",
+};
+
+const overlayGradients: Record<string, string> = {
+  challenge: "from-orange-500/40 to-red-500/20",
+  music: "from-purple-500/40 to-pink-500/20",
+  hashtag: "from-blue-500/40 to-cyan-500/20",
+  event: "from-emerald-500/40 to-teal-500/20",
 };
 
 function timeAgo(dateStr: string): string {
@@ -46,45 +48,55 @@ function timeAgo(dateStr: string): string {
 }
 
 export function TrendCard({ id, title, category, heatScore, status, fetchedAt }: TrendCardProps) {
-  const gradient = gradients[category] || "from-gray-500 to-slate-500";
-  const icon = icons[category] || "🔥";
+  const overlay = overlayGradients[category] || "from-gray-500/40 to-slate-500/20";
   const imageUrl = `https://picsum.photos/seed/${id}/400/300`;
   const [imgError, setImgError] = useState(false);
 
   return (
     <Link href={`/trends/${id}`}>
-      <Card className="hover:shadow-lg transition-shadow cursor-pointer overflow-hidden group">
-        <div className={`h-36 bg-gradient-to-br ${gradient} flex items-center justify-center relative`}>
+      <div className="glass rounded-xl overflow-hidden transition-all duration-300 group hover:border-white/15">
+        {/* Image area */}
+        <div className="h-40 relative overflow-hidden">
           {!imgError && (
             <img
               src={imageUrl}
               alt={title}
-              className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-50 transition-opacity"
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               onError={() => setImgError(true)}
               loading="lazy"
             />
           )}
-          <span className="text-3xl relative z-10 drop-shadow-sm">{icon}</span>
-          <span className="absolute top-2 right-2 text-white/90 text-xs font-medium bg-black/30 rounded-full px-2 py-0.5 z-10">
-            {statusBadge[status]}
+          <div className={`absolute inset-0 bg-gradient-to-br ${overlay}`} />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+          <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-3xl drop-shadow-lg">
+            {icons[category]}
+          </span>
+          <span className={`absolute top-3 right-3 text-[10px] px-2 py-0.5 rounded-full ${statusStyle[status] || statusStyle.rising}`}>
+            {statusEmoji[status]} {status === "peak" ? "爆火" : status === "rising" ? "上升" : "降温"}
           </span>
         </div>
+
+        {/* Content */}
         <div className="p-4">
-          <Badge variant="outline" className="mb-2 text-xs">
-            {categoryLabels[category] || category}
-          </Badge>
-          <h3 className="font-semibold text-sm leading-tight mb-2">{title}</h3>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1 text-muted-foreground">
-              <span className="text-sm font-bold text-orange-500 tabular-nums">{heatScore.toLocaleString()}</span>
-              <span className="text-xs">热度</span>
-            </div>
+          <div className="flex items-center gap-2 mb-2">
+            <Badge variant="outline" className="text-[10px] border-white/10 text-white/50">
+              {categoryLabels[category] || category}
+            </Badge>
             {fetchedAt && (
-              <span className="text-xs text-muted-foreground/60">{timeAgo(fetchedAt)}</span>
+              <span className="text-[10px] text-white/25 ml-auto">{timeAgo(fetchedAt)}</span>
             )}
           </div>
+          <h3 className="font-semibold text-sm leading-snug mb-3 group-hover:text-purple-300 transition-colors">
+            {title}
+          </h3>
+          <div className="flex items-baseline gap-1">
+            <span className="text-lg font-bold text-purple-400 tabular-nums">
+              {heatScore.toLocaleString()}
+            </span>
+            <span className="text-[10px] text-white/30">热度指数</span>
+          </div>
         </div>
-      </Card>
+      </div>
     </Link>
   );
 }
