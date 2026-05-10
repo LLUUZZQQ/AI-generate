@@ -1,9 +1,25 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { prisma } from "@/lib/db";
 
-export default function LandingPage() {
+const categoryLabels: Record<string, string> = {
+  challenge: "挑战赛", music: "BGM", hashtag: "话题", event: "事件",
+};
+
+const statusBadge: Record<string, string> = {
+  rising: "📈 上升", peak: "🔥 爆火", falling: "📉 降温",
+};
+
+export default async function LandingPage() {
+  const hotTopics = await prisma.trendingTopic.findMany({
+    orderBy: { heatScore: "desc" },
+    take: 6,
+  });
+
   return (
     <div>
+      {/* Hero */}
       <section className="text-center py-20 px-6 max-w-3xl mx-auto">
         <h1 className="text-4xl font-bold tracking-tight mb-4">
           追踪抖音热点，AI 生成爆款内容
@@ -17,6 +33,36 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Hot Topics */}
+      {hotTopics.length > 0 && (
+        <section className="max-w-5xl mx-auto px-6 py-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold">🔥 实时热门话题</h2>
+            <Link href="/trends" className="text-sm text-primary hover:underline">查看全部 →</Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {hotTopics.map((topic) => (
+              <Link key={topic.id} href={`/trends/${topic.id}`}>
+                <div className="border rounded-lg p-4 hover:shadow-md transition-shadow hover:border-primary/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge variant="outline" className="text-xs">
+                      {categoryLabels[topic.category] || topic.category}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">{statusBadge[topic.status]}</span>
+                  </div>
+                  <h3 className="font-semibold text-sm mb-2">{topic.title}</h3>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span className="text-orange-500 font-bold">{topic.heatScore.toLocaleString()}</span>
+                    <span>热度</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Features */}
       <section className="max-w-5xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="text-center">
@@ -27,7 +73,7 @@ export default function LandingPage() {
           <div className="text-center">
             <div className="text-3xl mb-3">🎨</div>
             <h3 className="font-semibold mb-2">多模型 AI 生成</h3>
-            <p className="text-sm text-muted-foreground">DALL-E、Stable Diffusion、国产模型自由切换，一张图只需几秒</p>
+            <p className="text-sm text-muted-foreground">DALL-E 3 驱动，高质量 AI 图片和视频生成</p>
           </div>
           <div className="text-center">
             <div className="text-3xl mb-3">📝</div>
@@ -37,6 +83,7 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Pricing */}
       <section className="max-w-3xl mx-auto px-6 py-12 text-center">
         <h2 className="text-2xl font-bold mb-6">定价方案</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -1,14 +1,21 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { useParams } from "next/navigation";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useParams, useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PublishPanel } from "@/components/library/publish-panel";
 
 export default function LibraryDetailPage() {
   const params = useParams();
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const id = params.id as string;
+  const [showDelete, setShowDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["library", id],
@@ -17,6 +24,25 @@ export default function LibraryDetailPage() {
       return res.json();
     },
   });
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/library/${id}`, { method: "DELETE" });
+      const json = await res.json();
+      if (json.code === 0) {
+        toast.success("已删除");
+        queryClient.invalidateQueries({ queryKey: ["library"] });
+        router.push("/library");
+      } else {
+        toast.error(json.message ?? "删除失败");
+      }
+    } catch {
+      toast.error("网络错误");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -73,11 +99,16 @@ export default function LibraryDetailPage() {
 
           <p className="text-sm text-muted-foreground">{content.prompt}</p>
 
-          {content.fileUrl && (
-            <a href={content.fileUrl} download target="_blank" className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
-              下载文件
-            </a>
-          )}
+          <div className="flex gap-2">
+            {content.fileUrl && (
+              <a href={content.fileUrl} download target="_blank" className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
+                下载文件
+              </a>
+            )}
+            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setShowDelete(true)}>
+              删除
+            </Button>
+          </div>
         </div>
 
         {/* Publish Panel */}
@@ -85,6 +116,25 @@ export default function LibraryDetailPage() {
           <PublishPanel suggestion={content.suggestion} />
         </div>
       </div>
+
+      <Dialog open={showDelete} onOpenChange={setShowDelete}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>确认删除</DialogTitle>
+            <DialogDescription>
+              删除后无法恢复，确定要删除这条内容吗？
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDelete(false)} disabled={deleting}>
+              取消
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+              {deleting ? "删除中..." : "确认删除"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
