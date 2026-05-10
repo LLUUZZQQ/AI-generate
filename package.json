@@ -11,7 +11,8 @@
     "worker:trend": "tsx src/workers/trend-worker.ts",
     "worker:image": "tsx src/workers/image-worker.ts",
     "worker:video": "tsx src/workers/video-worker.ts",
-    "worker:suggest": "tsx src/workers/suggestion-worker.ts"
+    "worker:suggest": "tsx src/workers/suggestion-worker.ts",
+    "worker:swap": "tsx src/workers/swap-worker.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",

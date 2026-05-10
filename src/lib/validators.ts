@@ -10,8 +10,9 @@ export const trendsQuerySchema = z.object({
 export const generateSchema = z.object({
   topicId: z.string().min(1),
   modelId: z.string().min(1),
-  type: z.enum(["image", "video"]),
+  type: z.enum(["image", "video", "img2img", "swap"]),
   prompt: z.string().min(1).max(1000),
+  referenceImage: z.string().optional(),
   params: z.object({
     width: z.number().optional(),
     height: z.number().optional(),

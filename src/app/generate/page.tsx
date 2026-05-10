@@ -10,15 +10,19 @@ import { NodeLeft, NodeRight, NodeLink } from "@/components/ui/node-icons";
 import { ModelSelector } from "@/components/generate/model-selector";
 import { PromptInput } from "@/components/generate/prompt-input";
 import { ProgressTracker } from "@/components/generate/progress-tracker";
+import { ImageUpload } from "@/components/generate/image-upload";
 import { toast } from "sonner";
 
 export default function GeneratePage() {
   const searchParams = useSearchParams();
   const topicId = searchParams.get("topicId") || "";
 
+  const [mode, setMode] = useState<"generate" | "img2img" | "swap">("generate");
   const [type, setType] = useState<"image" | "video">("image");
   const [modelId, setModelId] = useState("");
   const [costPerGen, setCostPerGen] = useState(0);
+  const [referenceImage, setReferenceImage] = useState("");
+  const [characterPhoto, setCharacterPhoto] = useState("");
   const [prompt, setPrompt] = useState("");
   const [negativePrompt, setNegativePrompt] = useState("");
   const [taskId, setTaskId] = useState<string | null>(null);
@@ -48,7 +52,16 @@ export default function GeneratePage() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topicId, modelId, type, prompt: prompt.trim(), params: { ...(negativePrompt.trim() ? { negativePrompt: negativePrompt.trim() } : {}) } }),
+        body: JSON.stringify({
+          topicId, modelId,
+          type: mode === "swap" ? "swap" : mode === "img2img" ? "img2img" : type,
+          prompt: prompt.trim(),
+          referenceImage: referenceImage || undefined,
+          params: {
+            ...(negativePrompt.trim() ? { negativePrompt: negativePrompt.trim() } : {}),
+            ...(characterPhoto ? { characterPhoto } : {}),
+          },
+        }),
       });
       const json = await res.json();
       if (json.code !== 0) { toast.error(json.message || "生成失败"); return; }
@@ -77,17 +90,36 @@ export default function GeneratePage() {
         <h1 className="text-3xl font-bold tracking-tight">AI 内容生成</h1>
       </div>
 
-      {/* Type Switch */}
-      <div className="flex gap-1 p-1 rounded-full bg-white/[0.03] border border-white/[0.06] w-fit mb-8">
-        {(["image", "video"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => { setType(t); setModelId(""); setCostPerGen(0); }}
-            className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all ${type === t ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/70"}`}
-          >
-            {t === "image" ? "🖼️ 图片" : "🎬 视频"}
-          </button>
-        ))}
+      {/* Mode + Type Switch */}
+      <div className="flex flex-col gap-3 mb-8">
+        <div className="flex gap-1 p-1 rounded-full bg-white/[0.03] border border-white/[0.06] w-fit">
+          {([
+            { key: "generate" as const, label: "✨ 文生图" },
+            { key: "img2img" as const, label: "📷 参考生图" },
+            { key: "swap" as const, label: "🔄 人物替换" },
+          ]).map((m) => (
+            <button
+              key={m.key}
+              onClick={() => { setMode(m.key); setModelId(""); setCostPerGen(0); }}
+              className={`px-3.5 py-1.5 text-xs font-medium rounded-full transition-all ${mode === m.key ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/70"}`}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+        {mode !== "swap" && (
+          <div className="flex gap-1 p-1 rounded-full bg-white/[0.03] border border-white/[0.06] w-fit">
+            {(["image", "video"] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => { setType(t); setModelId(""); setCostPerGen(0); }}
+                className={`px-3.5 py-1.5 text-xs font-medium rounded-full transition-all ${type === t ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/70"}`}
+              >
+                {t === "image" ? "🖼️ 图片" : "🎬 视频"}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Model Selector */}
@@ -108,21 +140,51 @@ export default function GeneratePage() {
         <PromptInput prompt={prompt} onChange={setPrompt} negativePrompt={negativePrompt} onNegativeChange={setNegativePrompt} />
       </section>
 
+      {/* Reference Image Upload (img2img mode) */}
+      {mode === "img2img" && (
+        <section className="mb-6">
+          <ImageUpload
+            value={referenceImage}
+            onChange={setReferenceImage}
+            label="参考图片"
+          />
+        </section>
+      )}
+
+      {/* Character Swap Uploads (swap mode) */}
+      {mode === "swap" && (
+        <section className="space-y-4 mb-6">
+          <ImageUpload
+            value={characterPhoto}
+            onChange={setCharacterPhoto}
+            label="上传人物照片（你要替换成的人物）"
+          />
+          <ImageUpload
+            value={referenceImage}
+            onChange={setReferenceImage}
+            label="上传参考视频（跳舞模板等）"
+            accept="video/*"
+          />
+        </section>
+      )}
+
       {/* Prompt Templates */}
-      <section className="mb-6">
-        <div className="flex gap-1.5 flex-wrap">
-          {["赛博朋克，霓虹都市", "治愈温暖，电影质感", "国风水墨，古韵意境", "3D卡通，高饱和", "极简构图，高级感", "未来科技，光影对比"].map((tpl) => (
-            <button
-              key={tpl}
-              type="button"
-              className="text-[11px] px-3 py-1 rounded-full border border-white/[0.06] text-white/40 hover:border-purple-500/30 hover:text-purple-300 transition-all bg-white/[0.02]"
-              onClick={() => setPrompt((p) => p ? `${p}，${tpl}` : tpl)}
-            >
-              {tpl}
-            </button>
-          ))}
-        </div>
-      </section>
+      {mode !== "swap" && (
+        <section className="mb-6">
+          <div className="flex gap-1.5 flex-wrap">
+            {["赛博朋克，霓虹都市", "治愈温暖，电影质感", "国风水墨，古韵意境", "3D卡通，高饱和", "极简构图，高级感", "未来科技，光影对比"].map((tpl) => (
+              <button
+                key={tpl}
+                type="button"
+                className="text-[11px] px-3 py-1 rounded-full border border-white/[0.06] text-white/40 hover:border-purple-500/30 hover:text-purple-300 transition-all bg-white/[0.02]"
+                onClick={() => setPrompt((p) => p ? `${p}，${tpl}` : tpl)}
+              >
+                {tpl}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Topic info */}
       {topicId && (

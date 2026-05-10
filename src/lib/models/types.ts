@@ -5,6 +5,9 @@ export interface GenParams {
   height?: number;
   duration?: number;
   style?: string;
+  referenceImage?: string;
+  referenceVideo?: string;
+  characterPhoto?: string;
 }
 
 export interface GenResult {
@@ -16,4 +19,8 @@ export interface GenResult {
 export interface ModelAdapter {
   generateImage(params: GenParams): Promise<GenResult>;
   generateVideo(params: GenParams): Promise<GenResult>;
+}
+
+export interface SwapAdapter {
+  generateSwap(params: GenParams): Promise<GenResult>;
 }

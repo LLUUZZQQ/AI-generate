@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { withAuth } from "@/lib/auth-guard";
 import { success, error } from "@/lib/response";
 import { generateSchema } from "@/lib/validators";
-import { imageQueue, videoQueue } from "@/lib/queue";
+import { imageQueue, videoQueue, swapQueue } from "@/lib/queue";
 
 export const POST = withAuth(async (req: NextRequest, _context: any, user: { id: string }) => {
   const body = await req.json();
@@ -52,7 +52,7 @@ export const POST = withAuth(async (req: NextRequest, _context: any, user: { id:
   });
 
   // Push job to queue
-  const queue = type === "video" ? videoQueue : imageQueue;
+  const queue = type === "swap" ? swapQueue : type === "video" ? videoQueue : imageQueue;
   await queue.add("generate", {
     contentId: content.id,
     modelId,
