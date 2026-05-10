@@ -14,8 +14,16 @@ const typeTabs = [
   { label: "视频", value: "video" },
 ];
 
+const statusTabs = [
+  { label: "全部", value: "" },
+  { label: "已完成", value: "done" },
+  { label: "生成中", value: "processing" },
+  { label: "失败", value: "failed" },
+];
+
 export default function LibraryPage() {
   const [type, setType] = useState("");
+  const [status, setStatus] = useState("");
 
   const { data, isLoading } = useQuery({
     queryKey: ["library", type],
@@ -27,15 +35,26 @@ export default function LibraryPage() {
     },
   });
 
-  const list = data?.data?.list ?? [];
+  const allItems = data?.data?.list ?? [];
+  const list = status ? allItems.filter((item: any) => item.status === status) : allItems;
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">
       <h1 className="text-2xl font-bold mb-6">内容库</h1>
 
       <Tabs value={type} onValueChange={setType}>
-        <TabsList className="mb-6">
+        <TabsList className="mb-3">
           {typeTabs.map((tab) => (
+            <TabsTrigger key={tab.value} value={tab.value}>
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
+
+      <Tabs value={status} onValueChange={setStatus}>
+        <TabsList className="mb-6">
+          {statusTabs.map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value}>
               {tab.label}
             </TabsTrigger>

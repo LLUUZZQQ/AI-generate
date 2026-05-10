@@ -10,6 +10,7 @@ interface TrendCardProps {
   category: string;
   heatScore: number;
   status: string;
+  fetchedAt?: string;
 }
 
 const categoryLabels: Record<string, string> = {
@@ -34,7 +35,17 @@ const icons: Record<string, string> = {
   event: "📅",
 };
 
-export function TrendCard({ id, title, category, heatScore, status }: TrendCardProps) {
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "刚刚";
+  if (mins < 60) return `${mins}分钟前`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}小时前`;
+  return `${Math.floor(hours / 24)}天前`;
+}
+
+export function TrendCard({ id, title, category, heatScore, status, fetchedAt }: TrendCardProps) {
   const gradient = gradients[category] || "from-gray-500 to-slate-500";
   const icon = icons[category] || "🔥";
   const imageUrl = `https://picsum.photos/seed/${id}/400/300`;
@@ -63,9 +74,14 @@ export function TrendCard({ id, title, category, heatScore, status }: TrendCardP
             {categoryLabels[category] || category}
           </Badge>
           <h3 className="font-semibold text-sm leading-tight mb-2">{title}</h3>
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <span className="text-sm font-bold text-orange-500 tabular-nums">{heatScore.toLocaleString()}</span>
-            <span className="text-xs">热度</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <span className="text-sm font-bold text-orange-500 tabular-nums">{heatScore.toLocaleString()}</span>
+              <span className="text-xs">热度</span>
+            </div>
+            {fetchedAt && (
+              <span className="text-xs text-muted-foreground/60">{timeAgo(fetchedAt)}</span>
+            )}
           </div>
         </div>
       </Card>

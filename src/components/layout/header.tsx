@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { CreditsDisplay } from "@/components/user/credits-display";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 export function Header() {
   const { data: session } = useSession();
@@ -25,6 +26,7 @@ export function Header() {
               <Link href="/generate"><Button variant="ghost" size="sm">生成</Button></Link>
               <Link href="/library"><Button variant="ghost" size="sm">内容库</Button></Link>
               <Link href="/dashboard"><Button variant="ghost" size="sm">我的</Button></Link>
+              <ThemeToggle />
               <Button variant="outline" size="sm" onClick={() => signOut()}>退出</Button>
             </>
           ) : (
@@ -53,7 +55,8 @@ export function Header() {
               <Link href="/generate" onClick={() => setOpen(false)} className="block py-2 text-sm font-medium">🎨 生成</Link>
               <Link href="/library" onClick={() => setOpen(false)} className="block py-2 text-sm font-medium">📦 内容库</Link>
               <Link href="/dashboard" onClick={() => setOpen(false)} className="block py-2 text-sm font-medium">👤 我的</Link>
-              <Button variant="outline" size="sm" className="w-full mt-2" onClick={() => signOut()}>退出</Button>
+              <div className="py-2"><ThemeToggle /></div>
+              <Button variant="outline" size="sm" className="w-full" onClick={() => signOut()}>退出</Button>
             </>
           ) : (
             <div className="flex gap-2">
