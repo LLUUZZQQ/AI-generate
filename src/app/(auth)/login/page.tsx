@@ -17,10 +17,22 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true); setError("");
-    const result = await signIn("credentials", { email, password, redirect: false });
-    if (result?.ok) { router.push("/trends"); }
-    else {
-      setError(result?.error === "CredentialsSignin" ? "邮箱或密码错误" : "登录失败，请重试");
+
+    // Use direct API call to avoid NextAuth redirect behavior
+    const csrfRes = await fetch("/api/auth/csrf");
+    const { csrfToken } = await csrfRes.json();
+
+    const res = await fetch("/api/auth/callback/credentials", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ csrfToken, email, password }),
+      redirect: "manual",
+    });
+
+    if (res.ok || res.redirected) {
+      router.push("/trends");
+    } else {
+      setError("邮箱或密码错误");
     }
     setLoading(false);
   };
