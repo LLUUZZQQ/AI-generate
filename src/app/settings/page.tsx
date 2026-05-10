@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,6 +16,13 @@ const plans = [
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  if (searchParams.get("paid") === "1") {
+    setTimeout(() => {
+      toast.success("支付成功！积分将在几秒后到账");
+      queryClient.invalidateQueries({ queryKey: ["user-me"] });
+    }, 500);
+  }
   const [selectedPlan, setSelectedPlan] = useState<typeof plans[0] | null>(null);
   const [paying, setPaying] = useState(false);
 
@@ -27,15 +35,18 @@ export default function SettingsPage() {
   const handleRecharge = async () => {
     if (!selectedPlan) return;
     setPaying(true);
-    await new Promise((r) => setTimeout(r, 1500));
     try {
-      const res = await fetch("/api/user/recharge", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ amount: selectedPlan.amount }) });
+      const res = await fetch("/api/pay/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planAmount: selectedPlan.amount }),
+      });
       const json = await res.json();
-      if (json.code !== 0) { toast.error(json.message ?? "充值失败"); return; }
-      toast.success(`支付成功！获得 ${json.data.creditsAdded ?? selectedPlan.credits} 积分`);
-      queryClient.invalidateQueries({ queryKey: ["user-me"] });
-      queryClient.invalidateQueries({ queryKey: ["user-transactions"] });
-      setSelectedPlan(null);
+      if (json.code !== 0 || !json.data.url) {
+        toast.error(json.message ?? "创建支付失败");
+        return;
+      }
+      window.location.href = json.data.url;
     } catch { toast.error("网络错误"); }
     finally { setPaying(false); }
   };
