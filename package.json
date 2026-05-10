@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "db:seed": "tsx prisma/seed.ts",
+    "postinstall": "prisma generate",
     "worker:trend": "tsx src/workers/trend-worker.ts",
     "worker:image": "tsx src/workers/image-worker.ts",
     "worker:video": "tsx src/workers/video-worker.ts",
