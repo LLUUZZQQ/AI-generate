@@ -25,6 +25,12 @@ export default function GeneratePage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
 
+  const { data: userData } = useQuery({
+    queryKey: ["user-me"],
+    queryFn: async () => { const res = await fetch("/api/user/me"); return res.json(); },
+  });
+  const credits = userData?.data?.user?.credits ?? 0;
+
   const { data: topicData } = useQuery({
     queryKey: ["trend", topicId],
     queryFn: async () => {
@@ -138,13 +144,31 @@ export default function GeneratePage() {
         </div>
       )}
 
-      {/* Cost summary */}
+      {/* Credits + Cost summary */}
+      <div className="flex items-center justify-between text-sm mb-4 p-3 bg-muted/50 rounded-lg">
+        <span className="text-muted-foreground">积分余额</span>
+        <span className="font-bold">{credits}</span>
+      </div>
       {modelId && costPerGen > 0 && (
-        <div className="flex items-center justify-between text-sm mb-4 p-3 bg-muted/50 rounded-lg">
-          <span className="text-muted-foreground">本次消耗</span>
+        <div className={`flex items-center justify-between text-sm mb-4 p-3 rounded-lg ${credits < costPerGen ? "bg-destructive/10 text-destructive" : "bg-muted/50"}`}>
+          <span>{credits < costPerGen ? "⚠️ 积分不足" : "本次消耗"}</span>
           <span className="font-bold">{costPerGen} 积分</span>
         </div>
       )}
+
+      {/* Submit */}
+      <Button
+        size="lg"
+        className="w-full"
+        disabled={submitting || !modelId || !prompt.trim() || credits < costPerGen}
+        onClick={handleSubmit}
+      >
+        {credits < costPerGen && modelId
+          ? "积分不足，请先充值"
+          : submitting
+          ? "提交中..."
+          : `开始生成${costPerGen > 0 ? ` · ${costPerGen} 积分` : ""}`}
+      </Button>
 
       {/* Submit */}
       <Button

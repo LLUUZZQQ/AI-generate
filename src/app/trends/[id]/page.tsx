@@ -95,9 +95,9 @@ export default function TrendDetailPage() {
       </div>
 
       {/* Related Content */}
-      {contents && contents.length > 0 && (
-        <div>
-          <h3 className="text-lg font-semibold mb-4">已生成的内容</h3>
+      <div>
+        <h3 className="text-lg font-semibold mb-4">已生成的内容</h3>
+        {contents && contents.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {contents.map((c: any) => (
               <Link key={c.id} href={`/library/${c.id}`}>
@@ -118,8 +118,16 @@ export default function TrendDetailPage() {
               </Link>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="text-center py-8 border-2 border-dashed rounded-lg">
+            <div className="text-2xl mb-2">🎨</div>
+            <p className="text-sm text-muted-foreground mb-3">还没有人为这个话题生成内容</p>
+            <Button variant="outline" size="sm" onClick={() => router.push(`/generate?topicId=${topic.id}`)}>
+              我来生成第一条
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
