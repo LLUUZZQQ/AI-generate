@@ -1,7 +1,7 @@
 "use client";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,29 +10,42 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const searchParams = useSearchParams();
-  const [error, setError] = useState(searchParams.get("error") ? "邮箱或密码错误" : "");
+  const [error, setError] = useState("");
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true); setError("");
 
-    // Use direct API call to avoid NextAuth redirect behavior
-    const csrfRes = await fetch("/api/auth/csrf");
-    const { csrfToken } = await csrfRes.json();
+    try {
+      // First validate credentials via our own API
+      const checkRes = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const check = await checkRes.json();
 
-    const res = await fetch("/api/auth/callback/credentials", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ csrfToken, email, password }),
-      redirect: "manual",
-    });
+      if (check.code !== 0) {
+        setError(check.message || "邮箱或密码错误");
+        setLoading(false);
+        return;
+      }
 
-    if (res.ok || res.redirected) {
-      router.push("/trends");
-    } else {
-      setError("邮箱或密码错误");
+      // Credentials valid, now sign in via NextAuth
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.ok) {
+        router.push("/trends");
+      } else {
+        setError("登录失败，请重试");
+      }
+    } catch {
+      setError("网络错误");
     }
     setLoading(false);
   };
