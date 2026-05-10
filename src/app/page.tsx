@@ -4,6 +4,7 @@ import { Marquee } from "@/components/ui/marquee";
 import { AccordionCard } from "@/components/ui/accordion-card";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { CountUp } from "@/components/ui/count-up";
+import { ParallaxGlow } from "@/components/ui/scroll-effects";
 import { NodeLeft, NodeRight, NodeUnion, NodeLink } from "@/components/ui/node-icons";
 import { prisma } from "@/lib/db";
 
@@ -17,10 +18,7 @@ export default async function LandingPage() {
     <div>
       {/* ======== HERO ======== */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] rounded-full bg-purple-500/10 blur-[150px]" />
-          <div className="absolute top-1/2 right-1/4 w-[400px] h-[400px] rounded-full bg-amber-500/5 blur-[120px]" />
-        </div>
+        <ParallaxGlow />
 
         <div className="relative max-w-4xl mx-auto px-6 pt-32 pb-24 text-center">
           {/* Node decorator above headline */}
