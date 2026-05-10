@@ -2,6 +2,7 @@ import { Worker } from "bullmq";
 import { redis } from "@/lib/redis";
 import { prisma } from "@/lib/db";
 import { getModelAdapter } from "@/lib/models/registry";
+import { userFriendlyError } from "@/lib/error-messages";
 import { suggestQueue } from "@/lib/queue";
 
 const worker = new Worker("image-queue", async (job) => {
@@ -23,7 +24,7 @@ const worker = new Worker("image-queue", async (job) => {
   } catch (e: any) {
     await prisma.content.update({
       where: { id: contentId },
-      data: { status: "failed", metadata: { error: e.message } },
+      data: { status: "failed", metadata: { error: userFriendlyError(e.message), rawError: e.message } },
     });
   }
 }, { connection: redis, concurrency: 3 });
