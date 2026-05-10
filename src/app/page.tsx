@@ -1,65 +1,63 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
-export default function Home() {
+export default function LandingPage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div>
+      <section className="text-center py-20 px-6 max-w-3xl mx-auto">
+        <h1 className="text-4xl font-bold tracking-tight mb-4">
+          追踪抖音热点，AI 生成爆款内容
+        </h1>
+        <p className="text-lg text-muted-foreground mb-8">
+          实时监控抖音热门话题，AI 智能分析趋势，自动生成爆款图片和视频，附赠发布建议。
+        </p>
+        <div className="flex gap-4 justify-center">
+          <Link href="/register"><Button size="lg">免费注册，送 20 积分</Button></Link>
+          <Link href="/trends"><Button variant="outline" size="lg">浏览趋势</Button></Link>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      <section className="max-w-5xl mx-auto px-6 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="text-center">
+            <div className="text-3xl mb-3">🔥</div>
+            <h3 className="font-semibold mb-2">实时趋势追踪</h3>
+            <p className="text-sm text-muted-foreground">24h 监控抖音热搜，AI 预测话题爆发趋势，让你抢占流量先机</p>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl mb-3">🎨</div>
+            <h3 className="font-semibold mb-2">多模型 AI 生成</h3>
+            <p className="text-sm text-muted-foreground">DALL-E、Stable Diffusion、国产模型自由切换，一张图只需几秒</p>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl mb-3">📝</div>
+            <h3 className="font-semibold mb-2">智能发布建议</h3>
+            <p className="text-sm text-muted-foreground">AI 推荐最佳发布时间、配文、标签和 BGM，提高爆款概率</p>
+          </div>
         </div>
-      </main>
+      </section>
+
+      <section className="max-w-3xl mx-auto px-6 py-12 text-center">
+        <h2 className="text-2xl font-bold mb-6">定价方案</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[
+            { name: "基础包", credits: 50, yuan: 15 },
+            { name: "进阶包", credits: 120, yuan: 30 },
+            { name: "专业包", credits: 300, yuan: 60 },
+          ].map((plan) => (
+            <div key={plan.name} className="border rounded-lg p-6">
+              <h3 className="font-semibold mb-1">{plan.name}</h3>
+              <p className="text-3xl font-bold">{plan.credits} <span className="text-sm font-normal text-muted-foreground">积分</span></p>
+              <p className="text-muted-foreground text-sm">¥{plan.yuan}</p>
+            </div>
+          ))}
+        </div>
+        <p className="text-sm text-muted-foreground mt-4">新用户注册即送 20 积分，先体验再付费</p>
+      </section>
+
+      <footer className="text-center py-8 text-sm text-muted-foreground border-t">
+        <p>AI 爆款内容生成平台 © 2026</p>
+      </footer>
     </div>
   );
 }
