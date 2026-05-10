@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NodeLeft, NodeRight } from "@/components/ui/node-icons";
+import { CountUp } from "@/components/ui/count-up";
 
 export default function DashboardPage() {
   const { data, isLoading } = useQuery({
@@ -43,7 +44,8 @@ export default function DashboardPage() {
               <div key={stat.label} className="glass rounded-xl p-5">
                 <p className="text-[11px] text-white/30 mb-1">{stat.label}</p>
                 <p className={`text-2xl font-bold ${stat.color} tabular-nums`}>
-                  {stat.value}<span className="text-sm font-normal text-white/30">{stat.suffix}</span>
+                  <CountUp end={stat.value} duration={1000} />
+                  <span className="text-sm font-normal text-white/30">{stat.suffix}</span>
                 </p>
               </div>
             ))}

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Marquee } from "@/components/ui/marquee";
 import { AccordionCard } from "@/components/ui/accordion-card";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
+import { CountUp } from "@/components/ui/count-up";
 import { NodeLeft, NodeRight, NodeUnion, NodeLink } from "@/components/ui/node-icons";
 import { prisma } from "@/lib/db";
 
@@ -57,8 +58,10 @@ export default async function LandingPage() {
 
           {/* Data statement */}
           <div className="mt-16 text-center animate-fade-in-up delay-3">
-            <p className="text-3xl font-bold gradient-text tabular-nums mb-2">9+</p>
-            <p className="text-xs text-white/25">实时热门话题追踪，AI 驱动的内容创作社区正在成长</p>
+            <p className="text-3xl font-bold gradient-text tabular-nums mb-2">
+              <CountUp end={9216} suffix="+" duration={2000} />
+            </p>
+            <p className="text-xs text-white/25">个话题正在追踪，AI 驱动的内容创作社区正在成长</p>
           </div>
         </div>
 
