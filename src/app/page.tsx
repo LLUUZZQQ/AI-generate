@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Marquee } from "@/components/ui/marquee";
 import { prisma } from "@/lib/db";
 
 const categoryLabels: Record<string, string> = {
@@ -90,10 +91,8 @@ export default async function LandingPage() {
 
       {/* ======== TRUST STRIP ======== */}
       <section className="max-w-4xl mx-auto px-6 py-10">
-        <div className="glass rounded-2xl px-8 py-5 flex items-center justify-center gap-8 flex-wrap">
-          {["抖音热搜", "AI生成", "智能分析", "爆款文案", "发布建议"].map((item) => (
-            <span key={item} className="text-xs text-white/25 font-medium tracking-wide hover:text-white/45 transition-colors">{item}</span>
-          ))}
+        <div className="glass rounded-2xl overflow-hidden">
+          <Marquee items={["抖音热搜实时追踪", "AI 智能趋势分析", "DALL·E 图片生成", "智能配文推荐", "最佳发布时间", "热门 BGM 匹配", "一键生成爆款", "发布建议指导"]} />
         </div>
       </section>
 
@@ -144,6 +143,31 @@ export default async function LandingPage() {
           </div>
         </section>
       )}
+
+      {/* ======== HOW IT WORKS ======== */}
+      <section className="max-w-4xl mx-auto px-6 py-16">
+        <div className="text-center mb-14">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <NodeDecorator className="text-purple-500/60" />
+            <p className="text-[11px] text-purple-400 font-semibold tracking-widest uppercase">How It Works</p>
+            <NodeDecorator className="text-purple-500/60 rotate-180" />
+          </div>
+          <h2 className="text-3xl font-bold tracking-tight">几分钟即可上手</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[
+            { step: "01", title: "浏览或搜索话题", desc: "在趋势页发现当下最火的抖音话题，或者直接搜索你感兴趣的领域，一键进入创作。" },
+            { step: "02", title: "AI 一键生成", desc: "选择 AI 模型，输入创意提示词，数秒内获得高质量图片或视频内容，不满意可以再来。" },
+            { step: "03", title: "获取发布建议", desc: "生成完成后，AI 自动分析最佳发布时机、推荐配文和标签，助你精准发布获取流量。" },
+          ].map((s, i) => (
+            <div key={s.step} className={`animate-fade-in-up delay-${i + 1}`}>
+              <div className="text-4xl font-bold text-white/[0.03] mb-2">{s.step}</div>
+              <h3 className="font-semibold mb-2">{s.title}</h3>
+              <p className="text-xs text-white/30 leading-relaxed">{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* ======== FEATURES ======== */}
       <section className="max-w-5xl mx-auto px-6 py-16">
