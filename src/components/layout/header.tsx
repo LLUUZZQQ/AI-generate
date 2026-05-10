@@ -26,7 +26,7 @@ export function Header() {
       <div className={`flex items-center justify-between px-4 md:px-6 max-w-7xl mx-auto transition-all duration-500 ease-smooth ${
         scrolled ? "h-12" : "h-14"
       }`}>
-        <Link href={session ? "/trends" : "/"} className={`font-bold shrink-0 tracking-tight transition-all duration-500 ${
+        <Link href="/" className={`font-bold shrink-0 tracking-tight transition-all duration-500 ${
           scrolled ? "text-base" : "text-lg"
         }`}>
           <span className="gradient-text">AI</span><span className="text-white/80">爆款</span>
@@ -37,6 +37,7 @@ export function Header() {
           {session ? (
             <>
               <CreditsDisplay />
+              <Link href="/"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">首页</Button></Link>
               <Link href="/trends"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">趋势</Button></Link>
               <Link href="/generate"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">生成</Button></Link>
               <Link href="/library"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">内容库</Button></Link>
@@ -65,6 +66,7 @@ export function Header() {
         <div className="md:hidden border-t border-white/[0.06] bg-background/95 backdrop-blur-xl px-4 py-3 space-y-1">
           {session ? (
             <>
+              <Link href="/" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">🏠 首页</Link>
               <Link href="/trends" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">🔥 趋势</Link>
               <Link href="/generate" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">🎨 生成</Link>
               <Link href="/library" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">📦 内容库</Link>
