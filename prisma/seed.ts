@@ -11,10 +11,10 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   const models = [
     { id: "dall-e-3", name: "DALL-E 3", type: "image", provider: "openai", costPerGen: 3, isActive: true, config: {} },
-    { id: "stable-diffusion-xl", name: "Stable Diffusion XL", type: "image", provider: "stablediffusion", costPerGen: 1, isActive: true, config: {} },
-    { id: "tongyi-wanxiang", name: "通义万相", type: "image", provider: "tongyi", costPerGen: 2, isActive: true, config: {} },
+    { id: "stable-diffusion-xl", name: "Stable Diffusion XL", type: "image", provider: "stablediffusion", costPerGen: 1, isActive: false, config: {} },
+    { id: "tongyi-wanxiang", name: "通义万相", type: "image", provider: "tongyi", costPerGen: 2, isActive: false, config: {} },
     { id: "sora", name: "Sora", type: "video", provider: "openai", costPerGen: 15, isActive: false, config: {} },
-    { id: "jimeng", name: "即梦", type: "video", provider: "jimeng", costPerGen: 5, isActive: true, config: {} },
+    { id: "jimeng", name: "即梦", type: "video", provider: "jimeng", costPerGen: 5, isActive: false, config: {} },
   ];
 
   for (const m of models) {

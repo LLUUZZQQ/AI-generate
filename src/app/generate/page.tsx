@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ModelSelector } from "@/components/generate/model-selector";
@@ -18,6 +18,7 @@ export default function GeneratePage() {
   const [prompt, setPrompt] = useState("");
   const [negativePrompt, setNegativePrompt] = useState("");
   const [taskId, setTaskId] = useState<string | null>(null);
+  const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
@@ -65,8 +66,9 @@ export default function GeneratePage() {
     }
   };
 
-  const handleComplete = (_result: unknown) => {
+  const handleComplete = (result: any) => {
     toast.success("内容生成完成！");
+    router.push(`/library/${taskId}`);
   };
 
   // If a task is in progress, show the progress tracker

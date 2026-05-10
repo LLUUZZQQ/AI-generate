@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TransactionList } from "@/components/user/transaction-list";
 
@@ -15,6 +17,8 @@ const plans = [
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
+  const [selectedPlan, setSelectedPlan] = useState<typeof plans[0] | null>(null);
+  const [paying, setPaying] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["user-me"],
@@ -27,23 +31,31 @@ export default function SettingsPage() {
   const user = data?.data?.user;
   const currentCredits = user?.credits ?? 0;
 
-  const handleRecharge = async (amount: number) => {
+  const handleRecharge = async () => {
+    if (!selectedPlan) return;
+    setPaying(true);
     try {
+      // Simulate payment processing
+      await new Promise((r) => setTimeout(r, 1500));
+
       const res = await fetch("/api/user/recharge", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount }),
+        body: JSON.stringify({ amount: selectedPlan.amount }),
       });
       const json = await res.json();
       if (json.code !== 0) {
         toast.error(json.message ?? "充值失败");
         return;
       }
-      toast.success(`充值成功，获得 ${json.data.creditsAdded} 积分`);
+      toast.success(`支付成功！获得 ${json.data.creditsAdded ?? selectedPlan.credits} 积分`);
       queryClient.invalidateQueries({ queryKey: ["user-me"] });
       queryClient.invalidateQueries({ queryKey: ["user-transactions"] });
+      setSelectedPlan(null);
     } catch {
       toast.error("网络错误，请重试");
+    } finally {
+      setPaying(false);
     }
   };
 
@@ -77,7 +89,7 @@ export default function SettingsPage() {
               </div>
               <Button
                 className="w-full"
-                onClick={() => handleRecharge(plan.amount)}
+                onClick={() => setSelectedPlan(plan)}
                 disabled={isLoading}
               >
                 立即充值
@@ -88,6 +100,34 @@ export default function SettingsPage() {
       </div>
 
       <TransactionList />
+
+      <Dialog open={!!selectedPlan} onOpenChange={(open) => !open && setSelectedPlan(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>确认充值</DialogTitle>
+            <DialogDescription>
+              {selectedPlan && (
+                <>
+                  充值 <strong>{selectedPlan.name}</strong>：
+                  {selectedPlan.credits} 积分 / ¥{selectedPlan.price}
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-2 text-sm text-muted-foreground">
+            <p>支付方式：微信支付（模拟）</p>
+            <p>充值后积分立即到账</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSelectedPlan(null)} disabled={paying}>
+              取消
+            </Button>
+            <Button onClick={handleRecharge} disabled={paying}>
+              {paying ? "支付处理中..." : "确认支付 ¥" + (selectedPlan?.price ?? 0)}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
