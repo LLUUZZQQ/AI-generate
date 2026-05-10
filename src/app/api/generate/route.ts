@@ -60,5 +60,11 @@ export const POST = withAuth(async (req: NextRequest, _context: any, user: { id:
     params,
   });
 
+  // Wake up Railway worker (fire-and-forget, don't block response)
+  const WORKER_URL = process.env.WORKER_URL;
+  if (WORKER_URL) {
+    fetch(WORKER_URL).catch(() => {});
+  }
+
   return success({ taskId: content.id, status: "queued" });
 });
