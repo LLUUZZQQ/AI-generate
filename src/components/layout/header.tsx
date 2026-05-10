@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
@@ -9,11 +9,26 @@ import { ThemeToggle } from "@/components/layout/theme-toggle";
 export function Header() {
   const { data: session } = useSession();
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-background/80 backdrop-blur-xl">
-      <div className="flex h-14 items-center justify-between px-4 md:px-6 max-w-7xl mx-auto">
-        <Link href={session ? "/trends" : "/"} className="text-lg font-bold shrink-0 tracking-tight">
+    <header className={`sticky top-0 z-50 border-b transition-all duration-500 ease-smooth ${
+      scrolled
+        ? "border-white/[0.08] bg-background/95 backdrop-blur-xl shadow-lg shadow-black/20"
+        : "border-white/[0.04] bg-background/70 backdrop-blur-md"
+    }`}>
+      <div className={`flex items-center justify-between px-4 md:px-6 max-w-7xl mx-auto transition-all duration-500 ease-smooth ${
+        scrolled ? "h-12" : "h-14"
+      }`}>
+        <Link href={session ? "/trends" : "/"} className={`font-bold shrink-0 tracking-tight transition-all duration-500 ${
+          scrolled ? "text-base" : "text-lg"
+        }`}>
           <span className="gradient-text">AI</span><span className="text-white/80">爆款</span>
         </Link>
 

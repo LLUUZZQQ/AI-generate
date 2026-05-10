@@ -128,7 +128,8 @@ export default async function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {hotTopics.map((topic, i) => (
-              <Link key={topic.id} href={`/trends/${topic.id}`} className={`animate-fade-in-up delay-${i + 1}`}>
+              <ScrollReveal key={topic.id} delay={i * 80} scale>
+              <Link href={`/trends/${topic.id}`}>
                 <div className="glass rounded-xl p-5 transition-all duration-300 group flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1.5">
@@ -147,6 +148,7 @@ export default async function LandingPage() {
                   </div>
                 </div>
               </Link>
+              </ScrollReveal>
             ))}
           </div>
         </section>
