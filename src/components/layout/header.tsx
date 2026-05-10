@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
@@ -6,14 +7,17 @@ import { CreditsDisplay } from "@/components/user/credits-display";
 
 export function Header() {
   const { data: session } = useSession();
+  const [open, setOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
-      <div className="flex h-14 items-center justify-between px-6">
-        <Link href="/trends" className="text-lg font-bold">
+      <div className="flex h-14 items-center justify-between px-4 md:px-6">
+        <Link href={session ? "/trends" : "/"} className="text-lg font-bold shrink-0">
           AI爆款
         </Link>
-        <nav className="flex items-center gap-4">
+
+        {/* Desktop nav */}
+        <nav className="hidden md:flex items-center gap-4">
           {session ? (
             <>
               <CreditsDisplay />
@@ -30,7 +34,39 @@ export function Header() {
             </>
           )}
         </nav>
+
+        {/* Mobile hamburger + credits */}
+        <div className="flex md:hidden items-center gap-2">
+          {session && <CreditsDisplay />}
+          <Button variant="ghost" size="sm" onClick={() => setOpen(!open)}>
+            {open ? "✕" : "☰"}
+          </Button>
+        </div>
       </div>
+
+      {/* Mobile dropdown */}
+      {open && (
+        <div className="md:hidden border-t bg-background px-4 py-3 space-y-2">
+          {session ? (
+            <>
+              <Link href="/trends" onClick={() => setOpen(false)} className="block py-2 text-sm font-medium">🔥 趋势</Link>
+              <Link href="/generate" onClick={() => setOpen(false)} className="block py-2 text-sm font-medium">🎨 生成</Link>
+              <Link href="/library" onClick={() => setOpen(false)} className="block py-2 text-sm font-medium">📦 内容库</Link>
+              <Link href="/dashboard" onClick={() => setOpen(false)} className="block py-2 text-sm font-medium">👤 我的</Link>
+              <Button variant="outline" size="sm" className="w-full mt-2" onClick={() => signOut()}>退出</Button>
+            </>
+          ) : (
+            <div className="flex gap-2">
+              <Link href="/login" className="flex-1" onClick={() => setOpen(false)}>
+                <Button variant="outline" size="sm" className="w-full">登录</Button>
+              </Link>
+              <Link href="/register" className="flex-1" onClick={() => setOpen(false)}>
+                <Button size="sm" className="w-full">注册</Button>
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
     </header>
   );
 }
