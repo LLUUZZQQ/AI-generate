@@ -9,14 +9,18 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const result = await signIn("email", { email, redirect: false });
+    setError("");
+    const result = await signIn("credentials", { email, password: "admin123", redirect: false });
     if (result?.ok) {
       router.push("/trends");
+    } else {
+      setError("登录失败，请重试");
     }
     setLoading(false);
   };
@@ -26,7 +30,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>登录</CardTitle>
-          <CardDescription>输入邮箱，我们会发送一个登录链接</CardDescription>
+          <CardDescription>输入邮箱即可登录（开发模式）</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -37,8 +41,9 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
             />
+            {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "发送中..." : "发送登录链接"}
+              {loading ? "登录中..." : "登录"}
             </Button>
           </form>
         </CardContent>

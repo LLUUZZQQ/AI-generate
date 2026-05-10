@@ -9,14 +9,18 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const result = await signIn("email", { email, redirect: false });
+    setError("");
+    const result = await signIn("credentials", { email, password: "admin123", redirect: false });
     if (result?.ok) {
       router.push("/trends");
+    } else {
+      setError("注册失败，请重试");
     }
     setLoading(false);
   };
@@ -37,8 +41,9 @@ export default function RegisterPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
             />
+            {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "发送中..." : "注册领取 20 积分"}
+              {loading ? "处理中..." : "注册领取 20 积分"}
             </Button>
           </form>
         </CardContent>
