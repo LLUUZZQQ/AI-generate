@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@latest temp-scaffold --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-turbopack)",
+      "Bash(Remove-Item *)",
+      "Bash(npm install *)",
+      "Bash(npx shadcn@latest init -d)",
+      "Bash(npx shadcn@latest add button card input label select tabs dialog dropdown-menu avatar badge skeleton separator toast)",
+      "Bash(npx shadcn@latest add button card input label select tabs dialog dropdown-menu avatar badge skeleton separator)",
+      "Bash(npx shadcn@latest add sonner)",
+      "Bash(npm run *)",
+      "Bash(git commit *)",
+      "Bash(Get-ChildItem -Directory \"D:\\\\项目\")",
+      "Bash(Select-Object -ExpandProperty Name)",
+      "Bash(git *)",
+      "Bash(npx prisma *)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "Bash(npm info *)",
+      "Bash(node -e \"const d=require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\); const j=JSON.parse\\(d\\); console.log\\(j.slice\\(-5\\).join\\('\\\\n'\\)\\)\")",
+      "Bash(npm view *)",
+      "Bash(node -e \"const d=JSON.parse\\(require\\('fs'\\).readFileSync\\(0,'utf8'\\)\\); console.log\\(d.filter\\(v=>v.startsWith\\('7.'\\)\\).join\\('\\\\n'\\)\\)\")",
+      "Bash(npx tsc *)",
+      "PowerShell(New-Item *)",
+      "PowerShell(Get-ChildItem \"D:\\\\项目\\\\src\\\\app\\\\api\\\\models\\\\\" 2>$null; if \\(-not \\(Test-Path \"D:\\\\项目\\\\src\\\\app\\\\api\\\\models\"\\)\\) { \"models directory does not exist\" })",
+      "Bash(Select-String -Pattern \"worker\")",
+      "Bash(dir *)",
+      "Bash(npx --no-install tsc --noEmit)"
+    ]
+  }
+}

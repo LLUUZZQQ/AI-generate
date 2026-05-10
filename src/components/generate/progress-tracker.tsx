@@ -20,9 +20,8 @@ interface ProgressTrackerProps {
 
 const stages = [
   { key: "pending", label: "排队中" },
-  { key: "queued", label: "已入队" },
-  { key: "generating", label: "生成中" },
-  { key: "completed", label: "完成" },
+  { key: "processing", label: "生成中" },
+  { key: "done", label: "完成" },
 ];
 
 function getStageIndex(status: string): number {
@@ -43,7 +42,7 @@ export function ProgressTracker({ taskId, onComplete }: ProgressTrackerProps) {
     },
     refetchInterval: (query) => {
       const status = query.state.data?.status;
-      if (!status || status === "completed" || status === "failed") return false;
+      if (!status || status === "done" || status === "failed") return false;
       return 2000;
     },
     retry: 3,
@@ -52,7 +51,7 @@ export function ProgressTracker({ taskId, onComplete }: ProgressTrackerProps) {
   const currentIndex = taskData?.status ? getStageIndex(taskData.status) : -1;
 
   useEffect(() => {
-    if (taskData?.status === "completed" && !completedRef.current) {
+    if (taskData?.status === "done" && !completedRef.current) {
       completedRef.current = true;
       onComplete(taskData);
     }
@@ -135,7 +134,7 @@ export function ProgressTracker({ taskId, onComplete }: ProgressTrackerProps) {
         })}
       </div>
 
-      {taskData?.status === "completed" && taskData.fileUrl && (
+      {taskData?.status === "done" && taskData.fileUrl && (
         <p className="text-sm text-muted-foreground mt-6">
           生成完成！文件已保存到内容库。
         </p>
