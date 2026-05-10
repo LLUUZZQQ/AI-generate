@@ -121,7 +121,7 @@ export default function GeneratePage() {
       </section>
 
       {/* Prompt Input */}
-      <section className="mb-8">
+      <section className="mb-4">
         <h2 className="text-sm font-medium mb-3">提示词</h2>
         <PromptInput
           prompt={prompt}
@@ -129,6 +129,29 @@ export default function GeneratePage() {
           negativePrompt={negativePrompt}
           onNegativeChange={setNegativePrompt}
         />
+      </section>
+
+      {/* Prompt Templates */}
+      <section className="mb-6">
+        <div className="flex gap-2 flex-wrap">
+          {[
+            "赛博朋克风格，霓虹灯，未来都市",
+            "治愈系画面，温暖阳光，柔和色调",
+            "国风插画，水墨画风，古韵意境",
+            "3D卡通角色，可爱风格，高饱和度",
+            "电影质感，光影对比，景深虚化",
+            "极简构图，大面积留白，高级感",
+          ].map((tpl) => (
+            <button
+              key={tpl}
+              type="button"
+              className="text-xs px-2 py-1 rounded-full border hover:border-primary hover:text-primary transition-colors"
+              onClick={() => setPrompt((p) => p ? `${p}，${tpl}` : tpl)}
+            >
+              {tpl}
+            </button>
+          ))}
+        </div>
       </section>
 
       {/* Topic info */}
@@ -170,15 +193,6 @@ export default function GeneratePage() {
           : `开始生成${costPerGen > 0 ? ` · ${costPerGen} 积分` : ""}`}
       </Button>
 
-      {/* Submit */}
-      <Button
-        size="lg"
-        className="w-full"
-        disabled={submitting || !modelId || !prompt.trim()}
-        onClick={handleSubmit}
-      >
-        {submitting ? "提交中..." : `开始生成${costPerGen > 0 ? ` · ${costPerGen} 积分` : ""}`}
-      </Button>
     </div>
   );
 }

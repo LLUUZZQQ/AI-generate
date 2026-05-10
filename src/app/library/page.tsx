@@ -24,11 +24,13 @@ const statusTabs = [
 export default function LibraryPage() {
   const [type, setType] = useState("");
   const [status, setStatus] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 12;
 
   const { data, isLoading } = useQuery({
-    queryKey: ["library", type],
+    queryKey: ["library", type, page],
     queryFn: async () => {
-      const params = new URLSearchParams();
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
       if (type) params.set("type", type);
       const res = await fetch(`/api/library?${params}`);
       return res.json();
@@ -36,6 +38,7 @@ export default function LibraryPage() {
   });
 
   const allItems = data?.data?.list ?? [];
+  const total = data?.data?.total ?? 0;
   const list = status ? allItems.filter((item: any) => item.status === status) : allItems;
 
   return (
@@ -83,11 +86,20 @@ export default function LibraryPage() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {list.map((item: any) => (
-            <ContentCard key={item.id} {...item} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {list.map((item: any) => (
+              <ContentCard key={item.id} {...item} />
+            ))}
+          </div>
+          {total > pageSize && (
+            <div className="flex items-center justify-center gap-4 mt-8">
+              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>上一页</Button>
+              <span className="text-sm text-muted-foreground">第 {page} 页 / 共 {Math.ceil(total / pageSize)} 页</span>
+              <Button variant="outline" size="sm" disabled={page * pageSize >= total} onClick={() => setPage(p => p + 1)}>下一页</Button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
