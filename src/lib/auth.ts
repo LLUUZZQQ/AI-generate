@@ -24,15 +24,10 @@ providers.push(Credentials({
     if (!email || !password) return null;
 
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) return null;
+    if (!user || !user.password) return null;
 
-    // If user has a password, verify it
-    if (user.password) {
-      const valid = await bcrypt.compare(password, user.password);
-      if (!valid) return null;
-    }
-    // If no password set (e.g. GitHub-only user), allow any password
-    // This handles migration: old users without password can still login
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) return null;
 
     return { id: user.id, email: user.email, name: user.name, credits: user.credits };
   },
