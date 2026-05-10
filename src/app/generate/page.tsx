@@ -15,6 +15,7 @@ export default function GeneratePage() {
 
   const [type, setType] = useState<"image" | "video">("image");
   const [modelId, setModelId] = useState("");
+  const [costPerGen, setCostPerGen] = useState(0);
   const [prompt, setPrompt] = useState("");
   const [negativePrompt, setNegativePrompt] = useState("");
   const [taskId, setTaskId] = useState<string | null>(null);
@@ -86,7 +87,7 @@ export default function GeneratePage() {
 
       {/* Type Tabs */}
       <div className="mb-6">
-        <Tabs value={type} onValueChange={(v) => { setType(v as "image" | "video"); setModelId(""); }}>
+        <Tabs value={type} onValueChange={(v) => { setType(v as "image" | "video"); setModelId(""); setCostPerGen(0); }}>
           <TabsList>
             <TabsTrigger value="image">图片</TabsTrigger>
             <TabsTrigger value="video">视频</TabsTrigger>
@@ -97,7 +98,7 @@ export default function GeneratePage() {
       {/* Model Selector */}
       <section className="mb-6">
         <h2 className="text-sm font-medium mb-3">选择模型</h2>
-        <ModelSelector type={type} selected={modelId} onSelect={setModelId} />
+        <ModelSelector type={type} selected={modelId} onSelect={(id, cost) => { setModelId(id); setCostPerGen(cost); }} />
       </section>
 
       {/* Prompt Input */}
@@ -111,11 +112,21 @@ export default function GeneratePage() {
         />
       </section>
 
-      {/* Optional topic badge */}
+      {/* Topic info */}
       {topicId && (
-        <p className="text-xs text-muted-foreground mb-4">
-          关联话题 ID: <span className="font-mono">{topicId}</span>
-        </p>
+        <div className="flex items-center gap-2 text-sm mb-4 p-3 bg-primary/5 rounded-lg">
+          <span className="text-muted-foreground">关联话题：</span>
+          <span className="font-medium">{topicId}</span>
+          <Link href={`/trends/${topicId}`} className="text-xs text-primary hover:underline ml-auto">查看话题详情 →</Link>
+        </div>
+      )}
+
+      {/* Cost summary */}
+      {modelId && costPerGen > 0 && (
+        <div className="flex items-center justify-between text-sm mb-4 p-3 bg-muted/50 rounded-lg">
+          <span className="text-muted-foreground">本次消耗</span>
+          <span className="font-bold">{costPerGen} 积分</span>
+        </div>
       )}
 
       {/* Submit */}
@@ -125,7 +136,7 @@ export default function GeneratePage() {
         disabled={submitting || !modelId || !prompt.trim()}
         onClick={handleSubmit}
       >
-        {submitting ? "提交中..." : "开始生成"}
+        {submitting ? "提交中..." : `开始生成${costPerGen > 0 ? ` · ${costPerGen} 积分` : ""}`}
       </Button>
     </div>
   );

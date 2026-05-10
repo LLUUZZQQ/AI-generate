@@ -2,7 +2,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import Link from "next/link";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ContentCard } from "@/components/library/content-card";
 
@@ -52,7 +54,15 @@ export default function LibraryPage() {
           ))}
         </div>
       ) : list.length === 0 ? (
-        <p className="text-muted-foreground text-center py-12">暂无内容</p>
+        <div className="text-center py-16">
+          <div className="text-4xl mb-4">📭</div>
+          <h3 className="text-lg font-semibold mb-2">还没有生成内容</h3>
+          <p className="text-sm text-muted-foreground mb-6">选择一个热门话题，用 AI 生成你的第一条爆款内容吧</p>
+          <div className="flex gap-3 justify-center">
+            <Link href="/trends"><Button variant="default">浏览趋势</Button></Link>
+            <Link href="/generate"><Button variant="outline">直接生成</Button></Link>
+          </div>
+        </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {list.map((item: any) => (

@@ -17,7 +17,7 @@ interface Model {
 interface ModelSelectorProps {
   type: "image" | "video";
   selected: string;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, cost: number) => void;
 }
 
 export function ModelSelector({ type, selected, onSelect }: ModelSelectorProps) {
@@ -65,7 +65,7 @@ export function ModelSelector({ type, selected, onSelect }: ModelSelectorProps) 
             "cursor-pointer transition-all hover:ring-2 hover:ring-primary/50",
             selected === model.id && "ring-2 ring-primary border-primary"
           )}
-          onClick={() => onSelect(model.id)}
+          onClick={() => onSelect(model.id, model.costPerGen)}
         >
           <CardContent className="flex items-center justify-between py-2">
             <div>
