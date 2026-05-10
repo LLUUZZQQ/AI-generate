@@ -96,6 +96,9 @@ export default function TrendsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredItems.map((t: any) => <TrendCard key={t.id} {...t} />)}
           </div>
+          {search.trim() && (
+            <p className="text-xs text-white/20 mb-4">找到 {filteredItems.length} 个结果</p>
+          )}
           {data?.data && !search.trim() && (
             <div className="flex items-center justify-center gap-4 mt-10">
               <Button

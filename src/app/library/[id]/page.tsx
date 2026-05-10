@@ -98,7 +98,12 @@ export default function LibraryDetailPage() {
             )}
           </div>
 
-          <p className="text-sm text-muted-foreground">{content.prompt}</p>
+          <p className="text-sm text-white/60">{content.prompt}</p>
+
+          <div className="flex items-center gap-3 text-[11px] text-white/25">
+            {content.model && <span>模型：{content.model}</span>}
+            <span>{new Date(content.createdAt).toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+          </div>
 
           <div className="flex gap-2">
             {content.fileUrl && (

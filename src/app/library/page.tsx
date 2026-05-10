@@ -43,7 +43,12 @@ export default function LibraryPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">
-      <h1 className="text-2xl font-bold mb-6">内容库</h1>
+      <div className="flex items-baseline justify-between mb-6">
+        <h1 className="text-2xl font-bold">内容库</h1>
+        {!isLoading && data?.data && (
+          <span className="text-xs text-white/25">共 {data.data.total} 条</span>
+        )}
+      </div>
 
       <Tabs value={type} onValueChange={setType}>
         <TabsList className="mb-3">
