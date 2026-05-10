@@ -19,7 +19,7 @@ function analyzeHeatHistory(existing: any[], newScore: number) {
   return { history: updated, status: newScore > 8000 ? "peak" : trend };
 }
 
-const worker = new Worker("trend:queue", async (job) => {
+const worker = new Worker("trend-queue", async (job) => {
   const items = job.data as TrendItem[];
 
   for (const item of items) {

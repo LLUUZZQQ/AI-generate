@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { getModelAdapter } from "@/lib/models/registry";
 import { suggestQueue } from "@/lib/queue";
 
-const worker = new Worker("video:queue", async (job) => {
+const worker = new Worker("video-queue", async (job) => {
   const { contentId, modelId, prompt, params } = job.data;
 
   await prisma.content.update({ where: { id: contentId }, data: { status: "processing" } });

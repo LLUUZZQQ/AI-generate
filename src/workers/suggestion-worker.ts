@@ -2,7 +2,7 @@ import { Worker } from "bullmq";
 import { redis } from "@/lib/redis";
 import { prisma } from "@/lib/db";
 
-const worker = new Worker("suggest:queue", async (job) => {
+const worker = new Worker("suggest-queue", async (job) => {
   const { contentId } = job.data;
 
   const content = await prisma.content.findUnique({
