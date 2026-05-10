@@ -1,0 +1,76 @@
+<h2>技术选型</h2>
+<p class="subtitle">每个层面的工具选择及理由</p>
+
+<div class="section" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+  <div class="mockup">
+    <div class="mockup-header">🖥️ 前端</div>
+    <div class="mockup-body" style="font-size:13px;line-height:2;padding:12px;">
+      <strong>Next.js 15</strong> — React全栈框架<br>
+      <strong>Tailwind CSS</strong> — 原子化样式<br>
+      <strong>shadcn/ui</strong> — 高质量组件库<br>
+      <strong>Zustand</strong> — 轻量状态管理<br>
+      <strong>React Query</strong> — 数据请求+缓存
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">⚙️ 后端</div>
+    <div class="mockup-body" style="font-size:13px;line-height:2;padding:12px;">
+      <strong>Next.js API Routes</strong> — 前后端一体<br>
+      <strong>Prisma ORM</strong> — 类型安全数据库操作<br>
+      <strong>NextAuth.js</strong> — 认证（邮箱+微信+手机）<br>
+      <strong>Zod</strong> — 输入校验
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">🗄️ 数据层</div>
+    <div class="mockup-body" style="font-size:13px;line-height:2;padding:12px;">
+      <strong>PostgreSQL</strong> — 主数据库<br>
+      <strong>Redis</strong> — 任务队列 + 缓存<br>
+      <strong>BullMQ</strong> — Node.js 任务队列<br>
+      <strong>OSS/S3</strong> — 图片视频存储
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">🤖 AI + 外部服务</div>
+    <div class="mockup-body" style="font-size:13px;line-height:2;padding:12px;">
+      <strong>OpenAI SDK</strong> — DALL-E / Sora<br>
+      <strong>Replicate</strong> — Stable Diffusion<br>
+      <strong>国产 API</strong> — 通义万相/文心一格/即梦<br>
+      <strong>Puppeteer</strong> — 抖音趋势抓取<br>
+      <strong>微信/支付宝</strong> — 支付
+    </div>
+  </div>
+
+</div>
+
+<div class="section">
+  <h3>核心选型理由</h3>
+  <div style="font-size:13px;line-height:2;">
+    <table style="width:100%;border-collapse:collapse;">
+      <tr style="background:var(--bg-card);">
+        <td style="padding:8px 12px;"><strong>Next.js 单体</strong></td>
+        <td style="padding:8px 12px;">你一个人开发，前后端分离没必要。Next.js 一套代码搞定页面+API+认证</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px;"><strong>Prisma</strong></td>
+        <td style="padding:8px 12px;">类型安全的 ORM，自动生成 TypeScript 类型，改 schema 改代码都有智能提示</td>
+      </tr>
+      <tr style="background:var(--bg-card);">
+        <td style="padding:8px 12px;"><strong>BullMQ + Redis</strong></td>
+        <td style="padding:8px 12px;">Node 生态最成熟的任务队列。趋势抓取和 AI 生成都是分钟级任务，必须异步</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px;"><strong>shadcn/ui</strong></td>
+        <td style="padding:8px 12px;">不是 npm 包，代码直接拷进项目。你完全控制源码，后续定制不打架</td>
+      </tr>
+      <tr style="background:var(--bg-card);">
+        <td style="padding:8px 12px;"><strong>模型层抽象</strong></td>
+        <td style="padding:8px 12px;">所有 AI 模型通过统一接口调用：(model, prompt, params) → result。新增一个模型只需加配置，不改业务代码</td>
+      </tr>
+    </table>
+  </div>
+</div>

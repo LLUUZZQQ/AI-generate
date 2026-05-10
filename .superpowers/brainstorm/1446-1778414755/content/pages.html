@@ -1,0 +1,91 @@
+<h2>页面结构 & 路由设计</h2>
+<p class="subtitle">8个核心页面，覆盖完整用户旅程</p>
+
+<div class="section">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+    <div class="mockup">
+      <div class="mockup-header">🏠 / — 首页/落地页</div>
+      <div class="mockup-body" style="font-size:13px;line-height:1.7;">
+        产品介绍、核心功能展示、定价方案<br>
+        <span style="color:var(--text-muted);">未登录用户 → 引导注册<br>已登录 → 跳转趋势页</span>
+      </div>
+    </div>
+
+    <div class="mockup">
+      <div class="mockup-header">🔥 /trends — 趋势发现</div>
+      <div class="mockup-body" style="font-size:13px;line-height:1.7;">
+        实时热门话题瀑布流<br>
+        按热度/分类/时间筛选<br>
+        每个卡片显示：话题名、热度值、趋势箭头↑↓、热点预判标签
+      </div>
+    </div>
+
+    <div class="mockup">
+      <div class="mockup-header">📊 /trends/[id] — 话题详情</div>
+      <div class="mockup-body" style="font-size:13px;line-height:1.7;">
+        热度变化曲线图<br>
+        AI 趋势预判分析<br>
+        关联内容展示<br>
+        <mark style="background:#dcfce7;">一键「以此话题生成」按钮</mark>
+      </div>
+    </div>
+
+    <div class="mockup">
+      <div class="mockup-header">🎨 /generate — 内容生成</div>
+      <div class="mockup-body" style="font-size:13px;line-height:1.7;">
+        选择话题 → 选择模型 → 写提示词<br>
+        支持图片/视频两种模式切换<br>
+        显示本次消耗积分<br>
+        可调整参数：分辨率、风格、时长
+      </div>
+    </div>
+
+    <div class="mockup">
+      <div class="mockup-header">📦 /library — 我的内容库</div>
+      <div class="mockup-body" style="font-size:13px;line-height:1.7;">
+        所有生成历史，按时间/话题排列<br>
+        每条显示：缩略图、状态、话题、模型、时间<br>
+        操作：下载、查看发布建议、删除
+      </div>
+    </div>
+
+    <div class="mockup">
+      <div class="mockup-header">📝 /library/[id] — 内容详情+发布建议</div>
+      <div class="mockup-body" style="font-size:13px;line-height:1.7;">
+        大图/视频预览 + 下载<br>
+        AI 发布建议面板：<br>
+        最佳时段、推荐配文、热门标签、BGM推荐
+      </div>
+    </div>
+
+    <div class="mockup">
+      <div class="mockup-header">👤 /dashboard — 个人中心</div>
+      <div class="mockup-body" style="font-size:13px;line-height:1.7;">
+        积分余额 + 消费统计<br>
+        生成数量统计<br>
+        快速入口：趋势页 / 生成页
+      </div>
+    </div>
+
+    <div class="mockup">
+      <div class="mockup-header">⚙️ /settings — 设置 + 充值</div>
+      <div class="mockup-body" style="font-size:13px;line-height:1.7;">
+        账户信息管理<br>
+        <mark style="background:#fef3c7;">积分充值（微信/支付宝）</mark><br>
+        API Key 管理（高级用户）<br>
+        消费记录明细
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="section">
+  <h3>用户核心旅程</h3>
+  <pre style="font-size:13px;line-height:2.2;background:var(--bg-card);padding:20px;border-radius:8px;">
+  进入首页 → 注册/登录(送20积分) → 浏览趋势页🔥 → 看到感兴趣话题 →
+  查看话题详情📊 → 点击「以此话题生成」→ 选择模型+写提示词 → 提交生成 →
+  等待完成(进度条) → 查看结果+发布建议📝 → 重复以上 → 积分不足 → 充值 → 继续
+  </pre>
+</div>
