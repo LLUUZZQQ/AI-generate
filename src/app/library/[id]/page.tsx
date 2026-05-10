@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -108,6 +109,11 @@ export default function LibraryDetailPage() {
             <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setShowDelete(true)}>
               删除
             </Button>
+            {content.topic && (
+              <Link href={`/generate?topicId=${content.topicId || ""}`}>
+                <Button variant="outline" size="sm">再用此话题生成</Button>
+              </Link>
+            )}
           </div>
         </div>
 

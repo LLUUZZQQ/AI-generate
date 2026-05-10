@@ -88,14 +88,56 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="flex gap-3 mb-8">
+            <div className="flex gap-3">
               <Link href="/trends"><Button variant="default">浏览趋势</Button></Link>
               <Link href="/generate"><Button variant="secondary">立即生成</Button></Link>
               <Link href="/settings"><Button variant="outline">充值积分</Button></Link>
             </div>
           )}
+
+          {/* Recent Activity */}
+          <RecentContent />
         </>
       )}
+    </div>
+  );
+}
+
+function RecentContent() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["library", "recent"],
+    queryFn: async () => {
+      const res = await fetch("/api/library?pageSize=4");
+      return res.json();
+    },
+  });
+
+  const items = data?.data?.list ?? [];
+
+  if (isLoading) return <div className="mt-8"><Skeleton className="h-20 w-full" /></div>;
+  if (items.length === 0) return null;
+
+  return (
+    <div className="mt-8">
+      <h2 className="text-lg font-semibold mb-4">最近生成</h2>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {items.map((item: any) => (
+          <Link key={item.id} href={`/library/${item.id}`}>
+            <Card className="hover:shadow-md transition-shadow overflow-hidden">
+              <div className="aspect-square bg-muted flex items-center justify-center">
+                {item.thumbnailUrl ? (
+                  <img src={item.thumbnailUrl} alt={item.prompt} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-2xl">{item.type === "video" ? "🎬" : "🖼️"}</span>
+                )}
+              </div>
+              <CardContent className="p-3">
+                <p className="text-xs line-clamp-2 text-muted-foreground">{item.prompt}</p>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
