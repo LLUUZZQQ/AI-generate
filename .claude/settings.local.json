@@ -43,7 +43,14 @@
       "Bash(psql -U postgres -h localhost -c \"SELECT 1\")",
       "Bash(npx tsx *)",
       "Bash(node *)",
-      "Skill(browse)"
+      "Skill(browse)",
+      "Bash(npm i *)",
+      "Bash(vercel login *)",
+      "PowerShell(vercel whoami *)",
+      "Bash(vercel whoami *)",
+      "Bash(npx vercel *)",
+      "Bash(vercel *)",
+      "Bash(railway login *)"
     ]
   }
 }

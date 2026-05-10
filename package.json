@@ -13,7 +13,8 @@
     "worker:image": "tsx src/workers/image-worker.ts",
     "worker:video": "tsx src/workers/video-worker.ts",
     "worker:suggest": "tsx src/workers/suggestion-worker.ts",
-    "worker:swap": "tsx src/workers/swap-worker.ts"
+    "worker:swap": "tsx src/workers/swap-worker.ts",
+    "worker:all": "npx prisma generate && tsx src/workers/index.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",

@@ -1,0 +1,14 @@
+[start]
+cmd = "npm run worker:all"
+
+[build]
+cmd = "npm install --production=false"
+
+[build.apt]
+packages = []
+
+[phases.setup]
+cmds = [
+    "npm install --production=false",
+    "npx prisma generate"
+]
