@@ -19,8 +19,8 @@ export class OpenAIAdapter implements ModelAdapter {
     });
 
     return {
-      fileUrl: response.data[0].url!,
-      metadata: { revised_prompt: response.data[0].revised_prompt },
+      fileUrl: response.data?.[0]?.url!,
+      metadata: { revised_prompt: response.data?.[0]?.revised_prompt },
     };
   }
 
