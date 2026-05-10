@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CheckIcon, Loader2Icon } from "lucide-react";
 
@@ -21,6 +21,12 @@ const stages = [
 
 export function ProgressTracker({ taskId, onComplete }: ProgressTrackerProps) {
   const completedRef = useRef(false);
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => setElapsed((t) => t + 1), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const { data: taskData, isLoading, error } = useQuery<TaskData>({
     queryKey: ["generate-task", taskId],
@@ -100,11 +106,11 @@ export function ProgressTracker({ taskId, onComplete }: ProgressTrackerProps) {
           );
         })}
       </div>
-      {taskData?.status === "done" && (
-        <p className="text-sm text-center text-white/40 mt-8">
-          生成完成！正在跳转到内容详情...
-        </p>
-      )}
+      <p className="text-xs text-center text-white/15 mt-6">
+        {taskData?.status === "done"
+          ? `生成完成 · 耗时 ${elapsed} 秒 · 正在跳转...`
+          : `已等待 ${elapsed} 秒`}
+      </p>
     </div>
   );
 }
