@@ -8,6 +8,8 @@ import { ParallaxGlow } from "@/components/ui/scroll-effects";
 import { NodeLeft, NodeRight, NodeUnion, NodeLink } from "@/components/ui/node-icons";
 import { prisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export default async function LandingPage() {
   const hotTopics = await prisma.trendingTopic.findMany({
     orderBy: { heatScore: "desc" },
