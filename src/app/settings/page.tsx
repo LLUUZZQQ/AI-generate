@@ -1,18 +1,16 @@
 "use client";
-
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TransactionList } from "@/components/user/transaction-list";
 
 const plans = [
-  { amount: 50, credits: 50, price: 15, name: "基础包", desc: "适合轻度使用" },
-  { amount: 120, credits: 120, price: 30, name: "进阶包", desc: "适合日常创作" },
-  { amount: 300, credits: 300, price: 60, name: "专业包", desc: "适合批量生产" },
+  { amount: 50, credits: 50, price: 15, name: "基础包" },
+  { amount: 120, credits: 120, price: 30, name: "进阶包", rec: true },
+  { amount: 300, credits: 300, price: 60, name: "专业包" },
 ];
 
 export default function SettingsPage() {
@@ -22,108 +20,74 @@ export default function SettingsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["user-me"],
-    queryFn: async () => {
-      const res = await fetch("/api/user/me");
-      return res.json();
-    },
+    queryFn: async () => { const res = await fetch("/api/user/me"); return res.json(); },
   });
-
-  const user = data?.data?.user;
-  const currentCredits = user?.credits ?? 0;
+  const credits = data?.data?.user?.credits ?? 0;
 
   const handleRecharge = async () => {
     if (!selectedPlan) return;
     setPaying(true);
+    await new Promise((r) => setTimeout(r, 1500));
     try {
-      // Simulate payment processing
-      await new Promise((r) => setTimeout(r, 1500));
-
-      const res = await fetch("/api/user/recharge", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: selectedPlan.amount }),
-      });
+      const res = await fetch("/api/user/recharge", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ amount: selectedPlan.amount }) });
       const json = await res.json();
-      if (json.code !== 0) {
-        toast.error(json.message ?? "充值失败");
-        return;
-      }
+      if (json.code !== 0) { toast.error(json.message ?? "充值失败"); return; }
       toast.success(`支付成功！获得 ${json.data.creditsAdded ?? selectedPlan.credits} 积分`);
       queryClient.invalidateQueries({ queryKey: ["user-me"] });
       queryClient.invalidateQueries({ queryKey: ["user-transactions"] });
       setSelectedPlan(null);
-    } catch {
-      toast.error("网络错误，请重试");
-    } finally {
-      setPaying(false);
-    }
+    } catch { toast.error("网络错误"); }
+    finally { setPaying(false); }
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8">
-      <h1 className="text-2xl font-bold mb-6">设置</h1>
+    <div className="max-w-3xl mx-auto px-6 py-10">
+      <div className="mb-8">
+        <p className="text-xs text-purple-400 font-medium mb-2 tracking-wider uppercase">Settings</p>
+        <h1 className="text-2xl font-bold">设置</h1>
+      </div>
 
       {isLoading ? (
-        <div className="space-y-4 mb-8">
-          <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-4 w-48" />
-        </div>
+        <Skeleton className="h-6 w-32 bg-white/[0.03] mb-8" />
       ) : (
-        <p className="text-muted-foreground mb-8">
-          当前积分：<span className="text-foreground font-bold text-lg">{currentCredits}</span>
+        <p className="text-sm text-white/40 mb-8">
+          当前积分 <span className="text-white font-bold text-lg ml-1">{credits.toLocaleString()}</span>
         </p>
       )}
 
-      <h2 className="text-lg font-semibold mb-4">充值套餐</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+      <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">充值套餐</h3>
+      <div className="grid grid-cols-3 gap-3 mb-10">
         {plans.map((plan) => (
-          <Card key={plan.amount}>
-            <CardHeader>
-              <CardTitle>{plan.name}</CardTitle>
-              <CardDescription>{plan.desc}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="text-3xl font-bold">{plan.credits} <span className="text-base font-normal text-muted-foreground">积分</span></p>
-                <p className="text-sm text-muted-foreground">¥{plan.price}</p>
-              </div>
-              <Button
-                className="w-full"
-                onClick={() => setSelectedPlan(plan)}
-                disabled={isLoading}
-              >
-                立即充值
-              </Button>
-            </CardContent>
-          </Card>
+          <button key={plan.amount} onClick={() => setSelectedPlan(plan)} className={`glass rounded-xl p-5 text-left hover:border-white/15 transition-all ${plan.rec ? "relative overflow-hidden" : ""}`}>
+            {plan.rec && <div className="absolute top-0 right-0 text-[9px] px-2 py-0.5 rounded-bl-lg bg-purple-500/20 text-purple-300">推荐</div>}
+            <p className="text-sm font-semibold mb-2">{plan.name}</p>
+            <p className="text-2xl font-bold mb-1">{plan.credits}<span className="text-xs font-normal text-white/30 ml-0.5">积分</span></p>
+            <p className="text-xs text-white/20">¥{plan.price}</p>
+          </button>
         ))}
       </div>
 
-      <TransactionList />
+      <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">积分流水</h3>
+      <div className="glass rounded-xl p-4">
+        <TransactionList />
+      </div>
 
       <Dialog open={!!selectedPlan} onOpenChange={(open) => !open && setSelectedPlan(null)}>
-        <DialogContent>
+        <DialogContent className="glass border-white/10 !bg-background/95">
           <DialogHeader>
             <DialogTitle>确认充值</DialogTitle>
-            <DialogDescription>
-              {selectedPlan && (
-                <>
-                  充值 <strong>{selectedPlan.name}</strong>：
-                  {selectedPlan.credits} 积分 / ¥{selectedPlan.price}
-                </>
-              )}
+            <DialogDescription className="text-white/40">
+              {selectedPlan && <>{selectedPlan.name} — {selectedPlan.credits} 积分 / ¥{selectedPlan.price}</>}
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4 space-y-2 text-sm text-muted-foreground">
+          <div className="text-sm text-white/30 space-y-1 py-2">
             <p>支付方式：微信支付（模拟）</p>
             <p>充值后积分立即到账</p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedPlan(null)} disabled={paying}>
-              取消
-            </Button>
-            <Button onClick={handleRecharge} disabled={paying}>
-              {paying ? "支付处理中..." : "确认支付 ¥" + (selectedPlan?.price ?? 0)}
+            <Button variant="outline" size="sm" className="border-white/10" onClick={() => setSelectedPlan(null)} disabled={paying}>取消</Button>
+            <Button size="sm" className="bg-gradient-to-r from-purple-500 to-pink-500 border-0" onClick={handleRecharge} disabled={paying}>
+              {paying ? "支付处理中..." : `确认支付 ¥${selectedPlan?.price ?? 0}`}
             </Button>
           </DialogFooter>
         </DialogContent>

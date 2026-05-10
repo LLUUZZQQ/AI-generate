@@ -2,9 +2,9 @@
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -14,40 +14,38 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
+    setLoading(true); setError("");
     const result = await signIn("credentials", { email, password: "admin123", redirect: false });
-    if (result?.ok) {
-      router.push("/trends");
-    } else {
-      setError("注册失败，请重试");
-    }
+    if (result?.ok) { router.push("/trends"); }
+    else { setError("注册失败，请重试"); }
     setLoading(false);
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[80vh]">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>注册</CardTitle>
-          <CardDescription>注册即送 20 积分，开始生成爆款内容</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="flex items-center justify-center min-h-[80vh] px-6">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold mb-2"><span className="gradient-text">AI</span>爆款</h1>
+          <p className="text-sm text-white/30">注册即送 20 积分</p>
+        </div>
+        <form onSubmit={handleSubmit} className="glass rounded-xl p-6 space-y-4">
+          <div>
+            <label className="text-[11px] font-medium text-white/40 mb-1.5 block">邮箱</label>
             <Input
-              type="email"
-              placeholder="your@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
+              type="email" placeholder="your@email.com" value={email}
+              onChange={(e) => setEmail(e.target.value)} required
+              className="bg-white/[0.03] border-white/[0.08] h-10 rounded-lg"
             />
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "处理中..." : "注册领取 20 积分"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+          </div>
+          {error && <p className="text-xs text-red-400">{error}</p>}
+          <Button type="submit" className="w-full h-10 bg-gradient-to-r from-purple-500 to-pink-500 border-0" disabled={loading}>
+            {loading ? "处理中..." : "注册领取 20 积分"}
+          </Button>
+        </form>
+        <p className="text-center text-xs text-white/20 mt-4">
+          已有账号？<Link href="/login" className="text-purple-400 hover:text-purple-300">登录</Link>
+        </p>
+      </div>
     </div>
   );
 }

@@ -1,101 +1,74 @@
 "use client";
-
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["user-me"],
-    queryFn: async () => {
-      const res = await fetch("/api/user/me");
-      return res.json();
-    },
+    queryFn: async () => { const res = await fetch("/api/user/me"); return res.json(); },
   });
 
   const user = data?.data?.user;
   const stats: Array<{ type: string; status: string; _count: number }> = data?.data?.stats ?? [];
-
-  const imageCount = stats
-    .filter((s) => s.type === "image" && s.status === "done")
-    .reduce((sum, s) => sum + s._count, 0);
-
-  const videoCount = stats
-    .filter((s) => s.type === "video" && s.status === "done")
-    .reduce((sum, s) => sum + s._count, 0);
-
-  const totalGenerated = imageCount + videoCount;
-  const isNewUser = totalGenerated === 0;
+  const imageCount = stats.filter((s) => s.type === "image" && s.status === "done").reduce((sum, s) => sum + s._count, 0);
+  const videoCount = stats.filter((s) => s.type === "video" && s.status === "done").reduce((sum, s) => sum + s._count, 0);
+  const isNewUser = imageCount + videoCount === 0;
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8">
-      <h1 className="text-2xl font-bold mb-6">个人中心</h1>
+    <div className="max-w-4xl mx-auto px-6 py-10">
+      <div className="mb-8">
+        <p className="text-xs text-purple-400 font-medium mb-2 tracking-wider uppercase">Dashboard</p>
+        <h1 className="text-2xl font-bold">个人中心</h1>
+      </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i}>
-              <CardHeader><Skeleton className="h-4 w-20" /></CardHeader>
-              <CardContent><Skeleton className="h-8 w-16" /></CardContent>
-            </Card>
-          ))}
+        <div className="grid grid-cols-3 gap-3 mb-8">
+          {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl bg-white/[0.03]" />)}
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-4 mb-8">
-            <Card>
-              <CardHeader><CardTitle>积分余额</CardTitle></CardHeader>
-              <CardContent><p className="text-3xl font-bold">{user?.credits ?? 0}</p></CardContent>
-            </Card>
-            <Card>
-              <CardHeader><CardTitle>图片生成</CardTitle></CardHeader>
-              <CardContent><p className="text-3xl font-bold">{imageCount}</p></CardContent>
-            </Card>
-            <Card>
-              <CardHeader><CardTitle>视频生成</CardTitle></CardHeader>
-              <CardContent><p className="text-3xl font-bold">{videoCount}</p></CardContent>
-            </Card>
+          <div className="grid grid-cols-3 gap-3 mb-8">
+            {[
+              { label: "积分余额", value: user?.credits ?? 0, suffix: "", color: "text-purple-400" },
+              { label: "图片生成", value: imageCount, suffix: " 张", color: "text-emerald-400" },
+              { label: "视频生成", value: videoCount, suffix: " 条", color: "text-amber-400" },
+            ].map((stat) => (
+              <div key={stat.label} className="glass rounded-xl p-5">
+                <p className="text-[11px] text-white/30 mb-1">{stat.label}</p>
+                <p className={`text-2xl font-bold ${stat.color} tabular-nums`}>
+                  {stat.value}<span className="text-sm font-normal text-white/30">{stat.suffix}</span>
+                </p>
+              </div>
+            ))}
           </div>
 
           {isNewUser ? (
-            <Card className="mb-8 border-primary/30 bg-primary/5">
-              <CardHeader>
-                <CardTitle>🚀 快速开始</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="text-center p-4">
-                    <div className="text-2xl mb-2">1️⃣</div>
-                    <h3 className="font-semibold text-sm mb-1">浏览趋势</h3>
-                    <p className="text-xs text-muted-foreground mb-3">发现当下最火的话题</p>
-                    <Link href="/trends"><Button size="sm" variant="outline">去看看</Button></Link>
-                  </div>
-                  <div className="text-center p-4">
-                    <div className="text-2xl mb-2">2️⃣</div>
-                    <h3 className="font-semibold text-sm mb-1">选择话题生成</h3>
-                    <p className="text-xs text-muted-foreground mb-3">AI 自动生成爆款图片/视频</p>
-                    <Link href="/generate"><Button size="sm" variant="outline">开始创作</Button></Link>
-                  </div>
-                  <div className="text-center p-4">
-                    <div className="text-2xl mb-2">3️⃣</div>
-                    <h3 className="font-semibold text-sm mb-1">查看发布建议</h3>
-                    <p className="text-xs text-muted-foreground mb-3">获取最佳发布时机和文案</p>
-                    <Link href="/library"><Button size="sm" variant="outline">内容库</Button></Link>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="glass rounded-xl p-6 mb-8">
+              <h3 className="font-semibold mb-4">🚀 快速开始</h3>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                {[
+                  { step: "1", title: "浏览趋势", desc: "发现热门话题", href: "/trends" },
+                  { step: "2", title: "AI 生成", desc: "创作爆款内容", href: "/generate" },
+                  { step: "3", title: "查看建议", desc: "获取发布指导", href: "/library" },
+                ].map((s) => (
+                  <Link key={s.step} href={s.href} className="glass rounded-lg p-4 hover:border-white/15 transition-all">
+                    <div className="size-8 rounded-full bg-purple-500/20 text-purple-300 flex items-center justify-center text-sm font-bold mx-auto mb-2">{s.step}</div>
+                    <h4 className="text-sm font-semibold mb-0.5">{s.title}</h4>
+                    <p className="text-[10px] text-white/30">{s.desc}</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
           ) : (
-            <div className="flex gap-3">
-              <Link href="/trends"><Button variant="default">浏览趋势</Button></Link>
-              <Link href="/generate"><Button variant="secondary">立即生成</Button></Link>
-              <Link href="/settings"><Button variant="outline">充值积分</Button></Link>
+            <div className="flex gap-2 mb-8">
+              <Link href="/trends"><Button variant="outline" size="sm" className="border-white/10">浏览趋势</Button></Link>
+              <Link href="/generate"><Button size="sm" className="bg-gradient-to-r from-purple-500 to-pink-500 border-0">立即生成</Button></Link>
+              <Link href="/settings"><Button variant="outline" size="sm" className="border-white/10">充值积分</Button></Link>
             </div>
           )}
 
-          {/* Recent Activity */}
           <RecentContent />
         </>
       )}
@@ -106,35 +79,28 @@ export default function DashboardPage() {
 function RecentContent() {
   const { data, isLoading } = useQuery({
     queryKey: ["library", "recent"],
-    queryFn: async () => {
-      const res = await fetch("/api/library?pageSize=4");
-      return res.json();
-    },
+    queryFn: async () => { const res = await fetch("/api/library?pageSize=4"); return res.json(); },
   });
-
   const items = data?.data?.list ?? [];
-
-  if (isLoading) return <div className="mt-8"><Skeleton className="h-20 w-full" /></div>;
+  if (isLoading) return <Skeleton className="h-20 w-full bg-white/[0.03] rounded-xl" />;
   if (items.length === 0) return null;
 
   return (
-    <div className="mt-8">
-      <h2 className="text-lg font-semibold mb-4">最近生成</h2>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div>
+      <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">最近生成</h3>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {items.map((item: any) => (
-          <Link key={item.id} href={`/library/${item.id}`}>
-            <Card className="hover:shadow-md transition-shadow overflow-hidden">
-              <div className="aspect-square bg-muted flex items-center justify-center">
-                {item.thumbnailUrl ? (
-                  <img src={item.thumbnailUrl} alt={item.prompt} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-2xl">{item.type === "video" ? "🎬" : "🖼️"}</span>
-                )}
-              </div>
-              <CardContent className="p-3">
-                <p className="text-xs line-clamp-2 text-muted-foreground">{item.prompt}</p>
-              </CardContent>
-            </Card>
+          <Link key={item.id} href={`/library/${item.id}`} className="glass rounded-lg overflow-hidden hover:border-white/15 transition-all group">
+            <div className="aspect-square bg-white/[0.02] flex items-center justify-center">
+              {item.thumbnailUrl ? (
+                <img src={item.thumbnailUrl} alt={item.prompt} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              ) : (
+                <span className="text-xl">{item.type === "video" ? "🎬" : "🖼️"}</span>
+              )}
+            </div>
+            <div className="p-3">
+              <p className="text-[11px] line-clamp-2 text-white/40">{item.prompt}</p>
+            </div>
           </Link>
         ))}
       </div>
