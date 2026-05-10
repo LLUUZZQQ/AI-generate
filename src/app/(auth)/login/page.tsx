@@ -1,7 +1,7 @@
 "use client";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,8 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const searchParams = useSearchParams();
+  const [error, setError] = useState(searchParams.get("error") ? "邮箱或密码错误" : "");
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -18,7 +19,9 @@ export default function LoginPage() {
     setLoading(true); setError("");
     const result = await signIn("credentials", { email, password, redirect: false });
     if (result?.ok) { router.push("/trends"); }
-    else { setError("邮箱或密码错误"); }
+    else {
+      setError(result?.error === "CredentialsSignin" ? "邮箱或密码错误" : "登录失败，请重试");
+    }
     setLoading(false);
   };
 
