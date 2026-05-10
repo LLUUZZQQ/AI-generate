@@ -28,8 +28,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async session({ session, user }) {
-      return { ...session, user: { ...session.user, id: user.id, credits: (user as any).credits } };
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.credits = (user as any).credits;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: token.id as string,
+          credits: token.credits as number,
+        },
+      };
     },
   },
   session: { strategy: "jwt" },
