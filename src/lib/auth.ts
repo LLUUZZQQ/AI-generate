@@ -18,40 +18,34 @@ const providers: any[] = [
       if (!user) {
         user = await prisma.user.create({ data: { email, credits: 20 } });
       }
-      return { id: user.id, email: user.email, name: user.name, credits: user.credits };
+      return { id: user.id, email: user.email, credits: user.credits };
     },
   }),
 ];
 
-// Only enable GitHub if both keys are set
 if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
-  providers.unshift(
-    GitHub({
-      clientId: process.env.GITHUB_CLIENT_ID,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    })
-  );
+  providers.unshift(GitHub({ clientId: process.env.GITHUB_CLIENT_ID, clientSecret: process.env.GITHUB_CLIENT_SECRET }));
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers,
+  session: { strategy: "jwt" },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
-        const dbUser = await prisma.user.findUnique({ where: { email: user.email! } });
-        token.credits = dbUser?.credits ?? (user as any).credits ?? 20;
       }
       return token;
     },
     async session({ session, token }) {
-      return {
-        ...session,
-        user: { ...session.user, id: token.id as string, credits: token.credits as number },
-      };
+      if (token?.id) {
+        const u = await prisma.user.findUnique({ where: { id: token.id as string } });
+        (session.user as any).id = token.id;
+        (session.user as any).credits = u?.credits ?? 20;
+      }
+      return session;
     },
   },
-  session: { strategy: "jwt" },
   pages: { signIn: "/login", newUser: "/trends" },
 });
