@@ -1,3 +1,5 @@
+"use client";
+import { useState } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -35,13 +37,24 @@ const icons: Record<string, string> = {
 export function TrendCard({ id, title, category, heatScore, status }: TrendCardProps) {
   const gradient = gradients[category] || "from-gray-500 to-slate-500";
   const icon = icons[category] || "🔥";
+  const imageUrl = `https://picsum.photos/seed/${id}/400/300`;
+  const [imgError, setImgError] = useState(false);
 
   return (
     <Link href={`/trends/${id}`}>
-      <Card className="hover:shadow-lg transition-shadow cursor-pointer overflow-hidden">
-        <div className={`h-32 bg-gradient-to-br ${gradient} flex items-center justify-center relative`}>
-          <span className="text-4xl">{icon}</span>
-          <span className="absolute top-2 right-2 text-white/90 text-xs font-medium bg-black/20 rounded-full px-2 py-0.5">
+      <Card className="hover:shadow-lg transition-shadow cursor-pointer overflow-hidden group">
+        <div className={`h-36 bg-gradient-to-br ${gradient} flex items-center justify-center relative`}>
+          {!imgError && (
+            <img
+              src={imageUrl}
+              alt={title}
+              className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-50 transition-opacity"
+              onError={() => setImgError(true)}
+              loading="lazy"
+            />
+          )}
+          <span className="text-3xl relative z-10 drop-shadow-sm">{icon}</span>
+          <span className="absolute top-2 right-2 text-white/90 text-xs font-medium bg-black/30 rounded-full px-2 py-0.5 z-10">
             {statusBadge[status]}
           </span>
         </div>

@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ModelSelector } from "@/components/generate/model-selector";
 import { PromptInput } from "@/components/generate/prompt-input";
 import { ProgressTracker } from "@/components/generate/progress-tracker";
@@ -21,6 +24,16 @@ export default function GeneratePage() {
   const [taskId, setTaskId] = useState<string | null>(null);
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+
+  const { data: topicData } = useQuery({
+    queryKey: ["trend", topicId],
+    queryFn: async () => {
+      const res = await fetch(`/api/trends/${topicId}`);
+      return res.json();
+    },
+    enabled: !!topicId,
+  });
+  const topicTitle = topicData?.data?.title || "";
 
   const handleSubmit = async () => {
     if (!modelId) {
@@ -116,8 +129,12 @@ export default function GeneratePage() {
       {topicId && (
         <div className="flex items-center gap-2 text-sm mb-4 p-3 bg-primary/5 rounded-lg">
           <span className="text-muted-foreground">关联话题：</span>
-          <span className="font-medium">{topicId}</span>
-          <Link href={`/trends/${topicId}`} className="text-xs text-primary hover:underline ml-auto">查看话题详情 →</Link>
+          {topicTitle ? (
+            <span className="font-medium">{topicTitle}</span>
+          ) : (
+            <Skeleton className="h-4 w-24" />
+          )}
+          <Link href={`/trends/${topicId}`} className="text-xs text-primary hover:underline ml-auto">查看详情 →</Link>
         </div>
       )}
 
