@@ -19,3 +19,7 @@ export const generateSchema = z.object({
     style: z.string().optional(),
   }).optional(),
 });
+
+export const rechargeSchema = z.object({
+  amount: z.number().refine(v => [50, 120, 300].includes(v), "无效的充值档位"),
+});
