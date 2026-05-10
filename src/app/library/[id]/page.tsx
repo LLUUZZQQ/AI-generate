@@ -77,6 +77,25 @@ export default function LibraryDetailPage() {
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Failed banner */}
+        {content.status === "failed" && (
+          <div className="lg:col-span-3 glass rounded-xl p-5 border-red-500/20 bg-red-500/[0.04] mb-4">
+            <div className="flex items-start gap-3">
+              <span className="text-xl shrink-0">⚠️</span>
+              <div>
+                <h3 className="font-semibold text-red-400 text-sm mb-1">生成失败</h3>
+                <p className="text-xs text-white/40 leading-relaxed">
+                  {content.metadata?.error || "发生未知错误，请稍后重试"}
+                </p>
+                <p className="text-[10px] text-white/20 mt-2">
+                  常见原因：API 余额不足、网络超时、模型不可用。
+                  <a href="/settings" className="text-purple-400 hover:text-purple-300 ml-1 underline">检查设置 →</a>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Preview */}
         <div className="lg:col-span-2 space-y-4">
           <div className="aspect-square bg-muted rounded-lg flex items-center justify-center overflow-hidden">

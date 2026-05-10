@@ -195,6 +195,15 @@ export default function GeneratePage() {
         </div>
       )}
 
+      {/* Low balance warning */}
+      {credits > 0 && modelId && credits < costPerGen && (
+        <div className="glass rounded-lg p-3 mb-3 border-amber-500/20 bg-amber-500/[0.04] flex items-center gap-2 text-xs text-amber-400">
+          <span>⚠️</span>
+          <span>余额不足本次生成，请先</span>
+          <Link href="/settings" className="underline hover:text-amber-300">充值</Link>
+        </div>
+      )}
+
       {/* Credits + Cost */}
       <div className="glass rounded-lg p-4 mb-3 space-y-3">
         <div className="flex items-center justify-between text-sm">
