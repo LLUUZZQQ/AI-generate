@@ -4,7 +4,14 @@ import "./image-worker";
 import "./video-worker";
 import "./swap-worker";
 import "./suggestion-worker";
-import "./bg-replace-worker";
+
+// Dynamically import bg-replace to catch any load errors
+import("./bg-replace-worker").then(() => {
+  console.log("[index] bg-replace-worker loaded successfully");
+}).catch((err) => {
+  console.error("[index] bg-replace-worker FAILED to load:", err.message);
+  console.error(err.stack);
+});
 
 // Auto-shutdown after 5 minutes of inactivity
 let idleTimer: ReturnType<typeof setTimeout> | null = null;
