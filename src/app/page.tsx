@@ -4,6 +4,7 @@ import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { InteractiveLogoWrapper } from "@/components/ui/interactive-logo-wrapper";
 import { MagneticButton } from "@/components/ui/magnetic-button";
 import { BrowserFrame } from "@/components/ui/browser-frame";
+import { GenerationFlow } from "@/components/ui/generation-flow";
 import { Upload, Wand2, Download, Layers, Zap, Shield } from "lucide-react";
 
 export default function LandingPage() {
@@ -67,12 +68,9 @@ export default function LandingPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <BrowserFrame className="md:col-span-2" showBlob>
             <div className="p-5">
-              <p className="text-[10px] text-foreground/20 mb-3">FrameCraft · 产品照处理</p>
-              <div className="aspect-video bg-white/[0.015] rounded-2xl flex items-center justify-center border border-white/[0.03]">
-                <div className="text-center">
-                  <Wand2 className="w-8 h-8 text-foreground/8 mx-auto mb-2" />
-                  <p className="text-xs text-foreground/15">AI 处理结果将在此展示</p>
-                </div>
+              <p className="text-[10px] text-foreground/20 mb-3">FrameCraft · AI 处理流程</p>
+              <div className="bg-white/[0.015] rounded-2xl flex items-center justify-center border border-white/[0.03] px-4">
+                <GenerationFlow />
               </div>
             </div>
           </BrowserFrame>

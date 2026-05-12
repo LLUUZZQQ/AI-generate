@@ -19,17 +19,13 @@ export function Header() {
   }, []);
 
   return (
-    <header className={`sticky top-0 z-50 border-b transition-all duration-500 ease-smooth ${
-      scrolled
-        ? "border-white/[0.06] bg-background/90 backdrop-blur-2xl shadow-[0_1px_0_rgba(255,255,255,0.03)] shadow-lg shadow-black/30"
-        : "border-transparent bg-background/50 backdrop-blur-lg"
-    }`}>
-      <div className={`flex items-center justify-between px-4 md:px-6 max-w-7xl mx-auto transition-all duration-500 ease-smooth ${
-        scrolled ? "h-12" : "h-14"
+    <header className="sticky top-3 z-50 transition-all duration-500 ease-smooth">
+      <div className={`flex items-center justify-between px-5 max-w-2xl mx-auto transition-all duration-500 ease-smooth rounded-2xl border ${
+        scrolled
+          ? "h-11 bg-background/80 border-white/[0.08] backdrop-blur-2xl shadow-[0_8px_32px_-12px_rgba(0,0,0,0.5)]"
+          : "h-12 bg-background/50 border-white/[0.04] backdrop-blur-xl shadow-[0_4px_20px_-8px_rgba(0,0,0,0.3)]"
       }`}>
-        <Link href="/" className={`font-bold shrink-0 tracking-tight transition-all duration-500 ${
-          scrolled ? "text-base" : "text-lg"
-        }`}>
+        <Link href="/" className="font-bold shrink-0 tracking-tight text-sm transition-all duration-500">
           <motion.span
             className="inline-block bg-clip-text text-transparent"
             style={{
