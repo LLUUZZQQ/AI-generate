@@ -51,7 +51,24 @@
       "Bash(npx vercel *)",
       "Bash(vercel *)",
       "Bash(railway login *)",
-      "Bash(DATABASE_URL=\"postgresql://postgres:U6c%2An%2C3KZH5AUz8@db.gkyjbmzsoydcolzjblly.supabase.co:5432/postgres\" npx prisma *)"
+      "Bash(DATABASE_URL=\"postgresql://postgres:U6c%2An%2C3KZH5AUz8@db.gkyjbmzsoydcolzjblly.supabase.co:5432/postgres\" npx prisma *)",
+      "Bash(Get-ChildItem D:\\\\项目 *)",
+      "PowerShell(if \\(Test-Path \"D:\\\\项目\\\\node_modules\"\\) { $count = \\(Get-ChildItem \"D:\\\\项目\\\\node_modules\" -Directory\\).Count; Write-Host \"node_modules packages \\(directories\\): $count\" } else { Write-Host \"no node_modules\" })",
+      "PowerShell(npm ls *)",
+      "PowerShell($totalSize = \\(Get-ChildItem \"D:\\\\项目\" -Recurse -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum\\).Sum; $totalSizeMB = [math]::Round\\($totalSize / 1MB, 1\\); Write-Host \"Project total size: $totalSizeMB MB\")",
+      "PowerShell(if \\(Test-Path \"D:\\\\项目\\\\node_modules\"\\) { $nmSize = \\(Get-ChildItem \"D:\\\\项目\\\\node_modules\" -Recurse -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum\\).Sum; $nmSizeMB = [math]::Round\\($nmSize / 1MB, 1\\); Write-Host \"node_modules size: $nmSizeMB MB\" })",
+      "PowerShell(winget list *)",
+      "Bash(Get-ChildItem *)",
+      "Bash(npx supabase *)",
+      "Bash(psql --version)",
+      "Bash(pg_isready)",
+      "Bash(ping *)",
+      "PowerShell(Test-NetConnection *)",
+      "Bash(Select-String -NotMatch \"prisma\\\\.config\\\\.ts\")",
+      "Bash(pushd \"D:\\\\项目\")",
+      "Bash(git diff *)",
+      "PowerShell(npx tsx prisma/seed-backgrounds.ts)",
+      "PowerShell(npm run *)"
     ]
   }
 }
