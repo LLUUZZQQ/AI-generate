@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/footer";
 import { BackToTop } from "@/components/ui/back-to-top";
 import { ScrollProgress } from "@/components/ui/scroll-effects";
 import { SmoothScroll } from "@/components/ui/smooth-scroll";
+import { ParallaxGrid } from "@/components/ui/parallax-grid";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
@@ -54,6 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.className} flex flex-col min-h-screen antialiased`}>
         <ScrollProgress />
         <SmoothScroll>
+        <ParallaxGrid />
         <Providers>
           <Header />
           <main className="flex-1">{children}</main>
