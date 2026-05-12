@@ -226,43 +226,49 @@ async function compositeImages(subjectBuffer: Buffer, bgBuffer: Buffer): Promise
   if (!bgMetadata.width || !bgMetadata.height) throw new Error("Invalid background");
   if (!subjectMetadata.width || !subjectMetadata.height) throw new Error("Invalid subject");
 
-  const bgW = bgMetadata.width;
-  const bgH = bgMetadata.height;
+  const subW = subjectMetadata.width;
+  const subH = subjectMetadata.height;
+  let bgW = bgMetadata.width;
+  let bgH = bgMetadata.height;
 
-  // Scale subject to 55% of background width — keep original colors untouched
-  const subjectWidth = Math.round(bgW * 0.55);
-  const subjectHeight = Math.round(subjectWidth * (subjectMetadata.height / subjectMetadata.width));
+  // If subject is larger than background, scale background up to match
+  let bg = bgBuffer;
+  if (subW > bgW || subH > bgH) {
+    const scale = Math.max(subW / bgW, subH / bgH);
+    bgW = Math.round(bgW * scale);
+    bgH = Math.round(bgH * scale);
+    bg = await sharpModule(bgBuffer).resize(bgW, bgH).toBuffer();
+  }
 
-  const resizedSubject = await sharpModule(subjectBuffer)
-    .resize(subjectWidth, subjectHeight, { fit: "inside" })
-    .toBuffer();
+  // Keep subject at original size
+  const subject = subjectBuffer;
 
-  // Position: bottom-center
-  const left = Math.round((bgW - subjectWidth) / 2);
-  const top = Math.round(bgH * 0.45 - subjectHeight / 2);
+  // Position: center horizontally, bottom-aligned vertically
+  const left = Math.round((bgW - subW) / 2);
+  const top = Math.max(0, bgH - subH - Math.round(bgH * 0.05));
 
   // Create soft drop shadow
-  const shadowWidth = Math.round(subjectWidth * 0.75);
-  const shadowHeight = Math.round(subjectHeight * 0.12);
+  const shadowWidth = Math.round(subW * 0.75);
+  const shadowHeight = Math.round(subH * 0.12);
   const shadowLeft = Math.round((bgW - shadowWidth) / 2);
-  const shadowTop = Math.round(top + subjectHeight - shadowHeight * 0.5);
+  const shadowTop = Math.round(top + subH - shadowHeight * 0.5);
 
   const shadowSvg = Buffer.from(`<svg width="${bgW}" height="${bgH}">
     <defs>
-      <filter id="blur"><feGaussianBlur stdDeviation="10"/></filter>
+      <filter id="blur"><feGaussianBlur stdDeviation="12"/></filter>
     </defs>
     <ellipse cx="${Math.round(shadowLeft + shadowWidth/2)}" cy="${Math.round(shadowTop + shadowHeight/2)}"
              rx="${Math.round(shadowWidth/2)}" ry="${Math.round(shadowHeight/2)}"
-             fill="rgba(0,0,0,0.3)" filter="url(#blur)"/>
+             fill="rgba(0,0,0,0.25)" filter="url(#blur)"/>
   </svg>`);
 
   const shadowBuffer = await sharpModule(shadowSvg).png().toBuffer();
 
-  // Composite: background → shadow → subject (unchanged)
-  return sharpModule(bgBuffer)
+  // Composite: background → shadow → subject (original size, original colors)
+  return sharpModule(bg)
     .composite([
       { input: shadowBuffer, top: 0, left: 0 },
-      { input: resizedSubject, left, top },
+      { input: subject, left, top },
     ])
     .png()
     .toBuffer();
