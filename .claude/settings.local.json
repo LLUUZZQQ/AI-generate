@@ -80,7 +80,9 @@
       "Bash(powershell.exe -Command 'Get-Process node -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like '\\\\''*bg-replace*'\\\\'' -or $_.Id -eq \\(Get-Content '\\\\''.next/dev/logs/next-development.log'\\\\'' -ErrorAction SilentlyContinue | Select-String '\\\\''PID:'\\\\'' | Select-Object -First 1\\) } | Stop-Process -Force')",
       "Bash(gh api *)",
       "Bash(curl -s \"https://raw.githubusercontent.com/LLUUZZQQ/AI-generate/main/src/workers/index.ts\")",
-      "Bash(curl -s \"https://raw.githubusercontent.com/LLUUZZQQ/AI-generate/main/src/workers/bg-replace-worker.ts\")"
+      "Bash(curl -s \"https://raw.githubusercontent.com/LLUUZZQQ/AI-generate/main/src/workers/bg-replace-worker.ts\")",
+      "Bash(curl -s -c /tmp/cookies.txt https://ai-generate-two.vercel.app/api/auth/csrf)",
+      "Bash(curl *)"
     ]
   }
 }

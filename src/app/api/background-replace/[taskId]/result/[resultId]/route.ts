@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { downloadFromS3 } from "@/lib/s3";
 import { readFile } from "fs/promises";
 import path from "path";
 
@@ -26,7 +27,10 @@ export async function GET(
   if (result.resultKey.startsWith("http")) {
     const res = await fetch(result.resultKey);
     buffer = Buffer.from(await res.arrayBuffer());
-  } else if (result.resultKey.includes("/")) {
+  } else if (process.env.S3_BUCKET) {
+    // S3 path — download from S3
+    buffer = await downloadFromS3(result.resultKey);
+  } else if (result.resultKey.startsWith("/uploads/")) {
     const filePath = path.join(process.cwd(), "public", result.resultKey);
     buffer = await readFile(filePath);
   } else {
