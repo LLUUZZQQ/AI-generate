@@ -1,13 +1,8 @@
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
+import { InteractiveLogoWrapper } from "@/components/ui/interactive-logo-wrapper";
 import { Upload, Wand2, Download, Layers, Zap, Shield } from "lucide-react";
-
-const InteractiveLogo = dynamic(() => import("@/components/ui/interactive-logo").then(m => ({ default: m.InteractiveLogo })), {
-  ssr: false,
-  loading: () => <div className="w-full h-[320px] md:h-[420px]" />,
-});
 
 export default function LandingPage() {
   return (
@@ -15,7 +10,7 @@ export default function LandingPage() {
       {/* ======== HERO ======== */}
       <section className="relative overflow-hidden">
         <div className="relative max-w-4xl mx-auto px-6 pt-20 pb-20 md:pt-28 md:pb-28 text-center">
-          <InteractiveLogo />
+          <InteractiveLogoWrapper />
           <h1 className="text-3xl md:text-5xl lg:text-[3.5rem] font-semibold tracking-tight leading-[1.08] mb-6 animate-fade-in-up -mt-8 md:-mt-12">
             为产品照片<br />
             <span className="gradient-text">一键替换真实背景</span>
