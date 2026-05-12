@@ -8,6 +8,7 @@ import { GenerationFlow } from "@/components/ui/generation-flow";
 import { Upload, Wand2, Download, Layers, Zap, Shield } from "lucide-react";
 import { CompareSlider } from "@/components/ui/compare-slider";
 import { StickySection } from "@/components/ui/sticky-section";
+import { PartnerLogos } from "@/components/ui/partner-logos";
 
 export default function LandingPage() {
   return (
@@ -57,6 +58,9 @@ export default function LandingPage() {
 
         <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
       </section>
+
+      {/* ======== PARTNER LOGOS ======== */}
+      <PartnerLogos />
 
       {/* ======== FEATURES ======== */}
       <StickySection index={0} className="bg-background">
