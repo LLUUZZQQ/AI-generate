@@ -189,6 +189,24 @@ export default function LandingPage() {
       </section>
       </ScrollReveal>
 
+      {/* ======== METRICS BAR ======== */}
+      <ScrollReveal>
+      <section className="max-w-3xl mx-auto px-6 py-10">
+        <div className="glass p-8 grid grid-cols-3 gap-6 text-center">
+          {[
+            { value: "¥0.10", label: "每张价格" },
+            { value: "~25s", label: "平均处理时间" },
+            { value: "12 种", label: "真实场景" },
+          ].map((m) => (
+            <div key={m.label}>
+              <p className="text-2xl font-bold gradient-text mb-1">{m.value}</p>
+              <p className="text-[11px] text-foreground/25">{m.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+      </ScrollReveal>
+
       {/* ======== CLOSING ======== */}
       <ScrollReveal>
       <section className="max-w-3xl mx-auto px-6 py-20 md:py-28 text-center">

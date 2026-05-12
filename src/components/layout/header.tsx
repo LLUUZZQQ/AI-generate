@@ -21,8 +21,8 @@ export function Header() {
   return (
     <header className={`sticky top-0 z-50 border-b transition-all duration-500 ease-smooth ${
       scrolled
-        ? "border-white/[0.08] bg-background/95 backdrop-blur-xl shadow-lg shadow-black/20"
-        : "border-white/[0.04] bg-background/70 backdrop-blur-md"
+        ? "border-white/[0.06] bg-background/90 backdrop-blur-2xl shadow-[0_1px_0_rgba(255,255,255,0.03)] shadow-lg shadow-black/30"
+        : "border-transparent bg-background/50 backdrop-blur-lg"
     }`}>
       <div className={`flex items-center justify-between px-4 md:px-6 max-w-7xl mx-auto transition-all duration-500 ease-smooth ${
         scrolled ? "h-12" : "h-14"
