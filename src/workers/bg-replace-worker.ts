@@ -27,7 +27,9 @@ async function processTask(taskId: string) {
       const fileUrl = template.fileUrl;
       if (fileUrl.startsWith("http")) {
         const url = new URL(fileUrl);
-        const key = url.pathname.substring(1);
+        let key = url.pathname.substring(1);
+        const bucket = process.env.S3_BUCKET;
+        if (bucket && key.startsWith(bucket + "/")) key = key.substring(bucket.length + 1);
         backgroundBuffer = await downloadFromS3(key);
       } else {
         const fs = await import("fs/promises");
@@ -42,6 +44,7 @@ async function processTask(taskId: string) {
 
   for (const result of task.results) {
     try {
+      console.log("[bg-worker] Downloading original, key:", result.originalKey);
       let original: Buffer;
       if (result.originalKey.startsWith("http")) {
         // S3 URL — extract path and strip bucket prefix
@@ -129,17 +132,25 @@ async function processTask(taskId: string) {
 }
 
 async function poll() {
-  const task = await prisma.bgReplaceTask.findFirst({
-    where: { status: "pending" },
-    orderBy: { createdAt: "asc" },
-  });
-  if (task) {
+  try {
+    const task = await prisma.bgReplaceTask.findFirst({
+      where: { status: "pending" },
+      orderBy: { createdAt: "asc" },
+    });
+    if (!task) return;
+
     console.log("[bg-worker] Processing task:", task.id);
     try {
       await processTask(task.id);
     } catch (e: any) {
-      console.error("[bg-worker] Task failed:", task.id, e.message);
+      console.error("[bg-worker] Task crashed:", task.id, e.message);
+      await prisma.bgReplaceTask.update({
+        where: { id: task.id },
+        data: { status: "failed" },
+      }).catch(() => {});
     }
+  } catch (e: any) {
+    console.error("[bg-worker] Poll error:", e.message);
   }
 }
 
