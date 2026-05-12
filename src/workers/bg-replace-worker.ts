@@ -135,11 +135,10 @@ const worker = new Worker("bg-replace-queue", async (job) => {
 }, { connection: redis, concurrency: 2 });
 
 async function removeBackground(imageBuffer: Buffer): Promise<Buffer> {
-  const { removeBackground: imglyRemoveBg } = await import("@imgly/background-removal");
+  const { removeBackground: imglyRemoveBg } = await import("@imgly/background-removal-node");
 
-  const blob = new Blob([new Uint8Array(imageBuffer)], { type: "image/png" });
-  const resultBlob = await imglyRemoveBg(blob, {
-    model: "isnet_fp16",
+  const resultBlob = await imglyRemoveBg(imageBuffer, {
+    model: "medium",
     output: { format: "image/png", quality: 1 },
   });
 
