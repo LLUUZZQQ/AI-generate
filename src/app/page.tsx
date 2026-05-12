@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { InteractiveLogoWrapper } from "@/components/ui/interactive-logo-wrapper";
 import { MagneticButton } from "@/components/ui/magnetic-button";
+import { BrowserFrame } from "@/components/ui/browser-frame";
 import { Upload, Wand2, Download, Layers, Zap, Shield } from "lucide-react";
 
 export default function LandingPage() {
@@ -62,23 +63,47 @@ export default function LandingPage() {
           不只是抠图，是<span className="gradient-text">完整的场景替换</span>
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[
-            { icon: <Upload className="w-5 h-5" />, title: "批量上传", desc: "一次上传多张产品图，所有照片共用同一个背景场景。" },
-            { icon: <Wand2 className="w-5 h-5" />, title: "AI 智能抠图", desc: "自动识别产品主体，精细处理边缘，鞋盒、配件完整保留。" },
-            { icon: <Layers className="w-5 h-5" />, title: "真实场景", desc: "12 种实拍家居环境可选，木地板、瓷砖、毛毯、阳台……" },
-            { icon: <Zap className="w-5 h-5" />, title: "快速出图", desc: "提交后秒级入队，每张图处理仅需数十秒，批量并行处理。" },
-            { icon: <Shield className="w-5 h-5" />, title: "绕过检测", desc: "同款产品多张不同背景照片，轻松通过平台去重检测。" },
-            { icon: <Download className="w-5 h-5" />, title: "一键下载", desc: "处理完成后直接下载全部结果图，单张或打包都支持。" },
-          ].map((f, i) => (
-            <div key={i} className="glass rounded-xl p-6 transition-all duration-300">
-              <div className="w-9 h-9 rounded-lg bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50">
-                {f.icon}
-              </div>
-              <h3 className="font-medium text-sm mb-1.5">{f.title}</h3>
-              <p className="text-xs text-foreground/30 leading-relaxed">{f.desc}</p>
+        {/* Bento grid — asymmetric layout */}
+        <BrowserFrame className="mb-8 max-w-3xl mx-auto">
+          <div className="p-5 text-center">
+            <p className="text-xs text-foreground/25 mb-2">FrameCraft — 产品照处理界面</p>
+            <div className="h-40 bg-white/[0.02] rounded-lg flex items-center justify-center">
+              <p className="text-foreground/10 text-sm">你的产品照片处理结果将在此展示</p>
             </div>
-          ))}
+          </div>
+        </BrowserFrame>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div className="md:col-span-2 glass rounded-xl p-6">
+            <div className="w-9 h-9 rounded-lg bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Wand2 className="w-5 h-5" /></div>
+            <h3 className="font-medium text-sm mb-1.5">AI 智能抠图</h3>
+            <p className="text-xs text-foreground/30 leading-relaxed">自动识别产品主体，精细处理边缘。鞋盒、配件完整保留，不会误删任何细节。</p>
+          </div>
+          <div className="glass rounded-xl p-6">
+            <div className="w-9 h-9 rounded-lg bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Upload className="w-5 h-5" /></div>
+            <h3 className="font-medium text-sm mb-1.5">批量上传</h3>
+            <p className="text-xs text-foreground/30 leading-relaxed">一次上传多张，共用同一背景场景。</p>
+          </div>
+          <div className="glass rounded-xl p-6">
+            <div className="w-9 h-9 rounded-lg bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Zap className="w-5 h-5" /></div>
+            <h3 className="font-medium text-sm mb-1.5">快速出图</h3>
+            <p className="text-xs text-foreground/30 leading-relaxed">每张仅需数十秒，批量并行处理。</p>
+          </div>
+          <div className="glass rounded-xl p-6">
+            <div className="w-9 h-9 rounded-lg bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Layers className="w-5 h-5" /></div>
+            <h3 className="font-medium text-sm mb-1.5">真实场景</h3>
+            <p className="text-xs text-foreground/30 leading-relaxed">12 种实拍家居环境，木地板、瓷砖、毛毯……</p>
+          </div>
+          <div className="md:col-span-2 glass rounded-xl p-6">
+            <div className="w-9 h-9 rounded-lg bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Shield className="w-5 h-5" /></div>
+            <h3 className="font-medium text-sm mb-1.5">绕过平台检测</h3>
+            <p className="text-xs text-foreground/30 leading-relaxed">同款产品多张不同背景照片，轻松绕过 Vinted/Depop 去重系统。</p>
+          </div>
+          <div className="glass rounded-xl p-6">
+            <div className="w-9 h-9 rounded-lg bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Download className="w-5 h-5" /></div>
+            <h3 className="font-medium text-sm mb-1.5">一键下载</h3>
+            <p className="text-xs text-foreground/30 leading-relaxed">处理完成直接下载全部结果图。</p>
+          </div>
         </div>
       </section>
       </ScrollReveal>
