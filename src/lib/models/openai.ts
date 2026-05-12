@@ -5,7 +5,14 @@ export class OpenAIAdapter implements ModelAdapter {
   private client: OpenAI;
 
   constructor(_config: unknown) {
-    this.client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+    this.client = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY!,
+      baseURL: "https://openrouter.ai/api/v1",
+      defaultHeaders: {
+        "HTTP-Referer": process.env.NEXT_PUBLIC_URL || "http://localhost:3000",
+        "X-Title": "AI爆款",
+      },
+    });
   }
 
   async generateImage(params: GenParams): Promise<GenResult> {

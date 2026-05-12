@@ -135,34 +135,21 @@ const worker = new Worker("bg-replace-queue", async (job) => {
 }, { connection: redis, concurrency: 2 });
 
 async function removeBackground(imageBuffer: Buffer): Promise<Buffer> {
-  const REPLICATE_TOKEN = process.env.REPLICATE_API_TOKEN;
-  if (!REPLICATE_TOKEN) throw new Error("REPLICATE_API_TOKEN not set");
+  const HF_TOKEN = process.env.HF_TOKEN;
+  if (!HF_TOKEN) throw new Error("HF_TOKEN not set");
 
-  const response = await fetch("https://api.replicate.com/v1/models/briaai/rmbg-2.0/predictions", {
+  const response = await fetch("https://api-inference.huggingface.co/models/briaai/RMBG-2.0", {
     method: "POST",
-    headers: { Authorization: `Token ${REPLICATE_TOKEN}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      input: { image: `data:image/png;base64,${imageBuffer.toString("base64")}` },
-    }),
+    headers: { Authorization: `Bearer ${HF_TOKEN}` },
+    body: new Uint8Array(imageBuffer),
   });
 
-  if (!response.ok) throw new Error(`Replicate error: ${response.statusText}`);
-
-  const prediction = await response.json() as any;
-  let result = prediction;
-  while (result.status !== "succeeded" && result.status !== "failed") {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    const pollRes = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
-      headers: { Authorization: `Token ${REPLICATE_TOKEN}` },
-    });
-    result = await pollRes.json() as any;
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`HuggingFace RMBG error: ${response.status} ${errText.slice(0, 200)}`);
   }
 
-  if (result.status === "failed") throw new Error("Background removal failed");
-
-  const outputUrl = result.output;
-  const imgRes = await fetch(outputUrl);
-  const arrayBuffer = await imgRes.arrayBuffer();
+  const arrayBuffer = await response.arrayBuffer();
   return Buffer.from(arrayBuffer);
 }
 
@@ -193,36 +180,33 @@ async function compositeImages(subjectBuffer: Buffer, bgBuffer: Buffer): Promise
 }
 
 async function generateBackground(prompt: string): Promise<Buffer> {
-  const REPLICATE_TOKEN = process.env.REPLICATE_API_TOKEN;
-  if (!REPLICATE_TOKEN) throw new Error("REPLICATE_API_TOKEN not set");
+  const HF_TOKEN = process.env.HF_TOKEN;
+  if (!HF_TOKEN) throw new Error("HF_TOKEN not set");
 
-  const response = await fetch("https://api.replicate.com/v1/models/stability-ai/sdxl/predictions", {
-    method: "POST",
-    headers: { Authorization: `Token ${REPLICATE_TOKEN}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      input: {
-        prompt: `${prompt}, photorealistic, natural lighting, casual smartphone photo, no text, no watermark, no overlay`,
-        negative_prompt: "text, watermark, logo, overlay, product, object, person",
-        width: 1024,
-        height: 1024,
-      },
-    }),
-  });
+  const fullPrompt = `${prompt}, photorealistic, natural lighting, casual smartphone photo, no text, no watermark, no overlay`;
 
-  const prediction = await response.json() as any;
-  let result = prediction;
-  while (result.status !== "succeeded" && result.status !== "failed") {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    const pollRes = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
-      headers: { Authorization: `Token ${REPLICATE_TOKEN}` },
-    });
-    result = await pollRes.json() as any;
+  const response = await fetch(
+    "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${HF_TOKEN}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        inputs: fullPrompt,
+        parameters: {
+          negative_prompt: "text, watermark, logo, overlay, product, object, person",
+          width: 1024,
+          height: 1024,
+        },
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`HuggingFace SDXL error: ${response.status} ${errText.slice(0, 200)}`);
   }
 
-  if (result.status === "failed") throw new Error("Background generation failed");
-
-  const imgRes = await fetch(result.output[0]);
-  const arrayBuffer = await imgRes.arrayBuffer();
+  const arrayBuffer = await response.arrayBuffer();
   return Buffer.from(arrayBuffer);
 }
 

@@ -68,7 +68,12 @@
       "Bash(pushd \"D:\\\\项目\")",
       "Bash(git diff *)",
       "PowerShell(npx tsx prisma/seed-backgrounds.ts)",
-      "PowerShell(npm run *)"
+      "PowerShell(npm run *)",
+      "PowerShell(npx tsx scripts/generate-placeholder-bg.ts)",
+      "PowerShell(npx tsx scripts/create-test-user.ts)",
+      "Bash(netstat -ano)",
+      "Bash(Select-String \"LISTENING\")",
+      "Bash(Select-String \"6379\")"
     ]
   }
 }
