@@ -43,7 +43,7 @@ async function generateImage(prompt: string): Promise<Buffer> {
     const res = await fetch(result);
     return Buffer.from(await res.arrayBuffer());
   }
-  return Buffer.from(await result.arrayBuffer());
+  return Buffer.from(await (result as Blob).arrayBuffer());
 }
 
 async function main() {
