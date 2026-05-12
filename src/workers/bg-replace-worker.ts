@@ -7,6 +7,8 @@ import path from "path";
 
 const hasS3 = !!(process.env.S3_BUCKET && process.env.S3_ENDPOINT);
 
+try {
+
 const worker = new Worker("bg-replace-queue", async (job) => {
   const { taskId } = job.data;
 
@@ -226,3 +228,8 @@ async function createSolidBackground(color: string): Promise<Buffer> {
 }
 
 console.log("Background replace worker started");
+
+} catch (e: any) {
+  console.error("Background replace worker failed to start:", e.message);
+  console.error(e.stack);
+}

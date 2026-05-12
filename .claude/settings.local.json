@@ -77,7 +77,9 @@
       "Bash(powershell.exe -Command \"Get-Process node -ErrorAction SilentlyContinue | Select-Object Id, CommandLine | Format-Table -Wrap\")",
       "Bash(powershell.exe -Command 'Get-Process node -ErrorAction SilentlyContinue | Where-Object { $_CommandLine -like '\\\\''*bg-replace*'\\\\'' } | Stop-Process -Force')",
       "Bash(wait)",
-      "Bash(powershell.exe -Command 'Get-Process node -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like '\\\\''*bg-replace*'\\\\'' -or $_.Id -eq \\(Get-Content '\\\\''.next/dev/logs/next-development.log'\\\\'' -ErrorAction SilentlyContinue | Select-String '\\\\''PID:'\\\\'' | Select-Object -First 1\\) } | Stop-Process -Force')"
+      "Bash(powershell.exe -Command 'Get-Process node -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like '\\\\''*bg-replace*'\\\\'' -or $_.Id -eq \\(Get-Content '\\\\''.next/dev/logs/next-development.log'\\\\'' -ErrorAction SilentlyContinue | Select-String '\\\\''PID:'\\\\'' | Select-Object -First 1\\) } | Stop-Process -Force')",
+      "Bash(gh api *)",
+      "Bash(curl -s \"https://raw.githubusercontent.com/LLUUZZQQ/AI-generate/main/src/workers/index.ts\")"
     ]
   }
 }
