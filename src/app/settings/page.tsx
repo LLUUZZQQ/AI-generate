@@ -52,28 +52,25 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-10">
-      <div className="mb-8">
-        <p className="text-xs text-purple-400 font-medium mb-2 tracking-wider uppercase">Settings</p>
-        <h1 className="text-2xl font-bold">设置</h1>
-      </div>
+    <div className="max-w-3xl mx-auto px-6 py-10 md:py-14">
+      <h1 className="text-2xl font-semibold tracking-tight mb-8">设置</h1>
 
       {isLoading ? (
-        <Skeleton className="h-6 w-32 bg-white/[0.03] mb-8" />
+        <Skeleton className="h-6 w-32 mb-8" />
       ) : (
-        <p className="text-sm text-white/40 mb-8">
-          当前积分 <span className="text-white font-bold text-lg ml-1">{credits.toLocaleString()}</span>
+        <p className="text-sm text-foreground/30 mb-8">
+          当前积分 <span className="text-foreground font-semibold text-lg ml-1">{credits.toLocaleString()}</span>
         </p>
       )}
 
-      <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">充值套餐</h3>
+      <h3 className="text-xs font-semibold text-foreground/25 uppercase tracking-wider mb-4">充值套餐</h3>
       <div className="grid grid-cols-3 gap-3 mb-10">
         {plans.map((plan) => (
-          <button key={plan.amount} onClick={() => setSelectedPlan(plan)} className={`glass rounded-xl p-5 text-left hover:border-white/15 transition-all ${plan.rec ? "relative overflow-hidden" : ""}`}>
-            {plan.rec && <div className="absolute top-0 right-0 text-[9px] px-2 py-0.5 rounded-bl-lg bg-purple-500/20 text-purple-300">推荐</div>}
+          <button key={plan.amount} onClick={() => setSelectedPlan(plan)} className={`glass p-5 text-left ${plan.rec ? "relative overflow-hidden" : ""}`}>
+            {plan.rec && <div className="absolute top-0 right-0 text-[9px] px-2 py-0.5 rounded-bl-2xl bg-purple-500/15 text-purple-300">推荐</div>}
             <p className="text-sm font-semibold mb-2">{plan.name}</p>
             <p className="text-2xl font-bold mb-1">{plan.credits}<span className="text-xs font-normal text-white/30 ml-0.5">积分</span></p>
-            <p className="text-[10px] text-white/20">{plan.desc} · ¥{plan.price}</p>
+            <p className="text-[10px] text-foreground/15">{plan.desc} · ¥{plan.price}</p>
           </button>
         ))}
       </div>
@@ -84,20 +81,20 @@ export default function SettingsPage() {
       </div>
 
       <Dialog open={!!selectedPlan} onOpenChange={(open) => !open && setSelectedPlan(null)}>
-        <DialogContent className="glass border-white/10 !bg-background/95">
+        <DialogContent className="glass border-border !bg-background/95">
           <DialogHeader>
-            <DialogTitle>确认充值</DialogTitle>
-            <DialogDescription className="text-white/40">
+            <DialogTitle className="text-foreground">确认充值</DialogTitle>
+            <DialogDescription className="text-foreground/30">
               {selectedPlan && <>{selectedPlan.name} — {selectedPlan.credits} 积分 / ¥{selectedPlan.price}</>}
             </DialogDescription>
           </DialogHeader>
-          <div className="text-sm text-foreground/30 space-y-1 py-2">
+          <div className="text-sm text-foreground/25 space-y-1 py-2">
             <p>支付方式：Stripe</p>
             <p>充值后积分即时到账，可用于背景替换</p>
           </div>
           <DialogFooter>
-            <Button variant="outline" size="sm" className="border-white/10" onClick={() => setSelectedPlan(null)} disabled={paying}>取消</Button>
-            <Button size="sm" className="bg-gradient-to-r from-purple-500 to-pink-500 border-0" onClick={handleRecharge} disabled={paying}>
+            <Button variant="outline" size="sm" className="border-border rounded-xl" onClick={() => setSelectedPlan(null)} disabled={paying}>取消</Button>
+            <Button size="sm" className="bg-gradient-to-r from-purple-500 to-pink-500 border-0 rounded-xl" onClick={handleRecharge} disabled={paying}>
               {paying ? "支付处理中..." : `确认支付 ¥${selectedPlan?.price ?? 0}`}
             </Button>
           </DialogFooter>
