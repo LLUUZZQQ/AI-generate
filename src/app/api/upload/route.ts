@@ -3,6 +3,7 @@ import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { auth } from "@/lib/auth";
 import { success, error } from "@/lib/response";
+import { uploadToS3 } from "@/lib/s3";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -29,9 +30,16 @@ export async function POST(req: NextRequest) {
   await mkdir(uploadDir, { recursive: true });
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const filepath = path.join(uploadDir, filename);
-  await writeFile(filepath, buffer);
 
-  const url = `/uploads/${filename}`;
-  return success({ url, filename, size: file.size, type: file.type });
+  let url: string;
+  if (process.env.S3_BUCKET && process.env.S3_ENDPOINT) {
+    const key = `uploads/${session.user.id}_${Date.now()}.${ext}`;
+    url = await uploadToS3(key, buffer, file.type);
+  } else {
+    const filepath = path.join(uploadDir, filename);
+    await writeFile(filepath, buffer);
+    url = `/uploads/${filename}`;
+  }
+
+  return success({ url, filename: url.split("/").pop(), size: file.size, type: file.type });
 }
