@@ -219,24 +219,68 @@ async function removeBackground(imageBuffer: Buffer): Promise<Buffer> {
 
 async function compositeImages(subjectBuffer: Buffer, bgBuffer: Buffer): Promise<Buffer> {
   const sharp = await import("sharp");
-  const bgMetadata = await sharp.default(bgBuffer).metadata();
-  const subjectMetadata = await sharp.default(subjectBuffer).metadata();
+  const sharpModule = sharp.default;
+  const bgMetadata = await sharpModule(bgBuffer).metadata();
+  const subjectMetadata = await sharpModule(subjectBuffer).metadata();
 
   if (!bgMetadata.width || !bgMetadata.height) throw new Error("Invalid background");
   if (!subjectMetadata.width || !subjectMetadata.height) throw new Error("Invalid subject");
 
-  const subjectWidth = Math.round(bgMetadata.width * 0.65);
+  const bgW = bgMetadata.width;
+  const bgH = bgMetadata.height;
+
+  // Scale subject to 50-65% of background width
+  const subjectWidth = Math.round(bgW * 0.55);
   const subjectHeight = Math.round(subjectWidth * (subjectMetadata.height / subjectMetadata.width));
 
-  const resizedSubject = await sharp.default(subjectBuffer)
+  // Position: bottom-center, with room for shadow
+  const left = Math.round((bgW - subjectWidth) / 2);
+  const top = Math.round(bgH * 0.45 - subjectHeight / 2);
+
+  // Step 1: Match color temperature of background
+  const bgStats = await sharpModule(bgBuffer).resize(10, 10).raw().toBuffer();
+  let totalR = 0, totalG = 0, totalB = 0, count = 0;
+  for (let i = 0; i < bgStats.length; i += 3) {
+    totalR += bgStats[i]; totalG += bgStats[i + 1]; totalB += bgStats[i + 2]; count++;
+  }
+  const avgR = totalR / count, avgG = totalG / count, avgB = totalB / count;
+  const warmth = avgR > avgB ? 1.03 : 0.97; // warmer if background is warm
+
+  // Apply subtle color adjustment to subject
+  const colorMatchedSubject = await sharpModule(subjectBuffer)
     .resize(subjectWidth, subjectHeight, { fit: "inside" })
+    .modulate({ brightness: 1.02, saturation: 0.95 })
+    .tint({ r: Math.round(Math.min(255, avgR * 0.15)), g: Math.round(Math.min(255, avgG * 0.15)), b: Math.round(Math.min(255, avgB * 0.15)) })
     .toBuffer();
 
-  const left = Math.round((bgMetadata.width - subjectWidth) / 2);
-  const top = Math.round(bgMetadata.height * 0.55 - subjectHeight / 2);
+  // Step 2: Edge feathering — slight blur on the subject to avoid hard cut edges
+  const featheredSubject = await sharpModule(colorMatchedSubject)
+    .blur(0.5)
+    .toBuffer();
 
-  return sharp.default(bgBuffer)
-    .composite([{ input: resizedSubject, left, top }])
+  // Step 3: Create drop shadow
+  const shadowWidth = Math.round(subjectWidth * 0.7);
+  const shadowHeight = Math.round(subjectHeight * 0.15);
+  const shadowLeft = Math.round((bgW - shadowWidth) / 2);
+  const shadowTop = Math.round(top + subjectHeight - shadowHeight * 0.3);
+
+  const shadowSvg = Buffer.from(`<svg width="${bgW}" height="${bgH}">
+    <defs>
+      <filter id="blur"><feGaussianBlur stdDeviation="12"/></filter>
+    </defs>
+    <ellipse cx="${Math.round(shadowLeft + shadowWidth/2)}" cy="${Math.round(shadowTop + shadowHeight/2)}"
+             rx="${Math.round(shadowWidth/2)}" ry="${Math.round(shadowHeight/2)}"
+             fill="rgba(0,0,0,0.35)" filter="url(#blur)"/>
+  </svg>`);
+
+  const shadowBuffer = await sharpModule(shadowSvg).png().toBuffer();
+
+  // Step 4: Composite: shadow first, then subject on top
+  return sharpModule(bgBuffer)
+    .composite([
+      { input: shadowBuffer, top: 0, left: 0 },
+      { input: featheredSubject, left, top },
+    ])
     .png()
     .toBuffer();
 }
