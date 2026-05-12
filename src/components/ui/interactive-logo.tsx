@@ -32,64 +32,78 @@ export function InteractiveLogo() {
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       container.appendChild(renderer.domElement);
 
-      // Lights
-      scene.add(new THREE.AmbientLight(0x3a2050, 1.2));
-      const key = new THREE.DirectionalLight(0xb57bee, 2.5);
-      key.position.set(5, 3, 5);
+      // Lights — bright, crisp for glass
+      scene.add(new THREE.AmbientLight(0x8888cc, 0.8));
+      const key = new THREE.DirectionalLight(0xffffff, 3);
+      key.position.set(3, 2, 6);
       scene.add(key);
-      const fill = new THREE.DirectionalLight(0xec4899, 1.2);
-      fill.position.set(-3, -1, -2);
-      scene.add(fill);
-      const rim = new THREE.DirectionalLight(0xf59e0b, 0.8);
-      rim.position.set(0, 5, -3);
+      const rim = new THREE.DirectionalLight(0xaaccff, 2.5);
+      rim.position.set(-3, 4, -3);
       scene.add(rim);
+      const bottom = new THREE.DirectionalLight(0xcc88ff, 1.5);
+      bottom.position.set(0, -3, 2);
+      scene.add(bottom);
 
-      // Create "F" letter using BoxGeometry pieces
-      const mat = new THREE.MeshPhysicalMaterial({
-        color: 0xb57bee,
-        metalness: 0.05,
-        roughness: 0.2,
-        clearcoat: 0.4,
-        clearcoatRoughness: 0.2,
-        emissive: 0x1a1030,
-        emissiveIntensity: 0.3,
+      // Frosted glass "F"
+      const glassMat = new THREE.MeshPhysicalMaterial({
+        color: 0xddccff,
+        metalness: 0.0,
+        roughness: 0.25,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.15,
+        transparent: true,
+        opacity: 0.35,
+        envMapIntensity: 0.4,
+        specularIntensity: 1.0,
       });
 
       const group = new THREE.Group();
 
-      // F vertical stroke
-      const stem = new THREE.Mesh(new THREE.BoxGeometry(0.65, 4.5, 0.8), mat);
-      stem.position.set(-1.1, 0, 0);
+      // F — vertical stroke
+      const stem = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4.0, 0.6), glassMat);
+      stem.position.set(-0.9, 0, 0);
       group.add(stem);
 
-      // F top horizontal
-      const top = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.65, 0.8), mat);
-      top.position.set(0.15, 1.925, 0);
+      // F — top bar
+      const top = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.5, 0.6), glassMat);
+      top.position.set(0.1, 1.75, 0);
       group.add(top);
 
-      // F middle horizontal
-      const mid = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.55, 0.8), mat);
+      // F — mid bar
+      const mid = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.45, 0.6), glassMat);
       mid.position.set(-0.2, 0, 0);
       group.add(mid);
+
+      // Glowing edges on the F
+      const createEdges = (geo: any, pos: [number, number, number]) => {
+        const edgesGeo = new THREE.EdgesGeometry(geo);
+        const edgesMat = new THREE.LineBasicMaterial({ color: 0xccbbff, transparent: true, opacity: 0.5 });
+        const line = new THREE.LineSegments(edgesGeo, edgesMat);
+        line.position.set(...pos);
+        return line;
+      };
+      group.add(createEdges(new THREE.BoxGeometry(0.5, 4.0, 0.6), [-0.9, 0, 0]));
+      group.add(createEdges(new THREE.BoxGeometry(2.2, 0.5, 0.6), [0.1, 1.75, 0]));
+      group.add(createEdges(new THREE.BoxGeometry(1.6, 0.45, 0.6), [-0.2, 0, 0]));
 
       mesh = group;
       scene.add(mesh);
 
-      // Floating particles
+      // Floating glass-like particles
       const particlesGeo = new THREE.BufferGeometry();
-      const count = 80;
+      const count = 60;
       const positions = new Float32Array(count * 3);
       for (let i = 0; i < count; i++) {
-        positions[i * 3] = (Math.random() - 0.5) * 12;
-        positions[i * 3 + 1] = (Math.random() - 0.5) * 12;
-        positions[i * 3 + 2] = (Math.random() - 0.5) * 6;
+        positions[i * 3] = (Math.random() - 0.5) * 14;
+        positions[i * 3 + 1] = (Math.random() - 0.5) * 14;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 8;
       }
       particlesGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
       const particlesMat = new THREE.PointsMaterial({
-        color: 0xb57bee,
-        size: 0.03,
+        color: 0xccbbff,
+        size: 0.025,
         transparent: true,
-        opacity: 0.6,
+        opacity: 0.4,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       });
