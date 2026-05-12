@@ -240,31 +240,47 @@ async function compositeImages(subjectBuffer: Buffer, bgBuffer: Buffer): Promise
     bg = await sharpModule(bgBuffer).resize(bgW, bgH).toBuffer();
   }
 
-  // Keep subject at original size
+  // Keep subject at original size, no color changes
   const subject = subjectBuffer;
 
-  // Position: center horizontally, bottom-aligned vertically
+  // Position: centered horizontally, bottom-aligned with padding
   const left = Math.round((bgW - subW) / 2);
-  const top = Math.max(0, bgH - subH - Math.round(bgH * 0.05));
+  const bottomMargin = Math.round(bgH * 0.06);
+  const top = Math.max(0, bgH - subH - bottomMargin);
 
-  // Create soft drop shadow
-  const shadowWidth = Math.round(subW * 0.75);
-  const shadowHeight = Math.round(subH * 0.12);
-  const shadowLeft = Math.round((bgW - shadowWidth) / 2);
-  const shadowTop = Math.round(top + subH - shadowHeight * 0.5);
+  // Ground line — where the subject touches the ground
+  const groundY = top + subH;
+
+  // === Dual shadow system ===
+
+  // Layer 1: Contact shadow — dark, sharp, narrow, right at touch point
+  const contactW = Math.round(subW * 0.7);
+  const contactH = Math.round(subH * 0.04);
+  const contactX = Math.round((bgW - contactW) / 2);
+  const contactY = groundY - Math.round(contactH * 0.3);
+
+  // Layer 2: Ambient shadow — softer, wider, lighter
+  const ambientW = Math.round(subW * 0.9);
+  const ambientH = Math.round(subH * 0.18);
+  const ambientX = Math.round((bgW - ambientW) / 2);
+  const ambientY = groundY - Math.round(ambientH * 0.2);
 
   const shadowSvg = Buffer.from(`<svg width="${bgW}" height="${bgH}">
     <defs>
-      <filter id="blur"><feGaussianBlur stdDeviation="12"/></filter>
+      <filter id="blur-contact"><feGaussianBlur stdDeviation="3"/></filter>
+      <filter id="blur-ambient"><feGaussianBlur stdDeviation="14"/></filter>
     </defs>
-    <ellipse cx="${Math.round(shadowLeft + shadowWidth/2)}" cy="${Math.round(shadowTop + shadowHeight/2)}"
-             rx="${Math.round(shadowWidth/2)}" ry="${Math.round(shadowHeight/2)}"
-             fill="rgba(0,0,0,0.25)" filter="url(#blur)"/>
+    <ellipse cx="${Math.round(ambientX + ambientW/2)}" cy="${Math.round(ambientY + ambientH/2)}"
+             rx="${Math.round(ambientW/2)}" ry="${Math.round(ambientH/2)}"
+             fill="rgba(0,0,0,0.22)" filter="url(#blur-ambient)"/>
+    <ellipse cx="${Math.round(contactX + contactW/2)}" cy="${Math.round(contactY + contactH/2)}"
+             rx="${Math.round(contactW/2)}" ry="${Math.round(contactH/2)}"
+             fill="rgba(0,0,0,0.4)" filter="url(#blur-contact)"/>
   </svg>`);
 
   const shadowBuffer = await sharpModule(shadowSvg).png().toBuffer();
 
-  // Composite: background → shadow → subject (original size, original colors)
+  // Composite: background → shadow layers → subject
   return sharpModule(bg)
     .composite([
       { input: shadowBuffer, top: 0, left: 0 },
