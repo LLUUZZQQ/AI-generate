@@ -9,34 +9,45 @@ export default function LandingPage() {
     <div>
       {/* ======== HERO ======== */}
       <section className="relative overflow-hidden">
-        <div className="relative max-w-4xl mx-auto px-6 pt-20 pb-20 md:pt-28 md:pb-28 text-center">
-          <InteractiveLogoWrapper />
-          <h1 className="text-3xl md:text-5xl lg:text-[3.5rem] font-semibold tracking-tight leading-[1.08] mb-6 animate-fade-in-up -mt-8 md:-mt-12">
-            为产品照片<br />
-            <span className="gradient-text">一键替换真实背景</span>
-          </h1>
+        <div className="relative max-w-6xl mx-auto px-6 pt-16 pb-20 md:pt-24 md:pb-28">
+          <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16">
+            {/* Left: 3D Logo */}
+            <div className="w-full md:w-1/2 flex justify-center md:justify-end">
+              <div className="w-[300px] md:w-[380px] lg:w-[440px]">
+                <InteractiveLogoWrapper />
+              </div>
+            </div>
 
-          <p className="text-sm md:text-base text-foreground/35 max-w-lg mx-auto mb-10 leading-relaxed animate-fade-in-up delay-1">
-            上传你的产品照片，AI 自动识别主体、移除原有背景、
-            合成到真实家居场景中。适合 Vinted、Depop 等平台卖家。
-          </p>
+            {/* Right: Text + CTA */}
+            <div className="w-full md:w-1/2 text-center md:text-left">
+              <h1 className="text-3xl md:text-4xl lg:text-[3.2rem] font-semibold tracking-tight leading-[1.08] mb-6 animate-fade-in-up">
+                产品照片<br />
+                <span className="gradient-text">一键换背景</span>
+              </h1>
 
-          <div className="flex items-center gap-3 justify-center animate-fade-in-up delay-2">
-            <Link href="/background-replace/new">
-              <Button size="lg" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-xl shadow-purple-500/25 h-12 px-8 text-sm font-medium rounded-full">
-                开始使用
-              </Button>
-            </Link>
-            <Link href="/background-replace">
-              <Button variant="outline" size="lg" className="h-12 px-8 text-sm font-medium border-border hover:bg-white/[0.03] rounded-full">
-                查看示例 ↗
-              </Button>
-            </Link>
+              <p className="text-sm md:text-base text-foreground/35 max-w-md mb-10 leading-relaxed animate-fade-in-up delay-1">
+                AI 自动识别主体、移除原有背景、
+                合成到真实家居场景中。适合 Vinted、Depop 等平台卖家。
+              </p>
+
+              <div className="flex items-center gap-3 animate-fade-in-up delay-2 justify-center md:justify-start">
+                <Link href="/background-replace/new">
+                  <Button size="lg" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-xl shadow-purple-500/25 h-12 px-8 text-sm font-medium rounded-full">
+                    开始使用
+                  </Button>
+                </Link>
+                <Link href="/background-replace">
+                  <Button variant="outline" size="lg" className="h-12 px-8 text-sm font-medium border-border hover:bg-white/[0.03] rounded-full">
+                    查看示例 ↗
+                  </Button>
+                </Link>
+              </div>
+
+              <p className="mt-8 text-xs text-foreground/20 animate-fade-in-up delay-3">
+                ¥0.10 / 张 · 无需信用卡 · 注册即送 20 积分
+              </p>
+            </div>
           </div>
-
-          <p className="mt-12 text-xs text-foreground/20 animate-fade-in-up delay-3">
-            ¥0.10 / 张 · 无需信用卡 · 注册即送 20 积分
-          </p>
         </div>
 
         <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
