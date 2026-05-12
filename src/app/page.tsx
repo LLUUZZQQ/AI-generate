@@ -6,6 +6,8 @@ import { MagneticButton } from "@/components/ui/magnetic-button";
 import { BrowserFrame } from "@/components/ui/browser-frame";
 import { GenerationFlow } from "@/components/ui/generation-flow";
 import { Upload, Wand2, Download, Layers, Zap, Shield } from "lucide-react";
+import { CompareSlider } from "@/components/ui/compare-slider";
+import { PartnerLogos } from "@/components/ui/partner-logos";
 
 export default function LandingPage() {
   return (
@@ -55,6 +57,9 @@ export default function LandingPage() {
 
         <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
       </section>
+
+      {/* ======== PARTNER LOGOS ======== */}
+      <PartnerLogos />
 
       {/* ======== FEATURES ======== */}
       <ScrollReveal>
@@ -125,50 +130,10 @@ export default function LandingPage() {
       </section>
       </ScrollReveal>
 
-      {/* ======== TRUST / SOCIAL PROOF ======== */}
-      <ScrollReveal>
-      <section className="max-w-4xl mx-auto px-6 py-10">
-        <p className="text-[10px] text-foreground/12 text-center mb-8 tracking-widest uppercase">
-          已获多平台卖家信任
-        </p>
 
-        {/* Logo strip */}
-        <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-5 mb-10">
-          {[
-            { name: "Vinted", letterSpacing: "-0.02em" },
-            { name: "Depop", letterSpacing: "-0.01em" },
-            { name: "eBay", letterSpacing: "-0.015em" },
-            { name: "Shopify", letterSpacing: "-0.01em" },
-            { name: "StockX", letterSpacing: "-0.03em" },
-            { name: "闲鱼", letterSpacing: "0em" },
-          ].map((p) => (
-            <span
-              key={p.name}
-              className="text-lg font-bold text-foreground/[0.07] hover:text-foreground/25 transition-colors duration-500 cursor-default select-none"
-              style={{ letterSpacing: p.letterSpacing }}
-            >
-              {p.name}
-            </span>
-          ))}
-        </div>
-
-        {/* Stats row */}
-        <div className="grid grid-cols-3 gap-6 max-w-lg mx-auto">
-          {[
-            { value: "10,000+", label: "卖家在使用" },
-            { value: "500,000+", label: "图片已处理" },
-            { value: "99.7%", label: "处理成功率" },
-          ].map((s) => (
-            <div key={s.label} className="text-center">
-              <p className="text-xl font-bold gradient-text mb-0.5">{s.value}</p>
-              <p className="text-[10px] text-foreground/18">{s.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-      </ScrollReveal>
 
       {/* ======== HOW IT WORKS — sticky steps ======== */}
+
       <ScrollReveal>
       <section className="max-w-5xl mx-auto px-6 py-16 md:py-24">
         <p className="text-[11px] text-purple-400 font-semibold tracking-widest uppercase mb-3 text-center">How It Works</p>
@@ -194,7 +159,10 @@ export default function LandingPage() {
       </section>
       </ScrollReveal>
 
+
+
       {/* ======== USE CASES — Bento ======== */}
+
       <ScrollReveal>
       <section className="max-w-4xl mx-auto px-6 py-12 md:py-20">
         <p className="text-[11px] text-purple-400 font-semibold tracking-widest uppercase mb-3 text-center">Use Cases</p>
@@ -230,7 +198,10 @@ export default function LandingPage() {
       </section>
       </ScrollReveal>
 
+
+
       {/* ======== BEFORE / AFTER ======== */}
+
       <ScrollReveal>
       <section className="max-w-4xl mx-auto px-6 py-12 md:py-20">
         <p className="text-[11px] text-purple-400 font-semibold tracking-widest uppercase mb-3 text-center">Showcase</p>
@@ -238,32 +209,20 @@ export default function LandingPage() {
           看看 <span className="gradient-text">实际效果</span>
         </h2>
         <div className="glass p-3 md:p-4">
-          <div className="rounded-2xl overflow-hidden">
-            <div className="relative aspect-[4/3] bg-white/[0.015] flex items-center justify-center">
-              <div className="text-center">
-                <p className="text-sm text-foreground/20 mb-3">拖拽中间滑块查看对比效果</p>
-                <div className="flex gap-4 justify-center">
-                  <div className="text-center">
-                    <div className="w-32 h-24 rounded-xl bg-white/[0.03] border border-white/[0.04] mb-2 flex items-center justify-center">
-                      <span className="text-[10px] text-foreground/15">上传原图</span>
-                    </div>
-                    <span className="text-[10px] text-foreground/25">原图</span>
-                  </div>
-                  <div className="text-center">
-                    <div className="w-32 h-24 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/15 mb-2 flex items-center justify-center">
-                      <span className="text-[10px] text-purple-400/40">处理后</span>
-                    </div>
-                    <span className="text-[10px] text-purple-400/50">结果</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <CompareSlider
+            before="/uploads/cmp1xpjj700001ovdsgmwmsrn_1778549085405.jpg"
+            after="/backgrounds/indoor-floor/light-wood-floor.jpg"
+            beforeLabel="原图"
+            afterLabel="AI 处理后"
+          />
         </div>
       </section>
       </ScrollReveal>
 
-      {/* ======== METRICS BAR ======== */}
+
+
+      {/* ======== METRICS + CLOSING — above sticky stack ======== */}
+      <div className="relative z-50 bg-background">
       <ScrollReveal>
       <section className="max-w-3xl mx-auto px-6 py-10">
         <div className="glass p-8 grid grid-cols-3 gap-6 text-center">
@@ -300,6 +259,7 @@ export default function LandingPage() {
         <p className="mt-10 text-[10px] text-foreground/15">© 2026 FrameCraft · 产品照片背景替换</p>
       </section>
       </ScrollReveal>
+      </div>
     </div>
   );
 }

@@ -87,7 +87,23 @@
       "Bash(tee /dev/tty)",
       "Bash(python3 -m json.tool)",
       "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); [print\\(t['name'], t['thumbnailUrl']\\) for t in data['data']]\")",
-      "WebFetch(domain:www.comfy.org)"
+      "WebFetch(domain:www.comfy.org)",
+      "Bash(Select-Object -First 30)",
+      "PowerShell(npx tsc --noEmit --pretty 2>&1 | Select-Object -First 30)",
+      "PowerShell(npx tsc --noEmit --pretty 2>&1 | Select-Object -First 25)",
+      "PowerShell(npx tsc --noEmit --pretty 2>&1 | Select-Object -First 20)",
+      "mcp__plugin_vercel_vercel__list_projects",
+      "mcp__plugin_vercel_vercel__list_teams",
+      "mcp__plugin_vercel_vercel__list_deployments",
+      "mcp__plugin_vercel_vercel__get_project",
+      "mcp__plugin_vercel_vercel__deploy_to_vercel",
+      "PowerShell(npx tsc --noEmit --pretty 2>&1 | Select-Object -First 15)",
+      "Bash(Get-Process -Name \"node\" -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object -First 1)",
+      "Bash(tasklist)",
+      "mcp__plugin_vercel_vercel__get_deployment",
+      "mcp__plugin_vercel_vercel__web_fetch_vercel_url",
+      "Bash(npx next *)"
     ]
   }
 }
