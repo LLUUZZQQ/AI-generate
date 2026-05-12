@@ -21,102 +21,109 @@ export function InteractiveLogo() {
 
       scene = new THREE.Scene();
       camera = new THREE.PerspectiveCamera(35, w / h, 0.1, 100);
-      camera.position.set(0, 0, 9);
+      camera.position.set(0, 0.1, 8.5);
       renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
       renderer.setSize(w, h);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.2;
       container.appendChild(renderer.domElement);
 
-      // Lighting — bright soft lights for glass
-      scene.add(new THREE.AmbientLight(0x7777aa, 0.7));
-      const key = new THREE.DirectionalLight(0xffffff, 3.5);
-      key.position.set(4, 2, 6);
+      // Lighting
+      scene.add(new THREE.AmbientLight(0x6666aa, 0.6));
+      const key = new THREE.DirectionalLight(0xffffff, 4);
+      key.position.set(3, 2, 5);
       scene.add(key);
-      const rim = new THREE.DirectionalLight(0xaaccff, 3);
-      rim.position.set(-4, 3, -4);
+      const rim = new THREE.DirectionalLight(0xbbccff, 3);
+      rim.position.set(-4, 2, -3);
       scene.add(rim);
-      const fill = new THREE.DirectionalLight(0xcc88ff, 2);
-      fill.position.set(0, -3, 3);
-      scene.add(fill);
+      const bot = new THREE.DirectionalLight(0xddaaff, 2);
+      bot.position.set(0, -3, 2);
+      scene.add(bot);
 
-      // Helper: rounded box using ExtrudeGeometry
-      function roundedBox(w: number, h: number, d: number, radius: number) {
-        const x = -w / 2, y = -h / 2;
-        const shape = new THREE.Shape();
-        shape.moveTo(x + radius, y);
-        shape.lineTo(x + w - radius, y);
-        shape.quadraticCurveTo(x + w, y, x + w, y + radius);
-        shape.lineTo(x + w, y + h - radius);
-        shape.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
-        shape.lineTo(x + radius, y + h);
-        shape.quadraticCurveTo(x, y + h, x, y + h - radius);
-        shape.lineTo(x, y + radius);
-        shape.quadraticCurveTo(x, y, x + radius, y);
-        return new THREE.ExtrudeGeometry(shape, {
-          depth: d,
-          bevelEnabled: true,
-          bevelThickness: 0.06,
-          bevelSize: 0.05,
-          bevelSegments: 4,
-        });
-      }
-
-      const glassMat = new THREE.MeshPhysicalMaterial({
-        color: 0xddccff,
-        metalness: 0.0,
-        roughness: 0.22,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.12,
-        transparent: true,
-        opacity: 0.35,
-        envMapIntensity: 0.5,
-        specularIntensity: 1.0,
-      });
-
-      const edgeMat = new THREE.LineBasicMaterial({
-        color: 0xccbbff,
-        transparent: true,
-        opacity: 0.4,
-      });
-
+      // Build continuous F shape as a path, then TubeGeometry
       const group = new THREE.Group();
 
-      // Vertical stem — tall, thick
-      const sw = 0.95, sd = 0.7, sh = 4.0, sr = 0.18;
-      const stemGeo = roundedBox(sw, sh, sd, sr);
-      const stemMesh = new THREE.Mesh(stemGeo, glassMat);
-      stemMesh.position.set(-0.95, 0, -sd / 2);
-      group.add(stemMesh);
-      const stemEdge = new THREE.LineSegments(new THREE.EdgesGeometry(stemGeo), edgeMat);
-      stemEdge.position.copy(stemMesh.position);
-      group.add(stemEdge);
+      const strokeW = 0.55; // tube radius
+      const hTotal = 4.2;   // total height
+      const topW = 2.4;     // top bar width
+      const midW = 1.8;     // mid bar width
+      const halfH = hTotal / 2;
 
-      // Top bar — wide, thick
-      const tw = 2.6, td = 0.7, th = 0.95, tr = 0.18;
-      const topGeo = roundedBox(tw, th, td, tr);
-      const topMesh = new THREE.Mesh(topGeo, glassMat);
-      topMesh.position.set(0.15, 1.75, -td / 2);
-      group.add(topMesh);
-      const topEdge = new THREE.LineSegments(new THREE.EdgesGeometry(topGeo), edgeMat);
-      topEdge.position.copy(topMesh.position);
-      group.add(topEdge);
+      // Helper: add a tube segment between two 3D points
+      function tubeSegment(x1: number, y1: number, x2: number, y2: number, z: number) {
+        const curve = new THREE.LineCurve3(
+          new THREE.Vector3(x1, y1, z),
+          new THREE.Vector3(x2, y2, z)
+        );
+        return new THREE.TubeGeometry(curve, 16, strokeW, 16, false);
+      }
 
-      // Mid bar — medium
-      const mw = 2.0, md = 0.7, mh = 0.85, mr = 0.18;
-      const midGeo = roundedBox(mw, mh, md, mr);
-      const midMesh = new THREE.Mesh(midGeo, glassMat);
-      midMesh.position.set(-0.1, 0, -md / 2);
-      group.add(midMesh);
-      const midEdge = new THREE.LineSegments(new THREE.EdgesGeometry(midGeo), edgeMat);
-      midEdge.position.copy(midMesh.position);
-      group.add(midEdge);
+      // Helper: add a 90-degree rounded corner as a tube
+      function tubeCorner(cx: number, cy: number, z: number, fromAngle: number, toAngle: number) {
+        const r = strokeW * 0.4;
+        const curve = new THREE.EllipseCurve(cx, cy, r, r, fromAngle, toAngle, false, 0);
+        const pts = curve.getPoints(8);
+        const path = new THREE.CatmullRomCurve3(
+          pts.map(p => new THREE.Vector3(p.x, p.y, z))
+        );
+        return new THREE.TubeGeometry(path, 12, strokeW, 8, false);
+      }
+
+      const z = 0;
+      const glassMat = new THREE.MeshPhysicalMaterial({
+        color: 0xe0d0ff,
+        metalness: 0.0,
+        roughness: 0.2,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.1,
+        transparent: true,
+        opacity: 0.4,
+        envMapIntensity: 0.5,
+      });
+
+      // Build F using connected tube segments
+      const parts: any[] = [];
+
+      // Vertical stem: bottom to top
+      parts.push(new THREE.Mesh(tubeSegment(-1, -halfH, -1, halfH, z), glassMat));
+
+      // Top bar: from stem rightward
+      parts.push(new THREE.Mesh(tubeSegment(-1, halfH, -1 + topW, halfH, z), glassMat));
+
+      // Mid bar: from stem rightward
+      parts.push(new THREE.Mesh(tubeSegment(-1, 0, -1 + midW, 0, z), glassMat));
+
+      // Rounded corners connecting bars to stem
+      const cr = strokeW * 0.6;
+      function corner(cx: number, cy: number, startA: number, endA: number) {
+        const curve = new THREE.EllipseCurve(cx, cy, cr, cr, startA, endA, false, 0);
+        const pts = curve.getPoints(8);
+        const path = new THREE.CatmullRomCurve3(pts.map(p => new THREE.Vector3(p.x, p.y, z)));
+        return new THREE.Mesh(new THREE.TubeGeometry(path, 10, strokeW, 8, false), glassMat);
+      }
+
+      // Top-left inner corner
+      parts.push(corner(-1, halfH - strokeW, -Math.PI / 2, 0));
+      // Top-right terminal (rounded cap)
+      parts.push(corner(-1 + topW, halfH, -Math.PI, 0));
+      // Mid-left inner corner
+      parts.push(corner(-1, strokeW, -Math.PI / 2, 0));
+      // Mid-right terminal
+      parts.push(corner(-1 + midW, 0, -Math.PI, 0));
+      // Stem bottom
+      parts.push(corner(-1, -halfH + strokeW, Math.PI / 2, Math.PI));
+
+      for (const p of parts) {
+        group.add(p);
+      }
 
       mesh = group;
       scene.add(mesh);
 
-      // Subtle floating particles
+      // Subtle particles
       const pGeo = new THREE.BufferGeometry();
-      const count = 50;
+      const count = 40;
       const pos = new Float32Array(count * 3);
       for (let i = 0; i < count; i++) {
         pos[i * 3] = (Math.random() - 0.5) * 14;
@@ -125,8 +132,8 @@ export function InteractiveLogo() {
       }
       pGeo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
       const pMat = new THREE.PointsMaterial({
-        color: 0xccbbff,
-        size: 0.022,
+        color: 0xd4c4f0,
+        size: 0.02,
         transparent: true,
         opacity: 0.35,
         blending: THREE.AdditiveBlending,
@@ -135,18 +142,17 @@ export function InteractiveLogo() {
       const particles = new THREE.Points(pGeo, pMat);
       scene.add(particles);
 
-      // Animation loop
       const animate = () => {
         animId = requestAnimationFrame(animate);
         targetRef.current.x += (mouseRef.current.x - targetRef.current.x) * 0.04;
         targetRef.current.y += (mouseRef.current.y - targetRef.current.y) * 0.04;
         if (mesh) {
-          mesh.rotation.y = targetRef.current.x * 1.0;
-          mesh.rotation.x = targetRef.current.y * 0.5;
-          mesh.position.y = Math.sin(Date.now() * 0.0008) * 0.15;
+          mesh.rotation.y = targetRef.current.x * 0.9;
+          mesh.rotation.x = targetRef.current.y * 0.45;
+          mesh.position.y = Math.sin(Date.now() * 0.0008) * 0.12;
         }
-        particles.rotation.y += 0.0006;
-        particles.rotation.x += 0.0003;
+        particles.rotation.y += 0.0005;
+        particles.rotation.x += 0.00025;
         renderer.render(scene, camera);
       };
       animate();
@@ -159,16 +165,13 @@ export function InteractiveLogo() {
       mouseRef.current.x = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
       mouseRef.current.y = -((e.clientY - rect.top) / rect.height - 0.5) * 2;
     };
-
     const onResize = () => {
       if (!renderer || !camera) return;
-      const w = container.clientWidth;
-      const h = container.clientHeight;
+      const w = container.clientWidth, h = container.clientHeight;
       renderer.setSize(w, h);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
     };
-
     window.addEventListener("mousemove", onMouse);
     window.addEventListener("resize", onResize);
 
