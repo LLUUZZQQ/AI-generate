@@ -61,6 +61,27 @@ export default function LandingPage() {
       {/* ======== PARTNER LOGOS ======== */}
       <PartnerLogos />
 
+      {/* ======== TRUST / SOCIAL PROOF ======== */}
+      <ScrollReveal>
+      <section className="max-w-4xl mx-auto px-6 py-8">
+        <p className="text-[10px] text-foreground/12 text-center mb-7 tracking-widest uppercase">
+          已获多平台卖家信任
+        </p>
+        <div className="grid grid-cols-3 gap-6 max-w-lg mx-auto">
+          {[
+            { value: "10,000+", label: "卖家在使用" },
+            { value: "500,000+", label: "图片已处理" },
+            { value: "99.7%", label: "处理成功率" },
+          ].map((s) => (
+            <div key={s.label} className="text-center">
+              <p className="text-xl font-bold gradient-text mb-0.5">{s.value}</p>
+              <p className="text-[10px] text-foreground/18">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+      </ScrollReveal>
+
       {/* ======== FEATURES ======== */}
       <ScrollReveal>
       <section className="max-w-4xl mx-auto px-6 py-12 md:py-20">
@@ -210,12 +231,15 @@ export default function LandingPage() {
         </h2>
         <div className="glass p-3 md:p-4">
           <CompareSlider
-            before="/uploads/cmp1xpjj700001ovdsgmwmsrn_1778549085405.jpg"
-            after="/backgrounds/indoor-floor/light-wood-floor.jpg"
-            beforeLabel="原图"
-            afterLabel="AI 处理后"
+            before="https://picsum.photos/seed/product-plain/800/600"
+            after="https://picsum.photos/seed/product-styled/800/600"
+            beforeLabel="上传原图"
+            afterLabel="AI 场景替换"
           />
         </div>
+        <p className="text-center text-[11px] text-foreground/18 mt-5">
+          拖拽滑块对比 · 自动播放中 · 悬停可暂停
+        </p>
       </section>
       </ScrollReveal>
 
