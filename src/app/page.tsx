@@ -7,7 +7,6 @@ import { BrowserFrame } from "@/components/ui/browser-frame";
 import { GenerationFlow } from "@/components/ui/generation-flow";
 import { Upload, Wand2, Download, Layers, Zap, Shield } from "lucide-react";
 import { CompareSlider } from "@/components/ui/compare-slider";
-import { StickySection } from "@/components/ui/sticky-section";
 import { PartnerLogos } from "@/components/ui/partner-logos";
 
 export default function LandingPage() {
@@ -63,7 +62,6 @@ export default function LandingPage() {
       <PartnerLogos />
 
       {/* ======== FEATURES ======== */}
-      <StickySection index={0} className="bg-background">
       <ScrollReveal>
       <section className="max-w-4xl mx-auto px-6 py-12 md:py-20">
         <p className="text-[11px] text-purple-400 font-semibold tracking-widest uppercase mb-3 text-center">Features</p>
@@ -131,10 +129,8 @@ export default function LandingPage() {
         </div>
       </section>
       </ScrollReveal>
-      </StickySection>
 
       {/* ======== HOW IT WORKS — sticky steps ======== */}
-      <StickySection index={1} className="bg-background">
       <ScrollReveal>
       <section className="max-w-5xl mx-auto px-6 py-16 md:py-24">
         <p className="text-[11px] text-purple-400 font-semibold tracking-widest uppercase mb-3 text-center">How It Works</p>
@@ -159,10 +155,8 @@ export default function LandingPage() {
         </div>
       </section>
       </ScrollReveal>
-      </StickySection>
 
       {/* ======== USE CASES — Bento ======== */}
-      <StickySection index={2} className="bg-background">
       <ScrollReveal>
       <section className="max-w-4xl mx-auto px-6 py-12 md:py-20">
         <p className="text-[11px] text-purple-400 font-semibold tracking-widest uppercase mb-3 text-center">Use Cases</p>
@@ -197,10 +191,8 @@ export default function LandingPage() {
         </div>
       </section>
       </ScrollReveal>
-      </StickySection>
 
       {/* ======== BEFORE / AFTER ======== */}
-      <StickySection index={3} className="bg-background">
       <ScrollReveal>
       <section className="max-w-4xl mx-auto px-6 py-12 md:py-20">
         <p className="text-[11px] text-purple-400 font-semibold tracking-widest uppercase mb-3 text-center">Showcase</p>
@@ -217,10 +209,8 @@ export default function LandingPage() {
         </div>
       </section>
       </ScrollReveal>
-      </StickySection>
 
-      {/* ======== METRICS + CLOSING — above sticky stack ======== */}
-      <div className="relative z-50 bg-background">
+      {/* ======== METRICS BAR ======== */}
       <ScrollReveal>
       <section className="max-w-3xl mx-auto px-6 py-10">
         <div className="glass p-8 grid grid-cols-3 gap-6 text-center">
@@ -257,7 +247,6 @@ export default function LandingPage() {
         <p className="mt-10 text-[10px] text-foreground/15">© 2026 FrameCraft · 产品照片背景替换</p>
       </section>
       </ScrollReveal>
-      </div>
     </div>
   );
 }
