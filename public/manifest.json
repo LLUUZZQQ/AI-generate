@@ -1,7 +1,7 @@
 {
-  "name": "AI爆款 - 抖音热点AI内容生成",
-  "short_name": "AI爆款",
-  "description": "追踪抖音热门话题，AI自动生成爆款图片和视频",
+  "name": "FrameCraft - 产品照片背景替换 · AI智能合成",
+  "short_name": "FrameCraft",
+  "description": "产品照片背景替换 · AI智能合成 · 电商卖家必备",
   "start_url": "/trends",
   "display": "standalone",
   "background_color": "#0a0a0f",

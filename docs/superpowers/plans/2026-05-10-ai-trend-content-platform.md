@@ -1,4 +1,4 @@
-# AI 爆款内容生成平台 — 实现计划
+# FrameCraft - 产品照片背景替换平台 — 实现计划
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -378,7 +378,7 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
       <div className="flex h-14 items-center justify-between px-6">
         <Link href="/trends" className="text-lg font-bold">
-          AI爆款
+          FrameCraft
         </Link>
         <nav className="flex items-center gap-4">
           {session ? (
@@ -422,7 +422,7 @@ import { Header } from "@/components/layout/header";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AI爆款 - 抖音热门话题AI内容生成",
+  title: "FrameCraft - 产品照片背景替换 · AI智能合成 · 电商卖家必备",
   description: "追踪抖音热门话题，AI自动生成爆款图片和视频",
 };
 

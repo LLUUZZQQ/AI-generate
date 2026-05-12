@@ -58,7 +58,7 @@ export default function RegisterPage() {
     <div className="flex items-center justify-center min-h-[80vh] px-6">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold mb-2"><span className="gradient-text">AI</span>爆款</h1>
+          <h1 className="text-2xl font-bold mb-2"><span className="gradient-text">Frame</span>Craft</h1>
           <p className="text-sm text-white/30">注册即送 20 积分</p>
         </div>
 

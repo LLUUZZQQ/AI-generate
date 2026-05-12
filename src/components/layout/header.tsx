@@ -29,7 +29,7 @@ export function Header() {
         <Link href="/" className={`font-bold shrink-0 tracking-tight transition-all duration-500 ${
           scrolled ? "text-base" : "text-lg"
         }`}>
-          <span className="gradient-text">AI</span><span className="text-white/80">爆款</span>
+          <span className="gradient-text">Frame</span><span className="text-white/80">Craft</span>
         </Link>
 
         {/* Desktop nav */}

@@ -17,7 +17,7 @@ async function main() {
     const cmd = new PutObjectCommand({
       Bucket: process.env.S3_BUCKET!,
       Key: "test/hello.txt",
-      Body: "Hello from AI爆款!",
+      Body: "Hello from FrameCraft!",
       ContentType: "text/plain",
     });
     await s3.send(cmd);

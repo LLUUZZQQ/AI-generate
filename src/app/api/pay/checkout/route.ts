@@ -32,7 +32,7 @@ export async function POST(req: Request) {
       {
         price_data: {
           currency: "cny",
-          product_data: { name: `AI爆款 - ${plan.name}` },
+          product_data: { name: `FrameCraft - ${plan.name}` },
           unit_amount: plan.amount,
         },
         quantity: 1,

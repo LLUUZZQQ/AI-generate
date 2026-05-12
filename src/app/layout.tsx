@@ -16,31 +16,31 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "AI爆款 - 抖音热门话题AI内容生成",
-    template: "%s | AI爆款",
+    default: "FrameCraft - 产品照片背景替换 · AI智能合成 · 电商卖家必备",
+    template: "%s | FrameCraft",
   },
-  description: "追踪抖音热门话题，AI自动生成爆款图片和视频。实时趋势追踪、多模型AI生成、智能发布建议。",
-  keywords: ["AI生成", "抖音", "热门话题", "爆款内容", "图片生成", "视频生成", "内容创作"],
-  authors: [{ name: "AI爆款" }],
+  description: "产品照片背景替换 · AI智能合成 · 电商卖家必备。上传产品照片，AI自动识别主体、移除背景、合成到真实场景。",
+  keywords: ["背景替换", "产品照片", "AI合成", "电商卖家", "商品图", "场景替换", "抠图"],
+  authors: [{ name: "FrameCraft" }],
   metadataBase: new URL("https://ai-generate-two.vercel.app"),
   openGraph: {
-    title: "AI爆款 - 抖音热点AI内容生成",
-    description: "追踪抖音热门话题，AI自动生成爆款图片和视频",
-    siteName: "AI爆款",
+    title: "FrameCraft - 产品照片背景替换 · AI智能合成",
+    description: "产品照片背景替换 · AI智能合成 · 电商卖家必备",
+    siteName: "FrameCraft",
     type: "website",
     locale: "zh_CN",
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI爆款",
-    description: "抖音热点AI内容生成平台",
+    title: "FrameCraft",
+    description: "产品照片背景替换 · AI智能合成 · 电商卖家必备",
   },
   manifest: "/manifest.json",
   icons: [{ url: "/icon.svg", type: "image/svg+xml" }],
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "AI爆款",
+    title: "FrameCraft",
   },
 };
 

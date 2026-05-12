@@ -11,10 +11,10 @@ export function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
           <div>
             <h4 className="font-semibold text-sm mb-3">
-              <span className="gradient-text">AI</span><span className="text-white/70">爆款</span>
+              <span className="gradient-text">Frame</span><span className="text-white/70">Craft</span>
             </h4>
             <p className="text-xs text-white/30 leading-relaxed">
-              追踪抖音热点，AI生成爆款内容，让创作更简单。
+              产品照片背景替换 · AI智能合成 · 电商卖家必备
             </p>
           </div>
           <div>
@@ -35,7 +35,7 @@ export function Footer() {
           <div>
             <h4 className="text-xs font-semibold text-white/40 mb-3 uppercase tracking-wider">关于</h4>
             <div className="space-y-2 text-xs text-white/20">
-              <p>© 2026 AI爆款</p>
+              <p>© 2026 FrameCraft</p>
               <p>Powered by AI</p>
             </div>
           </div>
