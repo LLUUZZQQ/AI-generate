@@ -65,7 +65,7 @@ export default function LandingPage() {
 
         {/* Bento showcase — 2/3 + 1/3 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <BrowserFrame className="md:col-span-2">
+          <BrowserFrame className="md:col-span-2" showBlob>
             <div className="p-5">
               <p className="text-[10px] text-foreground/20 mb-3">FrameCraft · 产品照处理</p>
               <div className="aspect-video bg-white/[0.015] rounded-2xl flex items-center justify-center border border-white/[0.03]">
