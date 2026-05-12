@@ -8,7 +8,7 @@ function proxyUrl(s3Url: string | null): string | null {
   if (!s3Url.startsWith("http")) return s3Url;
   try {
     const path = new URL(s3Url).pathname.substring(1).replace(/^ai-gen-content\//, "");
-    return `/api/s3/${path}`;
+    return `/api/s3/${path}?v=2`;
   } catch {
     return s3Url;
   }
