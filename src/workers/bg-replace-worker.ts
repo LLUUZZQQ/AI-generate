@@ -236,6 +236,15 @@ async function createSolidBackground(color: string): Promise<Buffer> {
     .toBuffer();
 }
 
-console.log("[bg-worker] Database polling worker started (interval: " + POLL_INTERVAL + "ms)");
+import http from "http";
+
+const PORT = parseInt(process.env.PORT || "3000");
+const server = http.createServer((_req, res) => {
+  res.writeHead(200, { "Content-Type": "text/plain" });
+  res.end("OK");
+});
+server.listen(PORT, () => {
+  console.log("[bg-worker] Worker listening on port " + PORT + ", polling every " + POLL_INTERVAL + "ms");
+  poll(); // immediate first run
+});
 setInterval(poll, POLL_INTERVAL);
-poll(); // immediate first run
