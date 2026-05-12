@@ -40,6 +40,7 @@ export function Header() {
               <Link href="/"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">首页</Button></Link>
               <Link href="/trends"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">趋势</Button></Link>
               <Link href="/generate"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">生成</Button></Link>
+              <Link href="/background-replace"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">背景替换</Button></Link>
               <Link href="/library"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">内容库</Button></Link>
               <Link href="/dashboard"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">我的</Button></Link>
               <ThemeToggle />
@@ -69,6 +70,7 @@ export function Header() {
               <Link href="/" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">🏠 首页</Link>
               <Link href="/trends" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">🔥 趋势</Link>
               <Link href="/generate" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">🎨 生成</Link>
+              <Link href="/background-replace" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">📸 背景替换</Link>
               <Link href="/library" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">📦 内容库</Link>
               <Link href="/dashboard" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">👤 我的</Link>
               <div className="py-2"><ThemeToggle /></div>
