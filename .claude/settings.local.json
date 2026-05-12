@@ -73,7 +73,8 @@
       "PowerShell(npx tsx scripts/create-test-user.ts)",
       "Bash(netstat -ano)",
       "Bash(Select-String \"LISTENING\")",
-      "Bash(Select-String \"6379\")"
+      "Bash(Select-String \"6379\")",
+      "Bash(powershell.exe -Command \"Get-Process node -ErrorAction SilentlyContinue | Select-Object Id, CommandLine | Format-Table -Wrap\")"
     ]
   }
 }

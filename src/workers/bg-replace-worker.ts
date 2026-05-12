@@ -4,8 +4,11 @@ import { prisma } from "@/lib/db";
 import { downloadFromS3, uploadToS3 } from "@/lib/s3";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { HfInference } from "@huggingface/inference";
 
 const hasS3 = !!(process.env.S3_BUCKET && process.env.S3_ENDPOINT);
+
+const hf = new HfInference(process.env.HF_TOKEN!);
 
 const worker = new Worker("bg-replace-queue", async (job) => {
   const { taskId } = job.data;
@@ -135,15 +138,49 @@ const worker = new Worker("bg-replace-queue", async (job) => {
 }, { connection: redis, concurrency: 2 });
 
 async function removeBackground(imageBuffer: Buffer): Promise<Buffer> {
-  const { removeBackground: imglyRemoveBg } = await import("@imgly/background-removal-node");
+  const blob = new Blob([new Uint8Array(imageBuffer)], { type: "image/png" });
 
-  const resultBlob = await imglyRemoveBg(imageBuffer, {
-    model: "medium",
-    output: { format: "image/png", quality: 1 },
-  });
+  try {
+    // Try synchronous first (HF may route to fal.ai which uses async queue)
+    const result = await hf.imageSegmentation({ model: "briaai/RMBG-2.0", inputs: blob }) as any;
 
-  const arrayBuffer = await resultBlob.arrayBuffer();
-  return Buffer.from(arrayBuffer);
+    // Handle async queue response (fal.ai)
+    if (result?.status === "IN_QUEUE" && result?.response_url) {
+      let pollResult = result;
+      let attempts = 0;
+      while (pollResult.status !== "COMPLETED" && attempts < 60) {
+        await new Promise((r) => setTimeout(r, 2000));
+        const pollRes = await fetch(result.response_url);
+        const data = await pollRes.json();
+        // Fal.ai returns nested response
+        if (typeof data === "object" && data !== null && "status" in data) {
+          pollResult = data as any;
+        } else {
+          // Got the actual result
+          const imgRes = await fetch(data.image?.url || data.url || Object.values(data)[0] as string);
+          return Buffer.from(await imgRes.arrayBuffer());
+        }
+        attempts++;
+      }
+      throw new Error("Background removal timed out");
+    }
+
+    // Handle synchronous result (Blob from HF direct)
+    if (result instanceof Blob) {
+      return Buffer.from(await result.arrayBuffer());
+    }
+
+    // Handle { image: { url: "..." } } format or similar
+    if (result?.image?.url) {
+      const imgRes = await fetch(result.image.url);
+      return Buffer.from(await imgRes.arrayBuffer());
+    }
+
+    throw new Error(`Unexpected result format: ${JSON.stringify(result).slice(0, 200)}`);
+  } catch (e: any) {
+    if (e.message.includes("Background removal")) throw e;
+    throw new Error(`Background removal failed: ${e.message}`);
+  }
 }
 
 async function compositeImages(subjectBuffer: Buffer, bgBuffer: Buffer): Promise<Buffer> {
@@ -173,39 +210,19 @@ async function compositeImages(subjectBuffer: Buffer, bgBuffer: Buffer): Promise
 }
 
 async function generateBackground(prompt: string): Promise<Buffer> {
-  const OPENAI_KEY = process.env.OPENAI_API_KEY;
-  if (!OPENAI_KEY) throw new Error("OPENAI_API_KEY not set");
-
   const fullPrompt = `${prompt}, photorealistic, natural lighting, casual smartphone photo, no text, no watermark, no overlay`;
 
-  // Try OpenRouter for image generation
-  const response = await fetch("https://openrouter.ai/api/v1/images/generations", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${OPENAI_KEY}`,
-      "Content-Type": "application/json",
-      "HTTP-Referer": process.env.NEXT_PUBLIC_URL || "http://localhost:3000",
-    },
-    body: JSON.stringify({
-      model: "stabilityai/stable-diffusion-xl-base-1.0",
-      prompt: fullPrompt,
-      n: 1,
-      size: "1024x1024",
-    }),
+  const result = await hf.textToImage({
+    model: "stabilityai/stable-diffusion-xl-base-1.0",
+    inputs: fullPrompt,
+    parameters: { negative_prompt: "text, watermark, logo, overlay, product, object, person" },
   });
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Background generation failed: ${response.status} ${errText.slice(0, 200)}`);
+  if (typeof result === "string") {
+    const res = await fetch(result);
+    return Buffer.from(await res.arrayBuffer());
   }
-
-  const data = await response.json() as any;
-  const imageUrl = data.data?.[0]?.url;
-  if (!imageUrl) throw new Error("No image in generation response");
-
-  const imgRes = await fetch(imageUrl);
-  const arrayBuffer = await imgRes.arrayBuffer();
-  return Buffer.from(arrayBuffer);
+  return Buffer.from(await (result as Blob).arrayBuffer());
 }
 
 async function createSolidBackground(color: string): Promise<Buffer> {
