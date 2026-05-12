@@ -6,7 +6,6 @@ import { MagneticButton } from "@/components/ui/magnetic-button";
 import { BrowserFrame } from "@/components/ui/browser-frame";
 import { GenerationFlow } from "@/components/ui/generation-flow";
 import { CompareSlider } from "@/components/ui/compare-slider";
-import { PartnerLogos } from "@/components/ui/partner-logos";
 import { Upload, Wand2, Download, Layers, Zap, Shield } from "lucide-react";
 
 export default function LandingPage() {
@@ -134,8 +133,25 @@ export default function LandingPage() {
           已获多平台卖家信任
         </p>
 
-        {/* Platform marquee */}
-        <PartnerLogos />
+        {/* Logo strip */}
+        <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-5 mb-10">
+          {[
+            { name: "Vinted", letterSpacing: "-0.02em" },
+            { name: "Depop", letterSpacing: "-0.01em" },
+            { name: "eBay", letterSpacing: "-0.015em" },
+            { name: "Shopify", letterSpacing: "-0.01em" },
+            { name: "StockX", letterSpacing: "-0.03em" },
+            { name: "闲鱼", letterSpacing: "0em" },
+          ].map((p) => (
+            <span
+              key={p.name}
+              className="text-lg font-bold text-foreground/[0.07] hover:text-foreground/25 transition-colors duration-500 cursor-default select-none"
+              style={{ letterSpacing: p.letterSpacing }}
+            >
+              {p.name}
+            </span>
+          ))}
+        </div>
 
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-6 max-w-lg mx-auto">
