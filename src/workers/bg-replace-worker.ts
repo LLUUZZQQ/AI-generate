@@ -140,47 +140,39 @@ const worker = new Worker("bg-replace-queue", async (job) => {
 async function removeBackground(imageBuffer: Buffer): Promise<Buffer> {
   const blob = new Blob([new Uint8Array(imageBuffer)], { type: "image/png" });
 
-  try {
-    // Try synchronous first (HF may route to fal.ai which uses async queue)
-    const result = await hf.imageSegmentation({ model: "briaai/RMBG-2.0", inputs: blob }) as any;
+  const result = await hf.imageSegmentation({ model: "briaai/RMBG-2.0", inputs: blob });
 
-    // Handle async queue response (fal.ai)
-    if (result?.status === "IN_QUEUE" && result?.response_url) {
-      let pollResult = result;
-      let attempts = 0;
-      while (pollResult.status !== "COMPLETED" && attempts < 60) {
-        await new Promise((r) => setTimeout(r, 2000));
-        const pollRes = await fetch(result.response_url);
-        const data = await pollRes.json();
-        // Fal.ai returns nested response
-        if (typeof data === "object" && data !== null && "status" in data) {
-          pollResult = data as any;
-        } else {
-          // Got the actual result
-          const imgRes = await fetch(data.image?.url || data.url || Object.values(data)[0] as string);
-          return Buffer.from(await imgRes.arrayBuffer());
-        }
-        attempts++;
-      }
-      throw new Error("Background removal timed out");
-    }
+  // Result is an array of { label, score, mask } — mask is base64 PNG
+  if (Array.isArray(result)) {
+    const mask = result[0]?.mask;
+    if (!mask) throw new Error("No mask in segmentation result");
 
-    // Handle synchronous result (Blob from HF direct)
-    if (result instanceof Blob) {
-      return Buffer.from(await result.arrayBuffer());
-    }
+    // Convert base64 mask to buffer
+    const maskBuffer = Buffer.from(mask, "base64");
 
-    // Handle { image: { url: "..." } } format or similar
-    if (result?.image?.url) {
-      const imgRes = await fetch(result.image.url);
-      return Buffer.from(await imgRes.arrayBuffer());
-    }
+    // Use sharp to combine original + mask → transparent background
+    const sharp = await import("sharp");
+    const original = sharp.default(imageBuffer);
+    const { width, height } = await original.metadata();
+    if (!width || !height) throw new Error("Cannot read image dimensions");
 
-    throw new Error(`Unexpected result format: ${JSON.stringify(result).slice(0, 200)}`);
-  } catch (e: any) {
-    if (e.message.includes("Background removal")) throw e;
-    throw new Error(`Background removal failed: ${e.message}`);
+    // Resize mask to match original if needed
+    const maskImage = sharp.default(maskBuffer).resize(width, height).greyscale();
+
+    // Composite: use mask as alpha channel
+    return original
+      .ensureAlpha()
+      .composite([{ input: await maskImage.toBuffer(), blend: "dest-in" }])
+      .png()
+      .toBuffer();
   }
+
+  // Handle Blob return (from some HF providers)
+  if (result && typeof result === "object" && "arrayBuffer" in result) {
+    return Buffer.from(await (result as Blob).arrayBuffer());
+  }
+
+  throw new Error(`Unexpected segmentation result type: ${typeof result}`);
 }
 
 async function compositeImages(subjectBuffer: Buffer, bgBuffer: Buffer): Promise<Buffer> {

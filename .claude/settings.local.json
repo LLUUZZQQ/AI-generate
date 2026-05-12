@@ -74,7 +74,9 @@
       "Bash(netstat -ano)",
       "Bash(Select-String \"LISTENING\")",
       "Bash(Select-String \"6379\")",
-      "Bash(powershell.exe -Command \"Get-Process node -ErrorAction SilentlyContinue | Select-Object Id, CommandLine | Format-Table -Wrap\")"
+      "Bash(powershell.exe -Command \"Get-Process node -ErrorAction SilentlyContinue | Select-Object Id, CommandLine | Format-Table -Wrap\")",
+      "Bash(powershell.exe -Command 'Get-Process node -ErrorAction SilentlyContinue | Where-Object { $_CommandLine -like '\\\\''*bg-replace*'\\\\'' } | Stop-Process -Force')",
+      "Bash(wait)"
     ]
   }
 }
