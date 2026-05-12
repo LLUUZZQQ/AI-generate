@@ -2,37 +2,43 @@ import "dotenv/config";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 
-const BUCKET = process.env.S3_BUCKET!;
-const REGION = process.env.S3_REGION || "auto";
-const ENDPOINT = process.env.S3_ENDPOINT!;
-const ACCESS_KEY = process.env.S3_ACCESS_KEY!;
-const SECRET_KEY = process.env.S3_SECRET_KEY!;
-
-const globalForS3 = globalThis as unknown as { s3: S3Client | undefined };
-const s3 = globalForS3.s3 ?? new S3Client({
-  region: REGION,
-  endpoint: ENDPOINT,
-  credentials: { accessKeyId: ACCESS_KEY, secretAccessKey: SECRET_KEY },
-  forcePathStyle: true,
-});
-if (process.env.NODE_ENV !== "production") globalForS3.s3 = s3;
+function getS3Client(): S3Client {
+  const bucket = process.env.S3_BUCKET;
+  const endpoint = process.env.S3_ENDPOINT;
+  const accessKey = process.env.S3_ACCESS_KEY;
+  const secretKey = process.env.S3_SECRET_KEY;
+  if (!bucket || !endpoint || !accessKey || !secretKey) {
+    throw new Error("S3 env vars not configured");
+  }
+  return new S3Client({
+    region: process.env.S3_REGION || "auto",
+    endpoint,
+    credentials: { accessKeyId: accessKey, secretAccessKey: secretKey },
+    forcePathStyle: true,
+  });
+}
 
 export async function uploadToS3(key: string, buffer: Buffer, contentType: string): Promise<string> {
+  const s3 = getS3Client();
+  const bucket = process.env.S3_BUCKET!;
+  const endpoint = process.env.S3_ENDPOINT!;
   const upload = new Upload({
     client: s3,
     params: {
-      Bucket: BUCKET,
+      Bucket: bucket,
       Key: key,
       Body: buffer,
       ContentType: contentType,
     },
   });
   await upload.done();
-  return `${ENDPOINT}/${BUCKET}/${key}`;
+  return `${endpoint}/${bucket}/${key}`;
 }
 
 export async function downloadFromS3(key: string): Promise<Buffer> {
-  const command = new GetObjectCommand({ Bucket: BUCKET, Key: key });
+  const s3 = getS3Client();
+  const bucket = process.env.S3_BUCKET!;
+  const command = new GetObjectCommand({ Bucket: bucket, Key: key });
   const response = await s3.send(command);
   const chunks: Uint8Array[] = [];
   if (response.Body) {
@@ -44,5 +50,7 @@ export async function downloadFromS3(key: string): Promise<Buffer> {
 }
 
 export function getS3Url(key: string): string {
-  return `${ENDPOINT}/${BUCKET}/${key}`;
+  const endpoint = process.env.S3_ENDPOINT!;
+  const bucket = process.env.S3_BUCKET!;
+  return `${endpoint}/${bucket}/${key}`;
 }
