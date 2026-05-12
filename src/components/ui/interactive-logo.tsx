@@ -95,9 +95,10 @@ export function InteractiveLogo() {
       });
 
       const mat = new THREE.MeshPhysicalMaterial({
-        color: 0xe0d4ff, metalness: 0.0, roughness: 0.22,
-        clearcoat: 1.0, clearcoatRoughness: 0.12,
-        transparent: true, opacity: 0.38, envMapIntensity: 0.5,
+        color: 0xe8e0ff, metalness: 0.0, roughness: 0.18,
+        clearcoat: 1.0, clearcoatRoughness: 0.08,
+        transparent: true, opacity: 0.55, envMapIntensity: 0.7,
+        specularIntensity: 1.2,
       });
 
       const group = new THREE.Group();
@@ -107,7 +108,7 @@ export function InteractiveLogo() {
 
       // Edge glow
       const edgeGeo = new THREE.EdgesGeometry(geo);
-      const edgeLine = new THREE.LineSegments(edgeGeo, new THREE.LineBasicMaterial({ color: 0xccbbff, transparent: true, opacity: 0.35 }));
+      const edgeLine = new THREE.LineSegments(edgeGeo, new THREE.LineBasicMaterial({ color: 0xccbbff, transparent: true, opacity: 0.6 }));
       edgeLine.position.z = -0.3;
       group.add(edgeLine);
 
