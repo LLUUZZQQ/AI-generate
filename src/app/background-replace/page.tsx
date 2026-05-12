@@ -72,7 +72,7 @@ export default async function BgReplacePage() {
                     {task.results.slice(0, 3).map((r) => (
                       <div key={r.id} className="w-14 h-14 rounded-lg overflow-hidden bg-white/[0.04] border border-white/[0.06]">
                         {r.resultKey ? (
-                          <img src={r.resultKey.startsWith("http") ? r.resultKey : `/uploads/${r.resultKey}`} className="w-full h-full object-cover" />
+                          <img src={r.resultKey.startsWith("http") ? r.resultKey : `/api/s3/${r.resultKey}`} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-white/10">
                             <ImageIcon className="w-5 h-5" />

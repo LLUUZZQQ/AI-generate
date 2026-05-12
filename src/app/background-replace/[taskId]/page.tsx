@@ -49,8 +49,7 @@ export default function BgReplaceTaskPage() {
 
   const getOriginalUrl = (key: string) => {
     if (key.startsWith("http")) return key;
-    // S3 key — construct direct URL (R2 needs public access for this to work)
-    if (key.includes("/")) return `https://789b9f751887ae90dc646e74a85f8121.r2.cloudflarestorage.com/ai-gen-content/${key}`;
+    if (key.includes("/")) return `/api/s3/${key}`;
     return `/uploads/${key}`;
   };
 
