@@ -14,6 +14,7 @@
     "worker:video": "tsx src/workers/video-worker.ts",
     "worker:suggest": "tsx src/workers/suggestion-worker.ts",
     "worker:swap": "tsx src/workers/swap-worker.ts",
+    "worker:bg": "tsx src/workers/bg-replace-worker.ts",
     "worker:all": "npx prisma generate && tsx src/workers/index.ts"
   },
   "dependencies": {

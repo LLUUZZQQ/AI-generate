@@ -4,6 +4,7 @@ import "./image-worker";
 import "./video-worker";
 import "./swap-worker";
 import "./suggestion-worker";
+import "./bg-replace-worker";
 
 // Auto-shutdown after 5 minutes of inactivity
 let idleTimer: ReturnType<typeof setTimeout> | null = null;
