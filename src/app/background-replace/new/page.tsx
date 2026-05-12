@@ -1,12 +1,17 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Coins, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Coins, Loader2, Sparkles, Upload, Palette, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { UploadZone } from "@/components/background-replace/upload-zone";
 import { BgSelector } from "@/components/background-replace/bg-selector";
 import { toast } from "sonner";
+
+const steps = [
+  { id: 1, icon: Upload, label: "上传照片" },
+  { id: 2, icon: Palette, label: "选择背景" },
+  { id: 3, icon: CheckCircle2, label: "确认提交" },
+] as const;
 
 export default function NewBgReplacePage() {
   const router = useRouter();
@@ -96,37 +101,64 @@ export default function NewBgReplacePage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8 md:py-12">
-      <div className="flex items-center gap-3 mb-10">
-        {[1, 2, 3].map((s) => (
-          <div key={s} className="flex items-center gap-2">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all duration-500 ${
-              s <= step
-                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                : "bg-white/[0.04] text-foreground/20"
-            }`}>
-              {s}
-            </div>
-            <span className={`text-xs font-medium ${s <= step ? "text-foreground/50" : "text-foreground/15"}`}>
-              {s === 1 ? "上传" : s === 2 ? "背景" : "确认"}
-            </span>
-            {s < 3 && <div className={`w-6 h-px transition-colors duration-500 ${s < step ? "bg-primary/40" : "bg-border"}`} />}
-          </div>
-        ))}
+    <div className="max-w-2xl mx-auto px-4 py-10 md:py-14">
+      {/* ====== Steps Indicator ====== */}
+      <div className="flex items-center justify-center mb-12">
+        <div className="flex items-center gap-1">
+          {steps.map((s, i) => {
+            const Icon = s.icon;
+            const isActive = s.id === step;
+            const isDone = s.id < step;
+            return (
+              <div key={s.id} className="flex items-center">
+                {/* Step circle */}
+                <div className="flex flex-col items-center gap-2">
+                  <div
+                    className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${
+                      isDone
+                        ? "bg-purple-500/20 border border-purple-400/30 text-purple-300 shadow-[0_0_20px_rgba(168,85,247,0.2)]"
+                        : isActive
+                          ? "bg-purple-500/15 border-2 border-purple-400/40 text-purple-300 shadow-[0_0_30px_rgba(168,85,247,0.3)] scale-110"
+                          : "bg-white/[0.03] border border-white/[0.06] text-foreground/15"
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" strokeWidth={isActive ? 2 : 1.5} />
+                  </div>
+                  <span
+                    className={`text-[11px] font-medium transition-all duration-500 whitespace-nowrap ${
+                      isDone ? "text-purple-400/70" : isActive ? "text-purple-300" : "text-foreground/15"
+                    }`}
+                  >
+                    {s.label}
+                  </span>
+                </div>
+                {/* Connector line */}
+                {i < steps.length - 1 && (
+                  <div className="w-10 md:w-16 h-px mx-1 mb-6">
+                    <div className={`h-full rounded-full transition-all duration-700 ${
+                      s.id < step ? "bg-purple-400/40" : "bg-white/[0.06]"
+                    }`} />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
+      {/* ====== Step Content ====== */}
       {step === 1 && (
-        <Card className="p-6 border-border bg-white/[0.015]">
+        <div className="glass p-6 md:p-8">
           <h2 className="text-lg font-semibold mb-1">上传产品照片</h2>
-          <p className="text-sm text-foreground/30 mb-6">选择要替换背景的产品照片，所有照片将使用同一背景</p>
+          <p className="text-sm text-foreground/25 mb-6">选择要替换背景的产品照片，所有照片将使用同一背景场景</p>
           <UploadZone files={files} onFilesChange={setFiles} />
-        </Card>
+        </div>
       )}
 
       {step === 2 && (
-        <Card className="p-6 border-border bg-white/[0.015]">
+        <div className="glass p-6 md:p-8">
           <h2 className="text-lg font-semibold mb-1">选择背景</h2>
-          <p className="text-sm text-foreground/30 mb-6">选择一种背景方式，所有照片将使用同一背景</p>
+          <p className="text-sm text-foreground/25 mb-6">所有照片将使用同一个背景。支持预设场景、AI 生成或自定义上传</p>
           <BgSelector
             mode={mode}
             onModeChange={setMode}
@@ -137,53 +169,54 @@ export default function NewBgReplacePage() {
             customBgFile={customBgFile}
             onCustomBgChange={setCustomBgFile}
           />
-        </Card>
+        </div>
       )}
 
       {step === 3 && (
-        <Card className="p-6 border-border bg-white/[0.015]">
+        <div className="glass p-6 md:p-8">
           <h2 className="text-lg font-semibold mb-1">确认提交</h2>
-          <p className="text-sm text-white/40 mb-6">确认以下信息后提交任务</p>
+          <p className="text-sm text-foreground/25 mb-6">确认信息无误后提交，AI 将立即开始处理</p>
           <div className="space-y-3">
-            <div className="flex justify-between py-2 border-b border-white/[0.06]">
-              <span className="text-sm text-white/50">照片数量</span>
-              <span className="text-sm text-white/80">{files.length} 张</span>
+            <div className="flex justify-between py-2.5 border-b border-white/[0.05]">
+              <span className="text-sm text-foreground/35">照片数量</span>
+              <span className="text-sm font-medium">{files.length} 张</span>
             </div>
-            <div className="flex justify-between py-2 border-b border-white/[0.06]">
-              <span className="text-sm text-white/50">背景方式</span>
-              <span className="text-sm text-white/80">
-                {mode === "ai" ? "AI 生成" : mode === "preset" ? "预设模板" : "自定义上传"}
+            <div className="flex justify-between py-2.5 border-b border-white/[0.05]">
+              <span className="text-sm text-foreground/35">背景方式</span>
+              <span className="text-sm font-medium">
+                {mode === "ai" ? "AI 智能生成" : mode === "preset" ? "预设模板" : "自定义上传"}
               </span>
             </div>
             {mode === "ai" && aiPrompt && (
-              <div className="flex justify-between py-2 border-b border-white/[0.06]">
-                <span className="text-sm text-white/50">背景描述</span>
-                <span className="text-sm text-white/80 truncate max-w-[200px]">{aiPrompt}</span>
+              <div className="flex justify-between py-2.5 border-b border-white/[0.05]">
+                <span className="text-sm text-foreground/35">场景描述</span>
+                <span className="text-sm font-medium truncate max-w-[220px]">{aiPrompt}</span>
               </div>
             )}
-            <div className="flex justify-between py-2 border-b border-white/[0.06]">
-              <span className="text-sm text-white/50">单价</span>
-              <span className="text-sm text-white/80">¥0.10 / 张（1 积分）</span>
+            <div className="flex justify-between py-2.5 border-b border-white/[0.05]">
+              <span className="text-sm text-foreground/35">单价</span>
+              <span className="text-sm text-foreground/50">1 积分 / 张</span>
             </div>
             <div className="flex justify-between py-3">
-              <span className="text-sm font-medium text-white/70">合计消耗</span>
-              <span className="text-sm font-bold text-purple-400">
+              <span className="text-sm font-medium text-foreground/60">合计消耗</span>
+              <span className="text-base font-bold gradient-text">
                 <Coins className="w-4 h-4 inline mr-1" />
-                {files.length} 积分 = ¥{(files.length * 0.1).toFixed(2)}
+                {files.length} 积分
               </span>
             </div>
           </div>
-        </Card>
+        </div>
       )}
 
+      {/* ====== Bottom actions ====== */}
       <div className="flex justify-between mt-6">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => step === 1 ? router.back() : setStep(step - 1)}
-          className="text-white/40"
+          className="text-foreground/30 hover:text-foreground/50 h-9 rounded-xl"
         >
-          <ArrowLeft className="w-4 h-4 mr-1" />
+          <ArrowLeft className="w-4 h-4 mr-1.5" />
           {step === 1 ? "返回" : "上一步"}
         </Button>
 
@@ -192,22 +225,22 @@ export default function NewBgReplacePage() {
             size="sm"
             onClick={() => setStep(step + 1)}
             disabled={!canNext()}
-            className="bg-white/10 hover:bg-white/20 text-white border-0 disabled:opacity-30"
+            className="bg-white/[0.06] hover:bg-white/[0.12] text-white border border-white/[0.08] disabled:opacity-25 h-9 px-5 rounded-xl text-sm"
           >
             下一步
-            <ArrowRight className="w-4 h-4 ml-1" />
+            <ArrowRight className="w-4 h-4 ml-1.5" />
           </Button>
         ) : (
           <Button
             size="sm"
             onClick={handleSubmit}
             disabled={!canNext() || submitting}
-            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0"
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-xl shadow-purple-500/25 h-9 px-6 rounded-xl text-sm"
           >
             {submitting ? (
-              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+              <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
             ) : (
-              <Sparkles className="w-4 h-4 mr-1" />
+              <Sparkles className="w-4 h-4 mr-1.5" />
             )}
             提交任务（{files.length} 积分）
           </Button>
