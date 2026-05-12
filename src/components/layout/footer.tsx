@@ -1,47 +1,41 @@
 import Link from "next/link";
-import { NodeLink } from "@/components/ui/node-icons";
 
 export function Footer() {
   return (
-    <footer className="border-t border-white/[0.06] mt-auto">
+    <footer className="border-t border-white/[0.05] mt-auto">
       <div className="max-w-6xl mx-auto px-6 py-10">
-        <div className="flex items-center justify-center mb-6">
-          <NodeLink className="text-white/[0.06]" />
-        </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
-          <div>
-            <h4 className="font-semibold text-sm mb-3">
-              <span className="gradient-text">Frame</span><span className="text-white/70">Craft</span>
-            </h4>
-            <p className="text-xs text-white/30 leading-relaxed">
-              产品照片背景替换 · AI智能合成 · 电商卖家必备
+          <div className="col-span-2 md:col-span-1">
+            <p className="font-semibold text-sm mb-2">
+              <span className="gradient-text">Frame</span><span className="text-foreground/70">Craft</span>
+            </p>
+            <p className="text-xs text-foreground/25 leading-relaxed">
+              产品照片背景替换<br />AI 智能合成 · 电商卖家必备
             </p>
           </div>
           <div>
-            <h4 className="text-xs font-semibold text-white/40 mb-3 uppercase tracking-wider">功能</h4>
+            <h4 className="text-[11px] font-semibold text-foreground/30 mb-3 uppercase tracking-wider">产品</h4>
             <div className="space-y-2 text-xs">
-              <p><Link href="/trends" className="text-white/30 hover:text-white/70 transition-colors">趋势发现</Link></p>
-              <p><Link href="/generate" className="text-white/30 hover:text-white/70 transition-colors">AI 生成</Link></p>
-              <p><Link href="/library" className="text-white/30 hover:text-white/70 transition-colors">内容库</Link></p>
+              <p><Link href="/background-replace" className="text-foreground/25 hover:text-foreground/50 transition-colors">背景替换</Link></p>
+              <p><Link href="/background-replace/new" className="text-foreground/25 hover:text-foreground/50 transition-colors">新建任务</Link></p>
             </div>
           </div>
           <div>
-            <h4 className="text-xs font-semibold text-white/40 mb-3 uppercase tracking-wider">支持</h4>
+            <h4 className="text-[11px] font-semibold text-foreground/30 mb-3 uppercase tracking-wider">账户</h4>
             <div className="space-y-2 text-xs">
-              <p><Link href="/settings" className="text-white/30 hover:text-white/70 transition-colors">充值积分</Link></p>
-              <p><Link href="/trends" className="text-white/30 hover:text-white/70 transition-colors">热门话题</Link></p>
+              <p><Link href="/dashboard" className="text-foreground/25 hover:text-foreground/50 transition-colors">我的</Link></p>
+              <p><Link href="/settings" className="text-foreground/25 hover:text-foreground/50 transition-colors">充值积分</Link></p>
             </div>
           </div>
           <div>
-            <h4 className="text-xs font-semibold text-white/40 mb-3 uppercase tracking-wider">关于</h4>
-            <div className="space-y-2 text-xs text-white/20">
+            <h4 className="text-[11px] font-semibold text-foreground/30 mb-3 uppercase tracking-wider">关于</h4>
+            <div className="space-y-2 text-xs text-foreground/15">
               <p>© 2026 FrameCraft</p>
-              <p>Powered by AI</p>
             </div>
           </div>
         </div>
-        <div className="text-center text-[10px] text-white/15 pt-6 border-t border-white/[0.04]">
-          本平台内容由 AI 生成，仅供创意参考
+        <div className="text-center text-[10px] text-foreground/10 pt-6 border-t border-white/[0.04]">
+          AI 生成内容仅供创意参考
         </div>
       </div>
     </footer>
