@@ -47,9 +47,15 @@ export default function BgReplaceTaskPage() {
     return () => clearInterval(interval);
   }, [task, fetchTask]);
 
-  const getImageUrl = (key: string) => {
+  const getOriginalUrl = (key: string) => {
     if (key.startsWith("http")) return key;
+    // S3 key — construct direct URL (R2 needs public access for this to work)
+    if (key.includes("/")) return `https://789b9f751887ae90dc646e74a85f8121.r2.cloudflarestorage.com/ai-gen-content/${key}`;
     return `/uploads/${key}`;
+  };
+
+  const getResultUrl = (resultId: string) => {
+    return `/api/background-replace/${taskId}/result/${resultId}`;
   };
 
   const downloadAll = () => {
@@ -57,7 +63,7 @@ export default function BgReplaceTaskPage() {
     task.results.forEach((r) => {
       if (r.resultKey) {
         const a = document.createElement("a");
-        a.href = getImageUrl(r.resultKey);
+        a.href = getResultUrl(r.id);
         a.download = `result-${r.id}.png`;
         a.click();
       }
@@ -109,8 +115,8 @@ export default function BgReplaceTaskPage() {
         {task.results.map((result) => (
           <Card key={result.id} className="border-white/[0.08] bg-white/[0.02] overflow-hidden">
             <ResultCompare
-              originalUrl={getImageUrl(result.originalKey)}
-              resultUrl={result.resultKey ? getImageUrl(result.resultKey) : null}
+              originalUrl={getOriginalUrl(result.originalKey)}
+              resultUrl={result.resultKey ? getResultUrl(result.id) : null}
               status={result.status as "pending" | "processing" | "done" | "failed"}
               error={result.error}
               onRegenerate={() => toast.info("重新生成功能即将上线")}

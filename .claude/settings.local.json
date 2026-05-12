@@ -83,7 +83,9 @@
       "Bash(curl -s \"https://raw.githubusercontent.com/LLUUZZQQ/AI-generate/main/src/workers/bg-replace-worker.ts\")",
       "Bash(curl -s -c /tmp/cookies.txt https://ai-generate-two.vercel.app/api/auth/csrf)",
       "Bash(curl *)",
-      "Bash(npm uninstall *)"
+      "Bash(npm uninstall *)",
+      "Bash(tee /dev/tty)",
+      "Bash(python3 -m json.tool)"
     ]
   }
 }
