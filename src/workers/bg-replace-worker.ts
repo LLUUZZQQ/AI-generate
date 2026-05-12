@@ -135,21 +135,15 @@ const worker = new Worker("bg-replace-queue", async (job) => {
 }, { connection: redis, concurrency: 2 });
 
 async function removeBackground(imageBuffer: Buffer): Promise<Buffer> {
-  const HF_TOKEN = process.env.HF_TOKEN;
-  if (!HF_TOKEN) throw new Error("HF_TOKEN not set");
+  const { removeBackground: imglyRemoveBg } = await import("@imgly/background-removal");
 
-  const response = await fetch("https://api-inference.huggingface.co/models/briaai/RMBG-2.0", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${HF_TOKEN}` },
-    body: new Uint8Array(imageBuffer),
+  const blob = new Blob([new Uint8Array(imageBuffer)], { type: "image/png" });
+  const resultBlob = await imglyRemoveBg(blob, {
+    model: "isnet_fp16",
+    output: { format: "image/png", quality: 1 },
   });
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`HuggingFace RMBG error: ${response.status} ${errText.slice(0, 200)}`);
-  }
-
-  const arrayBuffer = await response.arrayBuffer();
+  const arrayBuffer = await resultBlob.arrayBuffer();
   return Buffer.from(arrayBuffer);
 }
 
@@ -180,33 +174,38 @@ async function compositeImages(subjectBuffer: Buffer, bgBuffer: Buffer): Promise
 }
 
 async function generateBackground(prompt: string): Promise<Buffer> {
-  const HF_TOKEN = process.env.HF_TOKEN;
-  if (!HF_TOKEN) throw new Error("HF_TOKEN not set");
+  const OPENAI_KEY = process.env.OPENAI_API_KEY;
+  if (!OPENAI_KEY) throw new Error("OPENAI_API_KEY not set");
 
   const fullPrompt = `${prompt}, photorealistic, natural lighting, casual smartphone photo, no text, no watermark, no overlay`;
 
-  const response = await fetch(
-    "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${HF_TOKEN}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        inputs: fullPrompt,
-        parameters: {
-          negative_prompt: "text, watermark, logo, overlay, product, object, person",
-          width: 1024,
-          height: 1024,
-        },
-      }),
-    }
-  );
+  // Try OpenRouter for image generation
+  const response = await fetch("https://openrouter.ai/api/v1/images/generations", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${OPENAI_KEY}`,
+      "Content-Type": "application/json",
+      "HTTP-Referer": process.env.NEXT_PUBLIC_URL || "http://localhost:3000",
+    },
+    body: JSON.stringify({
+      model: "stabilityai/stable-diffusion-xl-base-1.0",
+      prompt: fullPrompt,
+      n: 1,
+      size: "1024x1024",
+    }),
+  });
 
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(`HuggingFace SDXL error: ${response.status} ${errText.slice(0, 200)}`);
+    throw new Error(`Background generation failed: ${response.status} ${errText.slice(0, 200)}`);
   }
 
-  const arrayBuffer = await response.arrayBuffer();
+  const data = await response.json() as any;
+  const imageUrl = data.data?.[0]?.url;
+  if (!imageUrl) throw new Error("No image in generation response");
+
+  const imgRes = await fetch(imageUrl);
+  const arrayBuffer = await imgRes.arrayBuffer();
   return Buffer.from(arrayBuffer);
 }
 
