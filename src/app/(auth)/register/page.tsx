@@ -58,37 +58,39 @@ export default function RegisterPage() {
     <div className="flex items-center justify-center min-h-[80vh] px-6">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold mb-2"><span className="gradient-text">Frame</span>Craft</h1>
-          <p className="text-sm text-white/30">注册即送 20 积分</p>
+          <h1 className="text-2xl font-semibold tracking-tight mb-1.5">
+            <span className="gradient-text">Frame</span><span className="text-foreground/70">Craft</span>
+          </h1>
+          <p className="text-xs text-foreground/25">注册即送 20 积分</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="glass rounded-xl p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="glass p-6 space-y-4">
           <div>
-            <label className="text-[11px] font-medium text-white/40 mb-1.5 block">用户名</label>
+            <label className="text-[11px] font-medium text-foreground/30 mb-1.5 block">用户名</label>
             <Input placeholder="你的昵称" value={name}
               onChange={(e) => setName(e.target.value)} required
-              className="bg-white/[0.03] border-white/[0.08] h-10 rounded-lg" />
+              className="bg-white/[0.02] border-border h-10 rounded-xl" />
           </div>
           <div>
-            <label className="text-[11px] font-medium text-white/40 mb-1.5 block">邮箱</label>
+            <label className="text-[11px] font-medium text-foreground/30 mb-1.5 block">邮箱</label>
             <Input type="email" placeholder="your@email.com" value={email}
               onChange={(e) => setEmail(e.target.value)} required
-              className="bg-white/[0.03] border-white/[0.08] h-10 rounded-lg" />
+              className="bg-white/[0.02] border-border h-10 rounded-xl" />
           </div>
           <div>
-            <label className="text-[11px] font-medium text-white/40 mb-1.5 block">密码</label>
+            <label className="text-[11px] font-medium text-foreground/30 mb-1.5 block">密码</label>
             <Input type="password" placeholder="至少6位" value={password}
               onChange={(e) => setPassword(e.target.value)} required
-              className="bg-white/[0.03] border-white/[0.08] h-10 rounded-lg" />
+              className="bg-white/[0.02] border-border h-10 rounded-xl" />
           </div>
           <div>
-            <label className="text-[11px] font-medium text-white/40 mb-1.5 block">验证码</label>
+            <label className="text-[11px] font-medium text-foreground/30 mb-1.5 block">验证码</label>
             <div className="flex gap-2">
               <Input placeholder="4位数字" value={captcha} maxLength={4}
                 onChange={(e) => setCaptcha(e.target.value.replace(/\D/g, ""))} required
-                className="bg-white/[0.03] border-white/[0.08] h-10 rounded-lg flex-1" />
+                className="bg-white/[0.02] border-border h-10 rounded-xl flex-1" />
               <button type="button" onClick={fetchCaptcha}
-                className="h-10 px-3 rounded-lg text-sm font-bold tracking-[4px] bg-white/[0.05] border border-white/[0.08] hover:bg-white/[0.08] transition-colors text-purple-400 select-none">
+                className="h-10 px-3 rounded-xl text-sm font-bold tracking-[4px] bg-white/[0.03] border border-border hover:bg-white/[0.06] transition-colors text-purple-400 select-none">
                 {captchaCode || "----"}
               </button>
             </div>
