@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { CreditsDisplay } from "@/components/user/credits-display";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
@@ -29,7 +30,28 @@ export function Header() {
         <Link href="/" className={`font-bold shrink-0 tracking-tight transition-all duration-500 ${
           scrolled ? "text-base" : "text-lg"
         }`}>
-          <span className="gradient-text">Frame</span><span className="text-white/80">Craft</span>
+          <motion.span
+            className="inline-block bg-clip-text text-transparent"
+            style={{
+              backgroundImage: "linear-gradient(135deg, #d4b8f0 0%, #b57bee 30%, #f0a0c0 55%, #f5c090 75%, #d4b8f0 100%)",
+              backgroundSize: "200% 200%",
+            }}
+            animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          >
+            Frame
+          </motion.span>
+          <motion.span
+            className="inline-block bg-clip-text text-transparent"
+            style={{
+              backgroundImage: "linear-gradient(135deg, #e0d0ff 0%, #ffffff 40%, #d0c0f0 70%, #e0d0ff 100%)",
+              backgroundSize: "200% 200%",
+            }}
+            animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+          >
+            Craft
+          </motion.span>
         </Link>
 
         {/* Desktop nav */}

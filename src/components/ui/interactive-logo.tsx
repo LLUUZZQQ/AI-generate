@@ -1,178 +1,99 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useRef, useMemo } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { Environment, Float } from "@react-three/drei";
+import * as THREE from "three";
 
-export function InteractiveLogo() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const mouseRef = useRef({ x: 0, y: 0 });
-  const targetRef = useRef({ x: 0, y: 0 });
+function FShape() {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const stroke = 0.78;
+  const halfH = 2.1;
+  const topW = 2.5;
+  const midW = 1.9;
+  const r = stroke * 0.5;
+  const sx = -1.35;
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    let animId: number;
-    let scene: any, camera: any, renderer: any, mesh: any;
-
-    const init = async () => {
-      const THREE = await import("three");
-
-      const w = container.clientWidth;
-      const h = container.clientHeight;
-
-      scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera(35, w / h, 0.1, 100);
-      camera.position.set(0, 0.05, 9);
-      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-      renderer.setSize(w, h);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.15;
-      container.appendChild(renderer.domElement);
-
-      scene.add(new THREE.AmbientLight(0x6666aa, 0.5));
-      const k = new THREE.DirectionalLight(0xffffff, 3.5);
-      k.position.set(3, 2, 5); scene.add(k);
-      const rim = new THREE.DirectionalLight(0xbbccff, 3);
-      rim.position.set(-3, 2, -3); scene.add(rim);
-      const bot = new THREE.DirectionalLight(0xddaaff, 2);
-      bot.position.set(0, -3, 2); scene.add(bot);
-
-      // === Single continuous F shape ===
-      const stroke = 0.78;
-      const halfH = 2.1;
-      const topW = 2.5;
-      const midW = 1.9;
-      const r = stroke * 0.5; // corner radius
-
-      const sx = -1.35; // left edge x
-      const shape = new THREE.Shape();
-
-      // Start: bottom-left
-      shape.moveTo(sx, -halfH);
-
-      // Up left side, turning into top bar top-left corner
-      shape.lineTo(sx, halfH - stroke);
-      shape.quadraticCurveTo(sx, halfH, sx + r, halfH);
-
-      // Top bar: across the top
-      shape.lineTo(sx + topW - r, halfH);
-      shape.quadraticCurveTo(sx + topW, halfH, sx + topW, halfH - r);
-
-      // Top bar: down right side
-      shape.lineTo(sx + topW, halfH - stroke + r);
-      shape.quadraticCurveTo(sx + topW, halfH - stroke, sx + topW - r, halfH - stroke);
-
-      // Top bar: back left along bottom
-      shape.lineTo(sx + stroke + r, halfH - stroke);
-      shape.quadraticCurveTo(sx + stroke, halfH - stroke, sx + stroke, halfH - stroke - r);
-
-      // Inner stem: down to mid bar
-      shape.lineTo(sx + stroke, stroke + r);
-      shape.quadraticCurveTo(sx + stroke, stroke, sx + stroke + r, stroke);
-
-      // Mid bar: across to the right
-      shape.lineTo(sx + midW - r, stroke);
-      shape.quadraticCurveTo(sx + midW, stroke, sx + midW, stroke - r);
-
-      // Mid bar: down right side
-      shape.lineTo(sx + midW, -stroke + r);
-      shape.quadraticCurveTo(sx + midW, -stroke, sx + midW - r, -stroke);
-
-      // Mid bar: back left along bottom
-      shape.lineTo(sx + stroke + r, -stroke);
-      shape.quadraticCurveTo(sx + stroke, -stroke, sx + stroke, -stroke - r);
-
-      // Inner stem: down to bottom
-      shape.lineTo(sx + stroke, -halfH + r);
-      shape.quadraticCurveTo(sx + stroke, -halfH, sx, -halfH);
-
-      const geo = new THREE.ExtrudeGeometry(shape, {
-        depth: 0.6,
-        bevelEnabled: true,
-        bevelThickness: 0.08,
-        bevelSize: 0.07,
-        bevelSegments: 4,
-      });
-
-      const mat = new THREE.MeshPhysicalMaterial({
-        color: 0xe8e0ff, metalness: 0.0, roughness: 0.18,
-        clearcoat: 1.0, clearcoatRoughness: 0.08,
-        transparent: true, opacity: 0.55, envMapIntensity: 0.7,
-        specularIntensity: 1.2,
-      });
-
-      const group = new THREE.Group();
-      const fMesh = new THREE.Mesh(geo, mat);
-      fMesh.position.z = -0.3;
-      group.add(fMesh);
-
-      // Edge glow
-      const edgeGeo = new THREE.EdgesGeometry(geo);
-      const edgeLine = new THREE.LineSegments(edgeGeo, new THREE.LineBasicMaterial({ color: 0xccbbff, transparent: true, opacity: 0.6 }));
-      edgeLine.position.z = -0.3;
-      group.add(edgeLine);
-
-      mesh = group;
-      scene.add(mesh);
-
-      // Particles
-      const pGeo = new THREE.BufferGeometry();
-      const count = 40;
-      const pos = new Float32Array(count * 3);
-      for (let i = 0; i < count; i++) {
-        pos[i * 3] = (Math.random() - 0.5) * 14;
-        pos[i * 3 + 1] = (Math.random() - 0.5) * 14;
-        pos[i * 3 + 2] = (Math.random() - 0.5) * 10;
-      }
-      pGeo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-      scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({
-        color: 0xd4c4f0, size: 0.02, transparent: true, opacity: 0.3,
-        blending: THREE.AdditiveBlending, depthWrite: false,
-      })));
-
-      const animate = () => {
-        animId = requestAnimationFrame(animate);
-        targetRef.current.x += (mouseRef.current.x - targetRef.current.x) * 0.04;
-        targetRef.current.y += (mouseRef.current.y - targetRef.current.y) * 0.04;
-        if (mesh) {
-          mesh.rotation.y = targetRef.current.x * 0.85;
-          mesh.rotation.x = targetRef.current.y * 0.4;
-          mesh.position.y = Math.sin(Date.now() * 0.0008) * 0.1;
-        }
-        renderer.render(scene, camera);
-      };
-      animate();
-    };
-
-    init();
-
-    const onMouse = (e: MouseEvent) => {
-      const rect = container.getBoundingClientRect();
-      mouseRef.current.x = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
-      mouseRef.current.y = -((e.clientY - rect.top) / rect.height - 0.5) * 2;
-    };
-    const onResize = () => {
-      if (!renderer || !camera) return;
-      const w = container.clientWidth, h = container.clientHeight;
-      renderer.setSize(w, h);
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-    };
-    window.addEventListener("mousemove", onMouse);
-    window.addEventListener("resize", onResize);
-
-    return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener("mousemove", onMouse);
-      window.removeEventListener("resize", onResize);
-      if (renderer) renderer.dispose();
-    };
+  const shape = useMemo(() => {
+    const s = new THREE.Shape();
+    s.moveTo(sx, -halfH);
+    s.lineTo(sx, halfH - stroke);
+    s.quadraticCurveTo(sx, halfH, sx + r, halfH);
+    s.lineTo(sx + topW - r, halfH);
+    s.quadraticCurveTo(sx + topW, halfH, sx + topW, halfH - r);
+    s.lineTo(sx + topW, halfH - stroke + r);
+    s.quadraticCurveTo(sx + topW, halfH - stroke, sx + topW - r, halfH - stroke);
+    s.lineTo(sx + stroke + r, halfH - stroke);
+    s.quadraticCurveTo(sx + stroke, halfH - stroke, sx + stroke, halfH - stroke - r);
+    s.lineTo(sx + stroke, stroke + r);
+    s.quadraticCurveTo(sx + stroke, stroke, sx + stroke + r, stroke);
+    s.lineTo(sx + midW - r, stroke);
+    s.quadraticCurveTo(sx + midW, stroke, sx + midW, stroke - r);
+    s.lineTo(sx + midW, -stroke + r);
+    s.quadraticCurveTo(sx + midW, -stroke, sx + midW - r, -stroke);
+    s.lineTo(sx + stroke + r, -stroke);
+    s.quadraticCurveTo(sx + stroke, -stroke, sx + stroke, -stroke - r);
+    s.lineTo(sx + stroke, -halfH + r);
+    s.quadraticCurveTo(sx + stroke, -halfH, sx, -halfH);
+    return s;
   }, []);
 
+  const geo = useMemo(() => {
+    return new THREE.ExtrudeGeometry(shape, {
+      depth: 0.6,
+      bevelEnabled: true,
+      bevelThickness: 0.08,
+      bevelSize: 0.07,
+      bevelSegments: 4,
+    });
+  }, [shape]);
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      const mx = (state.mouse.x || 0) * 0.5;
+      const my = (state.mouse.y || 0) * 0.3;
+      meshRef.current.rotation.y += 0.003;
+      meshRef.current.rotation.x += (my - meshRef.current.rotation.x) * 0.02;
+      meshRef.current.rotation.y += (mx * 0.5 - meshRef.current.rotation.y) * 0.01;
+    }
+  });
+
   return (
-    <div
-      ref={containerRef}
-      className="w-full aspect-square max-w-[420px] mx-auto cursor-grab active:cursor-grabbing select-none"
-    />
+    <Float speed={1.5} rotationIntensity={0.15} floatIntensity={0.3}>
+      <mesh ref={meshRef} geometry={geo} position={[0, 0, -0.3]}>
+        <meshPhysicalMaterial
+          color="#e8e0ff"
+          metalness={0.0}
+          roughness={0.15}
+          clearcoat={1.0}
+          clearcoatRoughness={0.06}
+          transparent
+          opacity={0.6}
+          envMapIntensity={0.8}
+          specularIntensity={1.5}
+        />
+      </mesh>
+      <lineSegments geometry={new THREE.EdgesGeometry(geo)} position={[0, 0, -0.3]}>
+        <lineBasicMaterial color="#ccbbff" transparent opacity={0.5} />
+      </lineSegments>
+    </Float>
+  );
+}
+
+export function InteractiveLogo() {
+  return (
+    <div className="w-full aspect-square max-w-[420px] mx-auto cursor-grab active:cursor-grabbing select-none">
+      <Canvas
+        camera={{ position: [0, 0.1, 9], fov: 35 }}
+        gl={{ alpha: true, antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.2 }}
+        dpr={[1, 2]}
+      >
+        <ambientLight intensity={0.5} color="#6666aa" />
+        <directionalLight position={[3, 2, 5]} intensity={3.5} color="#ffffff" />
+        <directionalLight position={[-3, 2, -3]} intensity={3} color="#bbccff" />
+        <directionalLight position={[0, -3, 2]} intensity={2} color="#ddaaff" />
+        <FShape />
+        <Environment preset="city" />
+      </Canvas>
+    </div>
   );
 }
