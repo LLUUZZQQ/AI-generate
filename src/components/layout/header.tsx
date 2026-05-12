@@ -33,22 +33,22 @@ export function Header() {
           <motion.span
             className="inline-block bg-clip-text text-transparent"
             style={{
-              backgroundImage: "linear-gradient(135deg, #d4b8f0 0%, #b57bee 30%, #f0a0c0 55%, #f5c090 75%, #d4b8f0 100%)",
-              backgroundSize: "200% 200%",
+              backgroundImage: "linear-gradient(135deg, #818cf8 0%, #a78bfa 25%, #60a5fa 50%, #818cf8 75%, #a78bfa 100%)",
+              backgroundSize: "300% 300%",
             }}
             animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
           >
             Frame
           </motion.span>
           <motion.span
             className="inline-block bg-clip-text text-transparent"
             style={{
-              backgroundImage: "linear-gradient(135deg, #e0d0ff 0%, #ffffff 40%, #d0c0f0 70%, #e0d0ff 100%)",
-              backgroundSize: "200% 200%",
+              backgroundImage: "linear-gradient(135deg, #c7d2fe 0%, #e0e7ff 35%, #93c5fd 65%, #c7d2fe 100%)",
+              backgroundSize: "300% 300%",
             }}
             animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+            transition={{ duration: 7, repeat: Infinity, ease: "linear", delay: 1 }}
           >
             Craft
           </motion.span>
