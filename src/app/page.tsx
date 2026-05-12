@@ -5,7 +5,6 @@ import { InteractiveLogoWrapper } from "@/components/ui/interactive-logo-wrapper
 import { MagneticButton } from "@/components/ui/magnetic-button";
 import { BrowserFrame } from "@/components/ui/browser-frame";
 import { GenerationFlow } from "@/components/ui/generation-flow";
-import { CompareSlider } from "@/components/ui/compare-slider";
 import { Upload, Wand2, Download, Layers, Zap, Shield } from "lucide-react";
 
 export default function LandingPage() {
@@ -239,16 +238,28 @@ export default function LandingPage() {
           看看 <span className="gradient-text">实际效果</span>
         </h2>
         <div className="glass p-3 md:p-4">
-          <CompareSlider
-            before="https://picsum.photos/seed/product-plain/800/600"
-            after="https://picsum.photos/seed/product-styled/800/600"
-            beforeLabel="上传原图"
-            afterLabel="AI 场景替换"
-          />
+          <div className="rounded-2xl overflow-hidden">
+            <div className="relative aspect-[4/3] bg-white/[0.015] flex items-center justify-center">
+              <div className="text-center">
+                <p className="text-sm text-foreground/20 mb-3">拖拽中间滑块查看对比效果</p>
+                <div className="flex gap-4 justify-center">
+                  <div className="text-center">
+                    <div className="w-32 h-24 rounded-xl bg-white/[0.03] border border-white/[0.04] mb-2 flex items-center justify-center">
+                      <span className="text-[10px] text-foreground/15">上传原图</span>
+                    </div>
+                    <span className="text-[10px] text-foreground/25">原图</span>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-32 h-24 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/15 mb-2 flex items-center justify-center">
+                      <span className="text-[10px] text-purple-400/40">处理后</span>
+                    </div>
+                    <span className="text-[10px] text-purple-400/50">结果</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <p className="text-center text-[11px] text-foreground/18 mt-5">
-          拖拽滑块对比 · 自动播放中 · 悬停可暂停
-        </p>
       </section>
       </ScrollReveal>
 
