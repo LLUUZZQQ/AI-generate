@@ -4,11 +4,8 @@ import { prisma } from "@/lib/db";
 import { downloadFromS3, uploadToS3 } from "@/lib/s3";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
-import { HfInference } from "@huggingface/inference";
 
 const hasS3 = !!(process.env.S3_BUCKET && process.env.S3_ENDPOINT);
-
-const hf = new HfInference(process.env.HF_TOKEN!);
 
 const worker = new Worker("bg-replace-queue", async (job) => {
   const { taskId } = job.data;
@@ -138,6 +135,8 @@ const worker = new Worker("bg-replace-queue", async (job) => {
 }, { connection: redis, concurrency: 2 });
 
 async function removeBackground(imageBuffer: Buffer): Promise<Buffer> {
+  const { HfInference } = await import("@huggingface/inference");
+  const hf = new HfInference(process.env.HF_TOKEN!);
   const blob = new Blob([new Uint8Array(imageBuffer)], { type: "image/png" });
 
   const result = await hf.imageSegmentation({ model: "briaai/RMBG-2.0", inputs: blob });
@@ -202,6 +201,8 @@ async function compositeImages(subjectBuffer: Buffer, bgBuffer: Buffer): Promise
 }
 
 async function generateBackground(prompt: string): Promise<Buffer> {
+  const { HfInference } = await import("@huggingface/inference");
+  const hf = new HfInference(process.env.HF_TOKEN!);
   const fullPrompt = `${prompt}, photorealistic, natural lighting, casual smartphone photo, no text, no watermark, no overlay`;
 
   const result = await hf.textToImage({
