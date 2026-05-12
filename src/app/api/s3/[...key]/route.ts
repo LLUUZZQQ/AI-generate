@@ -15,7 +15,7 @@ export async function GET(
   try {
     const buffer = await downloadFromS3(s3Key);
     return new NextResponse(new Uint8Array(buffer), {
-      headers: { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=31536000, immutable" },
+      headers: { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=3600" },
     });
   } catch {
     return NextResponse.json({ error: "Not found" }, { status: 404 });

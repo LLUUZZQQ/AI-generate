@@ -39,6 +39,6 @@ export async function GET(
   }
 
   return new NextResponse(new Uint8Array(buffer), {
-    headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=31536000, immutable" },
+    headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=3600" },
   });
 }

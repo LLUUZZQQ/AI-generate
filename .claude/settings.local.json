@@ -85,7 +85,8 @@
       "Bash(curl *)",
       "Bash(npm uninstall *)",
       "Bash(tee /dev/tty)",
-      "Bash(python3 -m json.tool)"
+      "Bash(python3 -m json.tool)",
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); [print\\(t['name'], t['thumbnailUrl']\\) for t in data['data']]\")"
     ]
   }
 }
