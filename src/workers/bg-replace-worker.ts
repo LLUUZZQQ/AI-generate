@@ -45,8 +45,14 @@ const worker = new Worker("bg-replace-queue", async (job) => {
     try {
       let original: Buffer;
       if (result.originalKey.startsWith("http")) {
+        // S3 URL — extract path and strip bucket prefix
         const url = new URL(result.originalKey);
-        const key = url.pathname.substring(1);
+        let key = url.pathname.substring(1);
+        // Strip bucket name if present
+        const bucket = process.env.S3_BUCKET;
+        if (bucket && key.startsWith(bucket + "/")) {
+          key = key.substring(bucket.length + 1);
+        }
         original = await downloadFromS3(key);
       } else if (result.originalKey.includes("/")) {
         const key = result.originalKey.startsWith("/") ? result.originalKey.substring(1) : result.originalKey;

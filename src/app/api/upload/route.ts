@@ -32,14 +32,16 @@ export async function POST(req: NextRequest) {
   const buffer = Buffer.from(await file.arrayBuffer());
 
   let url: string;
+  let key: string;
   if (process.env.S3_BUCKET && process.env.S3_ENDPOINT) {
-    const key = `uploads/${session.user.id}_${Date.now()}.${ext}`;
+    key = `uploads/${session.user.id}_${Date.now()}.${ext}`;
     url = await uploadToS3(key, buffer, file.type);
   } else {
     const filepath = path.join(uploadDir, filename);
     await writeFile(filepath, buffer);
     url = `/uploads/${filename}`;
+    key = filename;
   }
 
-  return success({ url, filename: url.split("/").pop(), size: file.size, type: file.type });
+  return success({ url, key, filename: url.split("/").pop(), size: file.size, type: file.type });
 }

@@ -44,8 +44,7 @@ export default function NewBgReplacePage() {
           setSubmitting(false);
           return;
         }
-        const url = uploadData.data.url;
-        const key = url.startsWith("/uploads/") ? url.replace("/uploads/", "") : url;
+        const key = uploadData.data.key || uploadData.data.filename;
         fileKeys.push(key);
       }
 
@@ -60,8 +59,7 @@ export default function NewBgReplacePage() {
           setSubmitting(false);
           return;
         }
-        const url = uploadData.data.url;
-        customBgKey = url.startsWith("/uploads/") ? url.replace("/uploads/", "") : url;
+        customBgKey = uploadData.data.key || uploadData.data.filename;
       }
 
       const taskRes = await fetch("/api/background-replace", {
