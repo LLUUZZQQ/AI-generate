@@ -1,5 +1,3 @@
-console.log("BG-REPLACE: module loaded");
-
 import { Worker } from "bullmq";
 import { redis } from "@/lib/redis";
 import { prisma } from "@/lib/db";
@@ -7,11 +5,7 @@ import { downloadFromS3, uploadToS3 } from "@/lib/s3";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
-console.log("BG-REPLACE: imports done");
-
 const hasS3 = !!(process.env.S3_BUCKET && process.env.S3_ENDPOINT);
-
-console.log("BG-REPLACE: creating worker...");
 
 const worker = new Worker("bg-replace-queue", async (job) => {
   const { taskId } = job.data;
@@ -129,8 +123,6 @@ const worker = new Worker("bg-replace-queue", async (job) => {
   }
 }, { connection: redis, concurrency: 2 });
 
-console.log("BG-REPLACE: worker created");
-
 async function removeBackground(imageBuffer: Buffer): Promise<Buffer> {
   const { HfInference } = await import("@huggingface/inference");
   const hf = new HfInference(process.env.HF_TOKEN!);
@@ -213,4 +205,4 @@ async function createSolidBackground(color: string): Promise<Buffer> {
     .toBuffer();
 }
 
-console.log("BG-REPLACE: Background replace worker started");
+console.log("Background replace worker started");

@@ -32,10 +32,8 @@ export async function POST(req: NextRequest) {
   const buffer = Buffer.from(await file.arrayBuffer());
 
   let url: string;
-  console.log("[upload] S3_BUCKET:", process.env.S3_BUCKET, "S3_ENDPOINT:", process.env.S3_ENDPOINT);
   if (process.env.S3_BUCKET && process.env.S3_ENDPOINT) {
     const key = `uploads/${session.user.id}_${Date.now()}.${ext}`;
-    console.log("[upload] uploading to S3 with key:", key);
     url = await uploadToS3(key, buffer, file.type);
   } else {
     const filepath = path.join(uploadDir, filename);

@@ -4,9 +4,7 @@ import "./image-worker";
 import "./video-worker";
 import "./swap-worker";
 import "./suggestion-worker";
-console.log("INDEX: before bg-replace import");
 import "./bg-replace-worker";
-console.log("INDEX: after bg-replace import");
 
 // Auto-shutdown after 5 minutes of inactivity
 let idleTimer: ReturnType<typeof setTimeout> | null = null;
