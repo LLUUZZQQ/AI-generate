@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { ArrowLeft, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -89,6 +90,35 @@ export default function BgReplaceTaskPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 md:py-12">
+      {/* Processing status banner */}
+      {(task.status === "pending" || task.status === "processing") && (
+        <div className="glass p-5 mb-6">
+          <div className="flex items-center gap-4">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            >
+              <Loader2 className="w-5 h-5 text-purple-400" />
+            </motion.div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground/70 mb-2">
+                {task.status === "pending" ? "任务排队中..." : "正在处理中..."}
+              </p>
+              <div className="h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500"
+                  animate={{ width: ["0%", "60%", "80%", "90%"] }}
+                  transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                />
+              </div>
+              <p className="text-[10px] text-foreground/20 mt-2">
+                {task.status === "pending" ? "正在等待 Worker 处理" : "AI 正在移除背景 · 合成场景 · 优化细节"}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Link href="/background-replace">
