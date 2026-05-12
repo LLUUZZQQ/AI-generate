@@ -1,7 +1,7 @@
 "use client";
 export function BrowserFrame({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-xl overflow-hidden border border-white/[0.06] bg-white/[0.015] backdrop-blur-sm shadow-[0_0_60px_-20px_rgba(181,123,238,0.12)] ${className}`}>
+    <div className={`rounded-[1.25rem] overflow-hidden border border-white/[0.08] bg-white/[0.015] backdrop-blur-sm shadow-[0_0_60px_-20px_rgba(181,123,238,0.12)] transition-all duration-400 hover:border-white/[0.14] hover:-translate-y-0.5 ${className}`}>
       {/* Title bar */}
       <div className="flex items-center gap-2 px-4 h-10 border-b border-white/[0.05] bg-white/[0.02]">
         <div className="w-3 h-3 rounded-full bg-red-400/60" />

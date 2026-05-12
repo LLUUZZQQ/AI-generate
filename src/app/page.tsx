@@ -63,46 +63,65 @@ export default function LandingPage() {
           不只是抠图，是<span className="gradient-text">完整的场景替换</span>
         </h2>
 
-        {/* Bento grid — asymmetric layout */}
-        <BrowserFrame className="mb-8 max-w-3xl mx-auto">
-          <div className="p-5 text-center">
-            <p className="text-xs text-foreground/25 mb-2">FrameCraft — 产品照处理界面</p>
-            <div className="h-40 bg-white/[0.02] rounded-lg flex items-center justify-center">
-              <p className="text-foreground/10 text-sm">你的产品照片处理结果将在此展示</p>
+        {/* Bento showcase — 2/3 + 1/3 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <BrowserFrame className="md:col-span-2">
+            <div className="p-5">
+              <p className="text-[10px] text-foreground/20 mb-3">FrameCraft · 产品照处理</p>
+              <div className="aspect-video bg-white/[0.015] rounded-2xl flex items-center justify-center border border-white/[0.03]">
+                <div className="text-center">
+                  <Wand2 className="w-8 h-8 text-foreground/8 mx-auto mb-2" />
+                  <p className="text-xs text-foreground/15">AI 处理结果将在此展示</p>
+                </div>
+              </div>
+            </div>
+          </BrowserFrame>
+          <div className="glass p-6 flex flex-col justify-between">
+            <div>
+              <div className="w-9 h-9 rounded-xl bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Zap className="w-5 h-5" /></div>
+              <h3 className="font-semibold text-sm mb-2">每张仅需 ¥0.10</h3>
+              <p className="text-xs text-foreground/30 leading-relaxed">1 积分处理 1 张照片。注册送 20 积分，无需绑卡。</p>
+            </div>
+            <div className="mt-4 pt-4 border-t border-white/[0.05] flex items-center justify-between">
+              <span className="text-[10px] text-foreground/20">平均处理时间</span>
+              <span className="text-xs font-medium text-emerald-400">~25s</span>
             </div>
           </div>
-        </BrowserFrame>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <div className="md:col-span-2 glass rounded-xl p-6">
-            <div className="w-9 h-9 rounded-lg bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Wand2 className="w-5 h-5" /></div>
-            <h3 className="font-medium text-sm mb-1.5">AI 智能抠图</h3>
-            <p className="text-xs text-foreground/30 leading-relaxed">自动识别产品主体，精细处理边缘。鞋盒、配件完整保留，不会误删任何细节。</p>
+        {/* Bento feature cards — varied sizes */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="md:col-span-2 glass p-6">
+            <div className="w-9 h-9 rounded-xl bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Wand2 className="w-5 h-5" /></div>
+            <h3 className="font-semibold text-sm mb-2">AI 智能抠图</h3>
+            <p className="text-xs text-foreground/30 leading-relaxed max-w-sm">自动识别产品主体，精细处理边缘。鞋盒、配件完整保留。</p>
           </div>
-          <div className="glass rounded-xl p-6">
-            <div className="w-9 h-9 rounded-lg bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Upload className="w-5 h-5" /></div>
-            <h3 className="font-medium text-sm mb-1.5">批量上传</h3>
-            <p className="text-xs text-foreground/30 leading-relaxed">一次上传多张，共用同一背景场景。</p>
+          <div className="glass p-6">
+            <div className="w-9 h-9 rounded-xl bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Upload className="w-5 h-5" /></div>
+            <h3 className="font-semibold text-sm mb-2">批量上传</h3>
+            <p className="text-xs text-foreground/30 leading-relaxed">一次多张，共用同一场景。</p>
           </div>
-          <div className="glass rounded-xl p-6">
-            <div className="w-9 h-9 rounded-lg bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Zap className="w-5 h-5" /></div>
-            <h3 className="font-medium text-sm mb-1.5">快速出图</h3>
-            <p className="text-xs text-foreground/30 leading-relaxed">每张仅需数十秒，批量并行处理。</p>
+          <div className="glass p-6">
+            <div className="w-9 h-9 rounded-xl bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Layers className="w-5 h-5" /></div>
+            <h3 className="font-semibold text-sm mb-2">12 种真实场景</h3>
+            <p className="text-xs text-foreground/30 leading-relaxed">木地板·瓷砖·毛毯·白墙……</p>
           </div>
-          <div className="glass rounded-xl p-6">
-            <div className="w-9 h-9 rounded-lg bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Layers className="w-5 h-5" /></div>
-            <h3 className="font-medium text-sm mb-1.5">真实场景</h3>
-            <p className="text-xs text-foreground/30 leading-relaxed">12 种实拍家居环境，木地板、瓷砖、毛毯……</p>
+          <div className="glass p-6">
+            <div className="w-9 h-9 rounded-xl bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Shield className="w-5 h-5" /></div>
+            <h3 className="font-semibold text-sm mb-2">绕过检测</h3>
+            <p className="text-xs text-foreground/30 leading-relaxed">Vinted/Depop 去重系统。</p>
           </div>
-          <div className="md:col-span-2 glass rounded-xl p-6">
-            <div className="w-9 h-9 rounded-lg bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Shield className="w-5 h-5" /></div>
-            <h3 className="font-medium text-sm mb-1.5">绕过平台检测</h3>
-            <p className="text-xs text-foreground/30 leading-relaxed">同款产品多张不同背景照片，轻松绕过 Vinted/Depop 去重系统。</p>
-          </div>
-          <div className="glass rounded-xl p-6">
-            <div className="w-9 h-9 rounded-lg bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Download className="w-5 h-5" /></div>
-            <h3 className="font-medium text-sm mb-1.5">一键下载</h3>
-            <p className="text-xs text-foreground/30 leading-relaxed">处理完成直接下载全部结果图。</p>
+          <div className="md:col-span-2 glass p-6 flex flex-col justify-between">
+            <div>
+              <div className="w-9 h-9 rounded-xl bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Download className="w-5 h-5" /></div>
+              <h3 className="font-semibold text-sm mb-2">一键批量下载</h3>
+              <p className="text-xs text-foreground/30 leading-relaxed max-w-sm">处理完成的图片可单独下载或批量打包，直接用于产品上架。</p>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <span className="text-[10px] px-2 py-1 rounded-lg bg-white/[0.03] text-foreground/25 border border-white/[0.04]">PNG</span>
+              <span className="text-[10px] px-2 py-1 rounded-lg bg-white/[0.03] text-foreground/25 border border-white/[0.04]">原图分辨率</span>
+              <span className="text-[10px] px-2 py-1 rounded-lg bg-white/[0.03] text-foreground/25 border border-white/[0.04]">批量打包</span>
+            </div>
           </div>
         </div>
       </section>
@@ -142,26 +161,27 @@ export default function LandingPage() {
           适合 <span className="gradient-text">哪些人</span>
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="md:col-span-2 glass rounded-xl p-6 flex flex-col justify-between min-h-[140px]">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-2 glass p-6 flex flex-col justify-between min-h-[160px]">
             <div>
-              <h3 className="font-semibold text-sm mb-2">Vinted / Depop 卖家</h3>
+              <h3 className="font-semibold text-sm mb-2">Vinted / Depop 店群卖家</h3>
               <p className="text-xs text-foreground/30 leading-relaxed max-w-md">店群模式需要大量"不同"照片。同一产品换不同背景，轻松绕过平台去重检测，每个 Listing 都是全新的视觉。</p>
             </div>
             <div className="flex gap-2 mt-4">
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.04] text-foreground/30 border border-white/[0.05]">店群模式</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.04] text-foreground/30 border border-white/[0.05]">防重检测</span>
+              <span className="text-[10px] px-2.5 py-1 rounded-lg bg-white/[0.03] text-foreground/25 border border-white/[0.05]">店群模式</span>
+              <span className="text-[10px] px-2.5 py-1 rounded-lg bg-white/[0.03] text-foreground/25 border border-white/[0.05]">防重检测</span>
+              <span className="text-[10px] px-2.5 py-1 rounded-lg bg-white/[0.03] text-foreground/25 border border-white/[0.05]">批量处理</span>
             </div>
           </div>
-          <div className="glass rounded-xl p-6">
-            <h3 className="font-semibold text-sm mb-2">eBay / Shopify 商家</h3>
+          <div className="glass p-6">
+            <h3 className="font-semibold text-sm mb-2">eBay / Shopify</h3>
             <p className="text-xs text-foreground/30 leading-relaxed">批量处理 SKU 产品图。统一视觉风格，提升店铺专业度。</p>
           </div>
-          <div className="glass rounded-xl p-6">
+          <div className="glass p-6">
             <h3 className="font-semibold text-sm mb-2">鞋类转售</h3>
-            <p className="text-xs text-foreground/30 leading-relaxed">StockX、GOAT 卖家。给每双鞋拍一组照片，换背景后多平台分发。</p>
+            <p className="text-xs text-foreground/30 leading-relaxed">StockX、GOAT 卖家。换背景后多平台分发。</p>
           </div>
-          <div className="md:col-span-2 glass rounded-xl p-6">
+          <div className="md:col-span-2 glass p-6">
             <h3 className="font-semibold text-sm mb-2">社交媒体卖家</h3>
             <p className="text-xs text-foreground/30 leading-relaxed max-w-md">Instagram Shop、Facebook Marketplace。让你的产品照在信息流中脱颖而出。</p>
           </div>
