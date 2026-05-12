@@ -49,11 +49,11 @@
 }
 
 :root {
-  --background: #08080a;
+  --background: #191421;
   --foreground: #f0f0f5;
   --card: rgba(255,255,255,0.03);
   --card-foreground: #f0f0f5;
-  --popover: rgba(12,12,16,0.98);
+  --popover: rgba(25,20,33,0.98);
   --popover-foreground: #f0f0f5;
   --primary: #b57bee;
   --primary-foreground: #ffffff;
@@ -73,7 +73,7 @@
   --chart-4: #06b6d4;
   --chart-5: #22c55e;
   --radius: 0.875rem;
-  --sidebar: rgba(8,8,10,0.97);
+  --sidebar: rgba(25,20,33,0.97);
   --sidebar-foreground: #f0f0f5;
   --sidebar-primary: #b57bee;
   --sidebar-primary-foreground: #ffffff;
@@ -85,11 +85,11 @@
 }
 
 .dark {
-  --background: #08080a;
+  --background: #191421;
   --foreground: #f0f0f5;
   --card: rgba(255,255,255,0.03);
   --card-foreground: #f0f0f5;
-  --popover: rgba(12,12,16,0.98);
+  --popover: rgba(25,20,33,0.98);
   --popover-foreground: #f0f0f5;
   --primary: #b57bee;
   --primary-foreground: #ffffff;
@@ -109,7 +109,7 @@
   --chart-4: #06b6d4;
   --chart-5: #22c55e;
   --radius: 0.875rem;
-  --sidebar: rgba(8,8,10,0.97);
+  --sidebar: rgba(25,20,33,0.97);
   --sidebar-foreground: #f0f0f5;
   --sidebar-primary: #b57bee;
   --sidebar-primary-foreground: #ffffff;
