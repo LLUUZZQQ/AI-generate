@@ -228,44 +228,47 @@ async function compositeImages(subjectBuffer: Buffer, bgBuffer: Buffer): Promise
 
   const subW = subjectMetadata.width;
   const subH = subjectMetadata.height;
-  let bgW = bgMetadata.width;
-  let bgH = bgMetadata.height;
+  const bgW = bgMetadata.width;
+  const bgH = bgMetadata.height;
 
-  // If subject is larger than background, scale background up to match
-  let bg = bgBuffer;
-  if (subW > bgW || subH > bgH) {
-    const scale = Math.max(subW / bgW, subH / bgH);
-    bgW = Math.round(bgW * scale);
-    bgH = Math.round(bgH * scale);
-    bg = await sharpModule(bgBuffer).resize(bgW, bgH).toBuffer();
-  }
+  // Output canvas = subject's original size and aspect ratio
+  const canvasW = subW;
+  const canvasH = subH;
 
-  // Keep subject at original size, no color changes
+  // Scale background to cover the entire subject canvas
+  const bgScale = Math.max(canvasW / bgW, canvasH / bgH);
+  const scaledBgW = Math.round(bgW * bgScale);
+  const scaledBgH = Math.round(bgH * bgScale);
+  const scaledBg = await sharpModule(bgBuffer)
+    .resize(scaledBgW, scaledBgH, { fit: "cover" })
+    .toBuffer();
+
+  // Crop background to exact canvas size (center crop)
+  const bgCropLeft = Math.round((scaledBgW - canvasW) / 2);
+  const bgCropTop = Math.round((scaledBgH - canvasH) / 2);
+  const bg = await sharpModule(scaledBg)
+    .extract({ left: bgCropLeft, top: bgCropTop, width: canvasW, height: canvasH })
+    .toBuffer();
+
+  // Subject stays at original size, fills entire canvas
   const subject = subjectBuffer;
 
-  // Position: centered horizontally, bottom-aligned with padding
-  const left = Math.round((bgW - subW) / 2);
-  const bottomMargin = Math.round(bgH * 0.06);
-  const top = Math.max(0, bgH - subH - bottomMargin);
-
-  // Ground line — where the subject touches the ground
-  const groundY = top + subH;
-
   // === Dual shadow system ===
+  const groundY = canvasH;
 
-  // Layer 1: Contact shadow — dark, sharp, narrow, right at touch point
+  // Contact shadow — dark, sharp, narrow
   const contactW = Math.round(subW * 0.7);
   const contactH = Math.round(subH * 0.04);
-  const contactX = Math.round((bgW - contactW) / 2);
+  const contactX = Math.round((canvasW - contactW) / 2);
   const contactY = groundY - Math.round(contactH * 0.3);
 
-  // Layer 2: Ambient shadow — softer, wider, lighter
+  // Ambient shadow — softer, wider, lighter
   const ambientW = Math.round(subW * 0.9);
   const ambientH = Math.round(subH * 0.18);
-  const ambientX = Math.round((bgW - ambientW) / 2);
+  const ambientX = Math.round((canvasW - ambientW) / 2);
   const ambientY = groundY - Math.round(ambientH * 0.2);
 
-  const shadowSvg = Buffer.from(`<svg width="${bgW}" height="${bgH}">
+  const shadowSvg = Buffer.from(`<svg width="${canvasW}" height="${canvasH}">
     <defs>
       <filter id="blur-contact"><feGaussianBlur stdDeviation="3"/></filter>
       <filter id="blur-ambient"><feGaussianBlur stdDeviation="14"/></filter>
@@ -280,11 +283,11 @@ async function compositeImages(subjectBuffer: Buffer, bgBuffer: Buffer): Promise
 
   const shadowBuffer = await sharpModule(shadowSvg).png().toBuffer();
 
-  // Composite: background → shadow layers → subject
+  // Composite: background → shadow → subject
   return sharpModule(bg)
     .composite([
       { input: shadowBuffer, top: 0, left: 0 },
-      { input: subject, left, top },
+      { input: subject, left: 0, top: 0 },
     ])
     .png()
     .toBuffer();
