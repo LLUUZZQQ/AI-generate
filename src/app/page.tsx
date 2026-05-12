@@ -189,6 +189,39 @@ export default function LandingPage() {
       </section>
       </ScrollReveal>
 
+      {/* ======== BEFORE / AFTER ======== */}
+      <ScrollReveal>
+      <section className="max-w-4xl mx-auto px-6 py-12 md:py-20">
+        <p className="text-[11px] text-purple-400 font-semibold tracking-widest uppercase mb-3 text-center">Showcase</p>
+        <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-10 text-center">
+          看看 <span className="gradient-text">实际效果</span>
+        </h2>
+        <div className="glass p-3 md:p-4">
+          <div className="rounded-2xl overflow-hidden">
+            <div className="relative aspect-[4/3] bg-white/[0.015] flex items-center justify-center">
+              <div className="text-center">
+                <p className="text-sm text-foreground/20 mb-3">拖拽中间滑块查看对比效果</p>
+                <div className="flex gap-4 justify-center">
+                  <div className="text-center">
+                    <div className="w-32 h-24 rounded-xl bg-white/[0.03] border border-white/[0.04] mb-2 flex items-center justify-center">
+                      <span className="text-[10px] text-foreground/15">上传原图</span>
+                    </div>
+                    <span className="text-[10px] text-foreground/25">原图</span>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-32 h-24 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/15 mb-2 flex items-center justify-center">
+                      <span className="text-[10px] text-purple-400/40">处理后</span>
+                    </div>
+                    <span className="text-[10px] text-purple-400/50">结果</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      </ScrollReveal>
+
       {/* ======== METRICS BAR ======== */}
       <ScrollReveal>
       <section className="max-w-3xl mx-auto px-6 py-10">
