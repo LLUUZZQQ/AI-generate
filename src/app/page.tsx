@@ -108,24 +108,24 @@ export default function LandingPage() {
       </section>
       </ScrollReveal>
 
-      {/* ======== HOW IT WORKS ======== */}
+      {/* ======== HOW IT WORKS — sticky steps ======== */}
       <ScrollReveal>
-      <section className="max-w-4xl mx-auto px-6 py-12 md:py-20">
+      <section className="max-w-5xl mx-auto px-6 py-16 md:py-24">
         <p className="text-[11px] text-purple-400 font-semibold tracking-widest uppercase mb-3 text-center">How It Works</p>
-        <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-12 text-center">
+        <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-16 text-center">
           三步完成，<span className="gradient-text">几分钟即可上手</span>
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
-            { step: "1", title: "上传照片", desc: "拖拽或点击上传你的产品照片，支持批量选择，一次可传多张。" },
-            { step: "2", title: "选择背景", desc: "从预设模板中选一个真实场景，或自己上传一张背景图。" },
-            { step: "3", title: "下载结果", desc: "AI 自动处理，几秒后即可下载换好背景的产品图。" },
+            { step: "01", title: "上传照片", desc: "拖拽或点击上传你的产品照片，支持批量选择，一次可传多张，每张只需 ¥0.10。" },
+            { step: "02", title: "选择背景", desc: "12 种实拍场景任选——木地板、瓷砖、毛毯……也可上传你自己的背景图。" },
+            { step: "03", title: "下载结果", desc: "AI 自动处理，秒级返回。下载全部结果图，直接上传到你的卖货平台。" },
           ].map((s, i) => (
-            <div key={s.step} className="flex gap-5 animate-fade-in-up" style={{ animationDelay: `${0.15 * (i + 1)}s` }}>
-              <div className="text-5xl font-bold text-white/[0.03] shrink-0 leading-none">{s.step}</div>
-              <div>
-                <h3 className="font-medium text-sm mb-2">{s.title}</h3>
+            <div key={s.step} className="relative">
+              <div className="text-7xl font-bold text-white/[0.02] absolute -top-8 -left-2 select-none">{s.step}</div>
+              <div className="relative">
+                <h3 className="font-semibold text-sm mb-3">{s.title}</h3>
                 <p className="text-xs text-foreground/30 leading-relaxed">{s.desc}</p>
               </div>
             </div>
@@ -134,9 +134,44 @@ export default function LandingPage() {
       </section>
       </ScrollReveal>
 
+      {/* ======== USE CASES — Bento ======== */}
+      <ScrollReveal>
+      <section className="max-w-4xl mx-auto px-6 py-12 md:py-20">
+        <p className="text-[11px] text-purple-400 font-semibold tracking-widest uppercase mb-3 text-center">Use Cases</p>
+        <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-12 text-center">
+          适合 <span className="gradient-text">哪些人</span>
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="md:col-span-2 glass rounded-xl p-6 flex flex-col justify-between min-h-[140px]">
+            <div>
+              <h3 className="font-semibold text-sm mb-2">Vinted / Depop 卖家</h3>
+              <p className="text-xs text-foreground/30 leading-relaxed max-w-md">店群模式需要大量"不同"照片。同一产品换不同背景，轻松绕过平台去重检测，每个 Listing 都是全新的视觉。</p>
+            </div>
+            <div className="flex gap-2 mt-4">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.04] text-foreground/30 border border-white/[0.05]">店群模式</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.04] text-foreground/30 border border-white/[0.05]">防重检测</span>
+            </div>
+          </div>
+          <div className="glass rounded-xl p-6">
+            <h3 className="font-semibold text-sm mb-2">eBay / Shopify 商家</h3>
+            <p className="text-xs text-foreground/30 leading-relaxed">批量处理 SKU 产品图。统一视觉风格，提升店铺专业度。</p>
+          </div>
+          <div className="glass rounded-xl p-6">
+            <h3 className="font-semibold text-sm mb-2">鞋类转售</h3>
+            <p className="text-xs text-foreground/30 leading-relaxed">StockX、GOAT 卖家。给每双鞋拍一组照片，换背景后多平台分发。</p>
+          </div>
+          <div className="md:col-span-2 glass rounded-xl p-6">
+            <h3 className="font-semibold text-sm mb-2">社交媒体卖家</h3>
+            <p className="text-xs text-foreground/30 leading-relaxed max-w-md">Instagram Shop、Facebook Marketplace。让你的产品照在信息流中脱颖而出。</p>
+          </div>
+        </div>
+      </section>
+      </ScrollReveal>
+
       {/* ======== CLOSING ======== */}
       <ScrollReveal>
-      <section className="max-w-3xl mx-auto px-6 py-16 md:py-24 text-center">
+      <section className="max-w-3xl mx-auto px-6 py-20 md:py-28 text-center">
         <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-4">
           准备好<span className="gradient-text">提升产品照片</span>了吗？
         </h2>
@@ -149,6 +184,8 @@ export default function LandingPage() {
             免费开始使用 ↗
           </MagneticButton>
         </Link>
+
+        <p className="mt-10 text-[10px] text-foreground/15">© 2026 FrameCraft · 产品照片背景替换</p>
       </section>
       </ScrollReveal>
     </div>
