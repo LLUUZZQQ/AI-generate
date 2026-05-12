@@ -97,36 +97,36 @@ export default function NewBgReplacePage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 md:py-12">
-      <div className="flex items-center gap-4 mb-8">
+      <div className="flex items-center gap-3 mb-10">
         {[1, 2, 3].map((s) => (
           <div key={s} className="flex items-center gap-2">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all duration-500 ${
               s <= step
-                ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
-                : "bg-white/[0.06] text-white/30"
+                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                : "bg-white/[0.04] text-foreground/20"
             }`}>
               {s}
             </div>
-            <span className={`text-sm ${s <= step ? "text-white/60" : "text-white/20"}`}>
+            <span className={`text-xs font-medium ${s <= step ? "text-foreground/50" : "text-foreground/15"}`}>
               {s === 1 ? "上传" : s === 2 ? "背景" : "确认"}
             </span>
-            {s < 3 && <div className={`w-8 h-px ${s < step ? "bg-purple-500/50" : "bg-white/[0.06]"}`} />}
+            {s < 3 && <div className={`w-6 h-px transition-colors duration-500 ${s < step ? "bg-primary/40" : "bg-border"}`} />}
           </div>
         ))}
       </div>
 
       {step === 1 && (
-        <Card className="p-6 border-white/[0.08] bg-white/[0.02]">
-          <h2 className="text-lg font-semibold text-white mb-1">上传产品照片</h2>
-          <p className="text-sm text-white/40 mb-6">选择要替换背景的产品照片，所有照片将使用同一背景</p>
+        <Card className="p-6 border-border bg-white/[0.015]">
+          <h2 className="text-lg font-semibold mb-1">上传产品照片</h2>
+          <p className="text-sm text-foreground/30 mb-6">选择要替换背景的产品照片，所有照片将使用同一背景</p>
           <UploadZone files={files} onFilesChange={setFiles} />
         </Card>
       )}
 
       {step === 2 && (
-        <Card className="p-6 border-white/[0.08] bg-white/[0.02]">
-          <h2 className="text-lg font-semibold text-white mb-1">选择背景</h2>
-          <p className="text-sm text-white/40 mb-6">选择一种背景方式，所有照片将使用同一背景</p>
+        <Card className="p-6 border-border bg-white/[0.015]">
+          <h2 className="text-lg font-semibold mb-1">选择背景</h2>
+          <p className="text-sm text-foreground/30 mb-6">选择一种背景方式，所有照片将使用同一背景</p>
           <BgSelector
             mode={mode}
             onModeChange={setMode}
@@ -141,8 +141,8 @@ export default function NewBgReplacePage() {
       )}
 
       {step === 3 && (
-        <Card className="p-6 border-white/[0.08] bg-white/[0.02]">
-          <h2 className="text-lg font-semibold text-white mb-1">确认提交</h2>
+        <Card className="p-6 border-border bg-white/[0.015]">
+          <h2 className="text-lg font-semibold mb-1">确认提交</h2>
           <p className="text-sm text-white/40 mb-6">确认以下信息后提交任务</p>
           <div className="space-y-3">
             <div className="flex justify-between py-2 border-b border-white/[0.06]">

@@ -9,9 +9,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TransactionList } from "@/components/user/transaction-list";
 
 const plans = [
-  { amount: 50, credits: 50, price: 15, name: "基础包" },
-  { amount: 120, credits: 120, price: 30, name: "进阶包", rec: true },
-  { amount: 300, credits: 300, price: 60, name: "专业包" },
+  { amount: 100, credits: 100, price: 10, name: "入门包", desc: "处理 100 张" },
+  { amount: 500, credits: 500, price: 45, name: "进阶包", desc: "处理 500 张", rec: true },
+  { amount: 2000, credits: 2000, price: 160, name: "专业包", desc: "处理 2000 张" },
 ];
 
 export default function SettingsPage() {
@@ -73,7 +73,7 @@ export default function SettingsPage() {
             {plan.rec && <div className="absolute top-0 right-0 text-[9px] px-2 py-0.5 rounded-bl-lg bg-purple-500/20 text-purple-300">推荐</div>}
             <p className="text-sm font-semibold mb-2">{plan.name}</p>
             <p className="text-2xl font-bold mb-1">{plan.credits}<span className="text-xs font-normal text-white/30 ml-0.5">积分</span></p>
-            <p className="text-xs text-white/20">¥{plan.price}</p>
+            <p className="text-[10px] text-white/20">{plan.desc} · ¥{plan.price}</p>
           </button>
         ))}
       </div>
@@ -91,9 +91,9 @@ export default function SettingsPage() {
               {selectedPlan && <>{selectedPlan.name} — {selectedPlan.credits} 积分 / ¥{selectedPlan.price}</>}
             </DialogDescription>
           </DialogHeader>
-          <div className="text-sm text-white/30 space-y-1 py-2">
-            <p>支付方式：微信支付（模拟）</p>
-            <p>充值后积分立即到账</p>
+          <div className="text-sm text-foreground/30 space-y-1 py-2">
+            <p>支付方式：Stripe</p>
+            <p>充值后积分即时到账，可用于背景替换</p>
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" className="border-white/10" onClick={() => setSelectedPlan(null)} disabled={paying}>取消</Button>
