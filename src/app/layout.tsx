@@ -4,6 +4,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { BackToTop } from "@/components/ui/back-to-top";
 import { ScrollProgress } from "@/components/ui/scroll-effects";
+import { SmoothScroll } from "@/components/ui/smooth-scroll";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
@@ -49,12 +50,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="zh-CN" suppressHydrationWarning>
       <body className="flex flex-col min-h-screen">
         <ScrollProgress />
+        <SmoothScroll>
         <Providers>
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
           <BackToTop />
         </Providers>
+        </SmoothScroll>
         <Analytics />
       </body>
     </html>

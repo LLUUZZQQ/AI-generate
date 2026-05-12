@@ -1,47 +1,28 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
+import { motion, useInView } from "framer-motion";
 
-interface ScrollRevealProps {
+export function ScrollReveal({
+  children,
+  delay = 0,
+  className = "",
+}: {
   children: React.ReactNode;
-  className?: string;
   delay?: number;
-  scale?: boolean;
-}
-
-export function ScrollReveal({ children, className = "", delay = 0, scale = false }: ScrollRevealProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setTimeout(() => setVisible(true), delay);
-          observer.unobserve(el);
-        }
-      },
-      { threshold: 0.08, rootMargin: "0px 0px -30px 0px" }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [delay]);
-
-  const baseTransform = scale
-    ? "scale-95 translate-y-4"
-    : "translate-y-6";
-
-  const visibleTransform = "scale-100 translate-y-0";
+  className?: string;
+}) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
 
   return (
-    <div
+    <motion.div
       ref={ref}
-      className={`transition-all duration-800 ease-smooth ${visible ? `opacity-100 ${visibleTransform}` : `opacity-0 ${baseTransform}`} ${className}`}
+      className={className}
+      initial={{ opacity: 0, y: 36 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.65, delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
-    </div>
+    </motion.div>
   );
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { InteractiveLogoWrapper } from "@/components/ui/interactive-logo-wrapper";
+import { MagneticButton } from "@/components/ui/magnetic-button";
 import { Upload, Wand2, Download, Layers, Zap, Shield } from "lucide-react";
 
 export default function LandingPage() {
@@ -32,14 +33,14 @@ export default function LandingPage() {
 
               <div className="flex items-center gap-3 animate-fade-in-up delay-2 justify-center md:justify-start">
                 <Link href="/background-replace/new">
-                  <Button size="lg" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-xl shadow-purple-500/25 h-12 px-8 text-sm font-medium rounded-full">
+                  <MagneticButton size="lg" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-xl shadow-purple-500/25 h-12 px-8 text-sm font-medium rounded-full">
                     开始使用
-                  </Button>
+                  </MagneticButton>
                 </Link>
                 <Link href="/background-replace">
-                  <Button variant="outline" size="lg" className="h-12 px-8 text-sm font-medium border-border hover:bg-white/[0.03] rounded-full">
+                  <MagneticButton variant="outline" size="lg" className="h-12 px-8 text-sm font-medium border-border hover:bg-white/[0.03] rounded-full">
                     查看示例 ↗
-                  </Button>
+                  </MagneticButton>
                 </Link>
               </div>
 
@@ -119,9 +120,9 @@ export default function LandingPage() {
         </p>
 
         <Link href="/background-replace/new">
-          <Button size="lg" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-xl shadow-purple-500/25 h-12 px-10 text-sm font-medium rounded-full">
+          <MagneticButton size="lg" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-xl shadow-purple-500/25 h-12 px-10 text-sm font-medium rounded-full">
             免费开始使用 ↗
-          </Button>
+          </MagneticButton>
         </Link>
       </section>
       </ScrollReveal>
