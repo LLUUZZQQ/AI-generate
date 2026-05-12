@@ -1,15 +1,13 @@
 import "dotenv/config";
-import { Worker } from "bullmq";
-import { redis } from "@/lib/redis";
 import { prisma } from "@/lib/db";
 import { downloadFromS3, uploadToS3 } from "@/lib/s3";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
 const hasS3 = !!(process.env.S3_BUCKET && process.env.S3_ENDPOINT);
+const POLL_INTERVAL = 3000; // 3 seconds
 
-const worker = new Worker("bg-replace-queue", async (job) => {
-  const { taskId } = job.data;
+async function processTask(taskId: string) {
 
   await prisma.bgReplaceTask.update({
     where: { id: taskId },
@@ -128,7 +126,22 @@ const worker = new Worker("bg-replace-queue", async (job) => {
       });
     }
   }
-}, { connection: redis, concurrency: 2 });
+}
+
+async function poll() {
+  const task = await prisma.bgReplaceTask.findFirst({
+    where: { status: "pending" },
+    orderBy: { createdAt: "asc" },
+  });
+  if (task) {
+    console.log("[bg-worker] Processing task:", task.id);
+    try {
+      await processTask(task.id);
+    } catch (e: any) {
+      console.error("[bg-worker] Task failed:", task.id, e.message);
+    }
+  }
+}
 
 async function removeBackground(imageBuffer: Buffer): Promise<Buffer> {
   const { HfInference } = await import("@huggingface/inference");
@@ -212,4 +225,6 @@ async function createSolidBackground(color: string): Promise<Buffer> {
     .toBuffer();
 }
 
-console.log("Background replace worker started");
+console.log("[bg-worker] Database polling worker started (interval: " + POLL_INTERVAL + "ms)");
+setInterval(poll, POLL_INTERVAL);
+poll(); // immediate first run

@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/db";
-import { bgReplaceQueue } from "@/lib/queue";
 
 const BG_REPLACE_COST_PER_IMAGE = 1; // 1 credit = ¥0.10 per image
 
@@ -58,11 +57,6 @@ export async function createBgReplaceTask(params: {
       taskId: task.id,
     },
   });
-
-  // Push to queue
-  await bgReplaceQueue.add("bg-replace", {
-    taskId: task.id,
-  }, { jobId: `bg-${task.id}` });
 
   return { taskId: task.id, imageCount, cost };
 }
