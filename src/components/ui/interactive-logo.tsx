@@ -19,115 +19,134 @@ export function InteractiveLogo() {
       const w = container.clientWidth;
       const h = container.clientHeight;
 
-      // Scene
       scene = new THREE.Scene();
-
-      // Camera
-      camera = new THREE.PerspectiveCamera(40, w / h, 0.1, 100);
-      camera.position.set(0, 0, 8);
-
-      // Renderer
+      camera = new THREE.PerspectiveCamera(35, w / h, 0.1, 100);
+      camera.position.set(0, 0, 9);
       renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
       renderer.setSize(w, h);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       container.appendChild(renderer.domElement);
 
-      // Lights — bright, crisp for glass
-      scene.add(new THREE.AmbientLight(0x8888cc, 0.8));
-      const key = new THREE.DirectionalLight(0xffffff, 3);
-      key.position.set(3, 2, 6);
+      // Lighting — bright soft lights for glass
+      scene.add(new THREE.AmbientLight(0x7777aa, 0.7));
+      const key = new THREE.DirectionalLight(0xffffff, 3.5);
+      key.position.set(4, 2, 6);
       scene.add(key);
-      const rim = new THREE.DirectionalLight(0xaaccff, 2.5);
-      rim.position.set(-3, 4, -3);
+      const rim = new THREE.DirectionalLight(0xaaccff, 3);
+      rim.position.set(-4, 3, -4);
       scene.add(rim);
-      const bottom = new THREE.DirectionalLight(0xcc88ff, 1.5);
-      bottom.position.set(0, -3, 2);
-      scene.add(bottom);
+      const fill = new THREE.DirectionalLight(0xcc88ff, 2);
+      fill.position.set(0, -3, 3);
+      scene.add(fill);
 
-      // Frosted glass "F"
+      // Helper: rounded box using ExtrudeGeometry
+      function roundedBox(w: number, h: number, d: number, radius: number) {
+        const x = -w / 2, y = -h / 2;
+        const shape = new THREE.Shape();
+        shape.moveTo(x + radius, y);
+        shape.lineTo(x + w - radius, y);
+        shape.quadraticCurveTo(x + w, y, x + w, y + radius);
+        shape.lineTo(x + w, y + h - radius);
+        shape.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+        shape.lineTo(x + radius, y + h);
+        shape.quadraticCurveTo(x, y + h, x, y + h - radius);
+        shape.lineTo(x, y + radius);
+        shape.quadraticCurveTo(x, y, x + radius, y);
+        return new THREE.ExtrudeGeometry(shape, {
+          depth: d,
+          bevelEnabled: true,
+          bevelThickness: 0.06,
+          bevelSize: 0.05,
+          bevelSegments: 4,
+        });
+      }
+
       const glassMat = new THREE.MeshPhysicalMaterial({
         color: 0xddccff,
         metalness: 0.0,
-        roughness: 0.25,
+        roughness: 0.22,
         clearcoat: 1.0,
-        clearcoatRoughness: 0.15,
+        clearcoatRoughness: 0.12,
         transparent: true,
         opacity: 0.35,
-        envMapIntensity: 0.4,
+        envMapIntensity: 0.5,
         specularIntensity: 1.0,
+      });
+
+      const edgeMat = new THREE.LineBasicMaterial({
+        color: 0xccbbff,
+        transparent: true,
+        opacity: 0.4,
       });
 
       const group = new THREE.Group();
 
-      // F — vertical stroke
-      const stem = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4.0, 0.6), glassMat);
-      stem.position.set(-0.9, 0, 0);
-      group.add(stem);
+      // Vertical stem — tall, thick
+      const sw = 0.95, sd = 0.7, sh = 4.0, sr = 0.18;
+      const stemGeo = roundedBox(sw, sh, sd, sr);
+      const stemMesh = new THREE.Mesh(stemGeo, glassMat);
+      stemMesh.position.set(-0.95, 0, -sd / 2);
+      group.add(stemMesh);
+      const stemEdge = new THREE.LineSegments(new THREE.EdgesGeometry(stemGeo), edgeMat);
+      stemEdge.position.copy(stemMesh.position);
+      group.add(stemEdge);
 
-      // F — top bar
-      const top = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.5, 0.6), glassMat);
-      top.position.set(0.1, 1.75, 0);
-      group.add(top);
+      // Top bar — wide, thick
+      const tw = 2.6, td = 0.7, th = 0.95, tr = 0.18;
+      const topGeo = roundedBox(tw, th, td, tr);
+      const topMesh = new THREE.Mesh(topGeo, glassMat);
+      topMesh.position.set(0.15, 1.75, -td / 2);
+      group.add(topMesh);
+      const topEdge = new THREE.LineSegments(new THREE.EdgesGeometry(topGeo), edgeMat);
+      topEdge.position.copy(topMesh.position);
+      group.add(topEdge);
 
-      // F — mid bar
-      const mid = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.45, 0.6), glassMat);
-      mid.position.set(-0.2, 0, 0);
-      group.add(mid);
-
-      // Glowing edges on the F
-      const createEdges = (geo: any, pos: [number, number, number]) => {
-        const edgesGeo = new THREE.EdgesGeometry(geo);
-        const edgesMat = new THREE.LineBasicMaterial({ color: 0xccbbff, transparent: true, opacity: 0.5 });
-        const line = new THREE.LineSegments(edgesGeo, edgesMat);
-        line.position.set(...pos);
-        return line;
-      };
-      group.add(createEdges(new THREE.BoxGeometry(0.5, 4.0, 0.6), [-0.9, 0, 0]));
-      group.add(createEdges(new THREE.BoxGeometry(2.2, 0.5, 0.6), [0.1, 1.75, 0]));
-      group.add(createEdges(new THREE.BoxGeometry(1.6, 0.45, 0.6), [-0.2, 0, 0]));
+      // Mid bar — medium
+      const mw = 2.0, md = 0.7, mh = 0.85, mr = 0.18;
+      const midGeo = roundedBox(mw, mh, md, mr);
+      const midMesh = new THREE.Mesh(midGeo, glassMat);
+      midMesh.position.set(-0.1, 0, -md / 2);
+      group.add(midMesh);
+      const midEdge = new THREE.LineSegments(new THREE.EdgesGeometry(midGeo), edgeMat);
+      midEdge.position.copy(midMesh.position);
+      group.add(midEdge);
 
       mesh = group;
       scene.add(mesh);
 
-      // Floating glass-like particles
-      const particlesGeo = new THREE.BufferGeometry();
-      const count = 60;
-      const positions = new Float32Array(count * 3);
+      // Subtle floating particles
+      const pGeo = new THREE.BufferGeometry();
+      const count = 50;
+      const pos = new Float32Array(count * 3);
       for (let i = 0; i < count; i++) {
-        positions[i * 3] = (Math.random() - 0.5) * 14;
-        positions[i * 3 + 1] = (Math.random() - 0.5) * 14;
-        positions[i * 3 + 2] = (Math.random() - 0.5) * 8;
+        pos[i * 3] = (Math.random() - 0.5) * 14;
+        pos[i * 3 + 1] = (Math.random() - 0.5) * 14;
+        pos[i * 3 + 2] = (Math.random() - 0.5) * 10;
       }
-      particlesGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-      const particlesMat = new THREE.PointsMaterial({
+      pGeo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+      const pMat = new THREE.PointsMaterial({
         color: 0xccbbff,
-        size: 0.025,
+        size: 0.022,
         transparent: true,
-        opacity: 0.4,
+        opacity: 0.35,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       });
-      const particles = new THREE.Points(particlesGeo, particlesMat);
+      const particles = new THREE.Points(pGeo, pMat);
       scene.add(particles);
 
       // Animation loop
       const animate = () => {
         animId = requestAnimationFrame(animate);
-
-        // Smooth mouse follow
-        targetRef.current.x += (mouseRef.current.x - targetRef.current.x) * 0.05;
-        targetRef.current.y += (mouseRef.current.y - targetRef.current.y) * 0.05;
-
+        targetRef.current.x += (mouseRef.current.x - targetRef.current.x) * 0.04;
+        targetRef.current.y += (mouseRef.current.y - targetRef.current.y) * 0.04;
         if (mesh) {
-          mesh.rotation.y = targetRef.current.x * 1.2;
-          mesh.rotation.x = targetRef.current.y * 0.6;
-          // Gentle floating
-          mesh.position.y = Math.sin(Date.now() * 0.001) * 0.2;
+          mesh.rotation.y = targetRef.current.x * 1.0;
+          mesh.rotation.x = targetRef.current.y * 0.5;
+          mesh.position.y = Math.sin(Date.now() * 0.0008) * 0.15;
         }
-
-        particles.rotation.y += 0.0008;
-        particles.rotation.x += 0.0004;
-
+        particles.rotation.y += 0.0006;
+        particles.rotation.x += 0.0003;
         renderer.render(scene, camera);
       };
       animate();
@@ -164,7 +183,7 @@ export function InteractiveLogo() {
   return (
     <div
       ref={containerRef}
-      className="w-full h-[320px] md:h-[420px] cursor-grab active:cursor-grabbing select-none"
+      className="w-full aspect-square max-w-[420px] mx-auto cursor-grab active:cursor-grabbing select-none"
     />
   );
 }
