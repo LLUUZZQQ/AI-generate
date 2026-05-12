@@ -2,6 +2,10 @@ import { Worker } from "bullmq";
 import { redis } from "@/lib/redis";
 import { prisma } from "@/lib/db";
 import { downloadFromS3, uploadToS3 } from "@/lib/s3";
+import { writeFile, mkdir } from "fs/promises";
+import path from "path";
+
+const hasS3 = !!(process.env.S3_BUCKET && process.env.S3_ENDPOINT);
 
 const worker = new Worker("bg-replace-queue", async (job) => {
   const { taskId } = job.data;
@@ -74,9 +78,18 @@ const worker = new Worker("bg-replace-queue", async (job) => {
       // Step 3: Composite subject onto background
       const composited = await compositeImages(subjectBuffer, bg);
 
-      // Step 4: Upload result
-      const resultKey = `results/${taskId}/${result.id}.png`;
-      await uploadToS3(resultKey, composited, "image/png");
+      // Step 4: Save result (S3 or local)
+      let resultKey: string;
+      if (hasS3) {
+        resultKey = `results/${taskId}/${result.id}.png`;
+        await uploadToS3(resultKey, composited, "image/png");
+      } else {
+        const resultDir = path.join(process.cwd(), "public", "results", taskId);
+        await mkdir(resultDir, { recursive: true });
+        const filename = `${result.id}.png`;
+        await writeFile(path.join(resultDir, filename), composited);
+        resultKey = `/results/${taskId}/${filename}`;
+      }
 
       await prisma.bgReplaceResult.update({
         where: { id: result.id },
