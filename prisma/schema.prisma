@@ -18,9 +18,10 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   transactions CreditTransaction[]
-  contents      Content[]
-  accounts      Account[]
-  sessions      Session[]
+  contents          Content[]
+  bgReplaceTasks    BgReplaceTask[]
+  accounts          Account[]
+  sessions          Session[]
 
   @@map("users")
 }
@@ -142,4 +143,50 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+model BackgroundTemplate {
+  id           String   @id @default(cuid())
+  name         String
+  category     String   @default("indoor-floor")
+  fileUrl      String   @map("file_url")
+  thumbnailUrl String?  @map("thumbnail_url")
+  isActive     Boolean  @default(true) @map("is_active")
+  sortOrder    Int      @default(0) @map("sort_order")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("background_templates")
+}
+
+model BgReplaceTask {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  backgroundMode  String   @default("preset") @map("background_mode")
+  backgroundId    String?  @map("background_id")
+  customBgKey     String?  @map("custom_bg_key")
+  aiPrompt        String?  @map("ai_prompt")
+  imageCount      Int      @default(0) @map("image_count")
+  cost            Int      @default(0)
+  status          String   @default("pending")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  user    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  results BgReplaceResult[]
+
+  @@map("bg_replace_tasks")
+}
+
+model BgReplaceResult {
+  id            String   @id @default(cuid())
+  taskId        String   @map("task_id")
+  originalKey   String   @map("original_key")
+  resultKey     String?  @map("result_key")
+  backgroundKey String?  @map("background_key")
+  status        String   @default("pending")
+  error         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  task BgReplaceTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("bg_replace_results")
 }
