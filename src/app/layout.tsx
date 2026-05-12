@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import { Providers } from "./providers";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -7,6 +8,8 @@ import { ScrollProgress } from "@/components/ui/scroll-effects";
 import { SmoothScroll } from "@/components/ui/smooth-scroll";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const viewport: Viewport = {
   themeColor: "#a855f7",
@@ -47,8 +50,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh-CN" suppressHydrationWarning>
-      <body className="flex flex-col min-h-screen">
+    <html lang="zh-CN" suppressHydrationWarning className={`${inter.variable}`}>
+      <body className={`${inter.className} flex flex-col min-h-screen antialiased`}>
         <ScrollProgress />
         <SmoothScroll>
         <Providers>
