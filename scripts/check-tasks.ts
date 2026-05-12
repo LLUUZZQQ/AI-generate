@@ -12,7 +12,7 @@ async function main() {
   for (const t of tasks) {
     console.log(`Task ${t.id}: status=${t.status}, images=${t.imageCount}, cost=${t.cost}`);
     for (const r of t.results) {
-      console.log(`  Result ${r.id}: status=${r.status}, error=${r.error || "none"}`);
+      console.log(`  Result ${r.id}: status=${r.status}, key=${r.originalKey}, error=${r.error || "none"}`);
     }
   }
   await p.$disconnect();

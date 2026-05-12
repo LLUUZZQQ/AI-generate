@@ -44,7 +44,7 @@ async function processTask(taskId: string) {
 
   for (const result of task.results) {
     try {
-      console.log("[bg-worker] Downloading original, key:", result.originalKey);
+      console.log("[bg-worker] Downloading, originalKey:", result.originalKey, "S3_BUCKET:", process.env.S3_BUCKET);
       let original: Buffer;
       if (result.originalKey.startsWith("http")) {
         // S3 URL — extract path and strip bucket prefix
