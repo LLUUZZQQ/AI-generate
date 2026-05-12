@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { withAuth } from "@/lib/auth-guard";
 import { success, error, paginated } from "@/lib/response";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { prisma } from "@/lib/db";
 import { createBgReplaceTask, listBgReplaceTasks } from "@/lib/bg-replace";
 import { z } from "zod";
 
@@ -38,6 +39,21 @@ export const POST = withAuth(async (req: NextRequest, _ctx: any, user: { id: str
     if (e.message === "INSUFFICIENT_CREDITS") return error(40003, "积分不足");
     throw e;
   }
+});
+
+const deleteSchema = z.object({
+  ids: z.array(z.string()).min(1).max(50),
+});
+
+export const DELETE = withAuth(async (req: NextRequest, _ctx: any, user: { id: string }) => {
+  const body = await req.json();
+  const parsed = deleteSchema.safeParse(body);
+  if (!parsed.success) return error(40001, "参数错误");
+
+  await prisma.bgReplaceTask.deleteMany({
+    where: { id: { in: parsed.data.ids }, userId: user.id },
+  });
+  return success(null, "删除成功");
 });
 
 export const GET = withAuth(async (_req: NextRequest, _ctx: any, user: { id: string }) => {
