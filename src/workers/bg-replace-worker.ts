@@ -21,25 +21,30 @@ async function processTask(taskId: string) {
   if (!task) return;
 
   let backgroundBuffer: Buffer | null = null;
-  if (task.backgroundMode === "preset" && task.backgroundId) {
-    const template = await prisma.backgroundTemplate.findUnique({ where: { id: task.backgroundId } });
-    if (template) {
-      const fileUrl = template.fileUrl;
-      if (fileUrl.startsWith("http")) {
-        const url = new URL(fileUrl);
-        let key = url.pathname.substring(1);
-        const bucket = process.env.S3_BUCKET;
-        if (bucket && key.startsWith(bucket + "/")) key = key.substring(bucket.length + 1);
-        backgroundBuffer = await downloadFromS3(key);
-      } else {
-        const fs = await import("fs/promises");
-        const path = await import("path");
-        const filePath = path.join(process.cwd(), "public", fileUrl);
-        backgroundBuffer = await fs.readFile(filePath);
+  try {
+    if (task.backgroundMode === "preset" && task.backgroundId) {
+      const template = await prisma.backgroundTemplate.findUnique({ where: { id: task.backgroundId } });
+      if (template) {
+        const fileUrl = template.fileUrl;
+        if (fileUrl.startsWith("http")) {
+          const url = new URL(fileUrl);
+          let key = url.pathname.substring(1);
+          const bucket = process.env.S3_BUCKET;
+          if (bucket && key.startsWith(bucket + "/")) key = key.substring(bucket.length + 1);
+          console.log("[bg-worker] Template key:", key);
+          backgroundBuffer = await downloadFromS3(key);
+        } else {
+          const fs = await import("fs/promises");
+          const path = await import("path");
+          const filePath = path.join(process.cwd(), "public", fileUrl);
+          backgroundBuffer = await fs.readFile(filePath);
+        }
       }
+    } else if (task.backgroundMode === "custom" && task.customBgKey) {
+      backgroundBuffer = await downloadFromS3(task.customBgKey);
     }
-  } else if (task.backgroundMode === "custom" && task.customBgKey) {
-    backgroundBuffer = await downloadFromS3(task.customBgKey);
+  } catch (e: any) {
+    console.error("[bg-worker] Template download failed:", e.message, "— using solid color fallback");
   }
 
   for (const result of task.results) {
