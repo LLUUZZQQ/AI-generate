@@ -160,6 +160,31 @@ async function poll() {
 }
 
 async function removeBackground(imageBuffer: Buffer): Promise<Buffer> {
+  // Try Remove.bg first, fall back to HuggingFace
+  const REMOVEBG_KEY = process.env.REMOVEBG_API_KEY;
+
+  if (REMOVEBG_KEY) {
+    const form = new FormData();
+    form.append("image_file", new Blob([new Uint8Array(imageBuffer)], { type: "image/png" }), "image.png");
+    form.append("size", "auto");
+
+    const res = await fetch("https://api.remove.bg/v1.0/removebg", {
+      method: "POST",
+      headers: { "X-Api-Key": REMOVEBG_KEY },
+      body: form,
+    });
+
+    if (res.ok) {
+      console.log("[bg-worker] Remove.bg success");
+      return Buffer.from(await res.arrayBuffer());
+    }
+
+    const errText = await res.text();
+    console.error("[bg-worker] Remove.bg failed:", res.status, errText.slice(0, 200));
+    // Fall through to HuggingFace
+  }
+
+  // HuggingFace fallback
   const { HfInference } = await import("@huggingface/inference");
   const hf = new HfInference(process.env.HF_TOKEN!);
   const blob = new Blob([new Uint8Array(imageBuffer)], { type: "image/png" });
