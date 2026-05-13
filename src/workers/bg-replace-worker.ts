@@ -81,7 +81,8 @@ async function processTask(taskId: string) {
         bg = await createSolidBackground("#f5f5f0");
       }
 
-      const composited = await compositeImages(subjectBuffer, bg);
+      const { composited: stageA, subjectAlpha } = await compositeImages(subjectBuffer, bg);
+      const composited = await img2imgFusion(stageA, subjectBuffer, subjectAlpha);
 
       let resultKey: string;
       if (hasS3) {
@@ -217,25 +218,24 @@ async function removeBackground(imageBuffer: Buffer): Promise<Buffer> {
   throw new Error(`Unexpected segmentation result type: ${typeof result}`);
 }
 
-async function compositeImages(subjectBuffer: Buffer, bgBuffer: Buffer): Promise<Buffer> {
+async function compositeImages(subjectBuffer: Buffer, bgBuffer: Buffer): Promise<{ composited: Buffer; subjectAlpha: Buffer }> {
   const sharp = await import("sharp");
   const sharpModule = sharp.default;
-  const bgMetadata = await sharpModule(bgBuffer).metadata();
-  const subjectMetadata = await sharpModule(subjectBuffer).metadata();
+  const bgMeta = await sharpModule(bgBuffer).metadata();
+  const subMeta = await sharpModule(subjectBuffer).metadata();
 
-  if (!bgMetadata.width || !bgMetadata.height) throw new Error("Invalid background");
-  if (!subjectMetadata.width || !subjectMetadata.height) throw new Error("Invalid subject");
+  if (!bgMeta.width || !bgMeta.height) throw new Error("Invalid background");
+  if (!subMeta.width || !subMeta.height) throw new Error("Invalid subject");
 
-  const subW = subjectMetadata.width;
-  const subH = subjectMetadata.height;
-  const bgW = bgMetadata.width;
-  const bgH = bgMetadata.height;
+  const subW = subMeta.width;
+  const subH = subMeta.height;
+  const bgW = bgMeta.width;
+  const bgH = bgMeta.height;
 
-  // Output canvas = subject's original size and aspect ratio
   const canvasW = subW;
   const canvasH = subH;
 
-  // Scale background to cover the entire subject canvas
+  // Scale background to cover subject canvas
   const bgScale = Math.max(canvasW / bgW, canvasH / bgH);
   const scaledBgW = Math.round(bgW * bgScale);
   const scaledBgH = Math.round(bgH * bgScale);
@@ -243,54 +243,211 @@ async function compositeImages(subjectBuffer: Buffer, bgBuffer: Buffer): Promise
     .resize(scaledBgW, scaledBgH, { fit: "cover" })
     .toBuffer();
 
-  // Crop background to exact canvas size (center crop)
   const bgCropLeft = Math.round((scaledBgW - canvasW) / 2);
   const bgCropTop = Math.round((scaledBgH - canvasH) / 2);
   const bg = await sharpModule(scaledBg)
     .extract({ left: bgCropLeft, top: bgCropTop, width: canvasW, height: canvasH })
     .toBuffer();
 
-  // Subject stays at original size, fills entire canvas
-  const subject = subjectBuffer;
+  // === Extract subject alpha for shadow generation ===
+  const subjectAlphaPng = await sharpModule(subjectBuffer)
+    .ensureAlpha()
+    .extractChannel(3)
+    .png()
+    .toBuffer();
 
-  // === Dual shadow system ===
-  const groundY = canvasH;
+  // === Shape-aware ground shadow ===
+  // Compress alpha vertically → simulates flat ground projection from top-front light
+  const shadowH = Math.round(subH * 0.22);
+  const shadowBase = await sharpModule(subjectAlphaPng)
+    .resize(subW, shadowH, { fit: "fill", kernel: "lanczos3" })
+    .extend({ top: subH - shadowH, bottom: 0, left: 0, right: 0, background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .toBuffer();
 
-  // Contact shadow — dark, sharp, narrow
-  const contactW = Math.round(subW * 0.7);
-  const contactH = Math.round(subH * 0.04);
-  const contactX = Math.round((canvasW - contactW) / 2);
-  const contactY = groundY - Math.round(contactH * 0.3);
+  // Contact shadow — sharp, dark, close to product base
+  const contactShadow = await sharpModule(shadowBase)
+    .blur(2.5)
+    .linear(0.35, 0)
+    .ensureAlpha()
+    .toBuffer();
 
-  // Ambient shadow — softer, wider, lighter
-  const ambientW = Math.round(subW * 0.9);
-  const ambientH = Math.round(subH * 0.18);
-  const ambientX = Math.round((canvasW - ambientW) / 2);
-  const ambientY = groundY - Math.round(ambientH * 0.2);
+  // Ambient shadow — soft, wide, lighter
+  const ambientShadow = await sharpModule(shadowBase)
+    .blur(14)
+    .linear(0.17, 0)
+    .ensureAlpha()
+    .toBuffer();
 
-  const shadowSvg = Buffer.from(`<svg width="${canvasW}" height="${canvasH}">
-    <defs>
-      <filter id="blur-contact"><feGaussianBlur stdDeviation="3"/></filter>
-      <filter id="blur-ambient"><feGaussianBlur stdDeviation="14"/></filter>
-    </defs>
-    <ellipse cx="${Math.round(ambientX + ambientW/2)}" cy="${Math.round(ambientY + ambientH/2)}"
-             rx="${Math.round(ambientW/2)}" ry="${Math.round(ambientH/2)}"
-             fill="rgba(0,0,0,0.22)" filter="url(#blur-ambient)"/>
-    <ellipse cx="${Math.round(contactX + contactW/2)}" cy="${Math.round(contactY + contactH/2)}"
-             rx="${Math.round(contactW/2)}" ry="${Math.round(contactH/2)}"
-             fill="rgba(0,0,0,0.4)" filter="url(#blur-contact)"/>
-  </svg>`);
+  // === Color/brightness match (luminance only, no hue shift) ===
+  const bgAvg = await sharpModule(bg).resize(1, 1).raw().toBuffer();
+  const subAvg = await sharpModule(subjectBuffer).resize(1, 1).raw().toBuffer();
 
-  const shadowBuffer = await sharpModule(shadowSvg).png().toBuffer();
+  const bgLum = bgAvg[0] * 0.299 + bgAvg[1] * 0.587 + bgAvg[2] * 0.114;
+  const subLum = subAvg[0] * 0.299 + subAvg[1] * 0.587 + subAvg[2] * 0.114;
 
-  // Composite: background → shadow → subject
-  return sharpModule(bg)
+  // Clamp brightness adjustment to avoid wash-out or crush; do NOT touch hue/saturation
+  const brightnessFactor = bgLum > 0
+    ? Math.min(1.3, Math.max(0.7, bgLum / Math.max(subLum, 1)))
+    : 1;
+  const colorMatched = brightnessFactor === 1
+    ? subjectBuffer
+    : await sharpModule(subjectBuffer)
+        .modulate({ brightness: brightnessFactor })
+        .toBuffer();
+
+  // === Edge softening (light blur to kill hard cutout edge) ===
+  const edgeSoftened = await sharpModule(colorMatched)
+    .ensureAlpha()
+    .blur(1.2)
+    .toBuffer();
+
+  // === Composite: bg → ambient shadow → contact shadow → subject ===
+  const composited = await sharpModule(bg)
     .composite([
-      { input: shadowBuffer, top: 0, left: 0 },
-      { input: subject, left: 0, top: 0 },
+      { input: ambientShadow, top: 0, left: 0 },
+      { input: contactShadow, top: 0, left: 0 },
+      { input: edgeSoftened, left: 0, top: 0 },
     ])
     .png()
     .toBuffer();
+
+  // === Noise overlay matching background noise level ===
+  const bgSample = await sharpModule(bg).resize(128, 128).greyscale().raw().toBuffer();
+  let mean = 0;
+  for (let i = 0; i < bgSample.length; i++) mean += bgSample[i];
+  mean /= bgSample.length;
+  let variance = 0;
+  for (let i = 0; i < bgSample.length; i++) variance += (bgSample[i] - mean) ** 2;
+  variance /= bgSample.length;
+  const noiseStd = Math.sqrt(variance);
+
+  // Generate subtle noise matching background grain level
+  const noiseRaw = Buffer.alloc(canvasW * canvasH);
+  const intensity = Math.min(14, Math.max(3, Math.round(noiseStd * 0.55)));
+  for (let i = 0; i < noiseRaw.length; i++) {
+    noiseRaw[i] = Math.round(128 + (Math.random() - 0.5) * intensity * 2);
+  }
+
+  const noiseLayer = await sharpModule(noiseRaw, { raw: { width: canvasW, height: canvasH, channels: 1 } })
+    .linear(0.07, 0)
+    .blur(0.5)
+    .ensureAlpha()
+    .png()
+    .toBuffer();
+
+  const finalComposite = await sharpModule(composited)
+    .composite([{ input: noiseLayer, blend: "overlay" }])
+    .png()
+    .toBuffer();
+
+  return { composited: finalComposite, subjectAlpha: subjectAlphaPng };
+}
+
+async function img2imgFusion(compositePng: Buffer, subjectBuffer: Buffer, subjectAlphaPng: Buffer): Promise<Buffer> {
+  try {
+    const { HfInference } = await import("@huggingface/inference");
+    const hf = new HfInference(process.env.HF_TOKEN!);
+    const sharp = (await import("sharp")).default;
+
+    // Build a transition-zone mask: dilate(alpha, 8px) minus alpha
+    // This ring is where SD can safely blend — product interior is never touched
+    const subMeta = await sharp(subjectAlphaPng).metadata();
+    if (!subMeta.width || !subMeta.height) return compositePng;
+
+    const alphaRaw = await sharp(subjectAlphaPng).ensureAlpha().raw().toBuffer();
+    const dilated = await sharp(alphaRaw, { raw: { width: subMeta.width, height: subMeta.height, channels: 4 } })
+      .blur(8)  // dilation via blur → threshold
+      .linear(3.0, -0.1)  // push edges outward
+      .ensureAlpha()
+      .extractChannel(3)
+      .raw()
+      .toBuffer();
+
+    const originalAlpha = await sharp(subjectAlphaPng)
+      .extractChannel(3)
+      .raw()
+      .toBuffer();
+
+    // transitionMask = dilated - original (only the edge ring)
+    const maskPixels = Buffer.alloc(subMeta.width * subMeta.height);
+    for (let i = 0; i < maskPixels.length; i++) {
+      const d = dilated[i];
+      const o = originalAlpha[i];
+      maskPixels[i] = Math.max(0, Math.min(255, d - o));
+    }
+
+    // Resize composite to 1024 max dim for SD efficiency
+    const maxDim = 1024;
+    let comp = compositePng;
+    let compW = subMeta.width;
+    let compH = subMeta.height;
+
+    if (subMeta.width > maxDim || subMeta.height > maxDim) {
+      const scale = maxDim / Math.max(subMeta.width, subMeta.height);
+      compW = Math.round(subMeta.width * scale);
+      compH = Math.round(subMeta.height * scale);
+      comp = await sharp(compositePng).resize(compW, compH, { fit: "inside" }).png().toBuffer();
+    }
+
+    // SD img2img with low strength — only edges will be affected because we blend back
+    console.log("[bg-worker] img2img fusion, dims:", compW, "x", compH);
+    const result = await hf.imageToImage({
+      model: "stabilityai/stable-diffusion-xl-base-1.0",
+      inputs: new Blob([new Uint8Array(comp)], { type: "image/png" }),
+      parameters: {
+        prompt: "casual smartphone photo, natural lighting, realistic amateur product shot, no color shift",
+        negative_prompt: "text, watermark, logo, overlay, saturated, overexposed, color cast",
+        strength: 0.3,
+        guidance_scale: 7,
+      },
+    });
+
+    let fused: Buffer;
+    if (typeof result === "string") {
+      const res = await fetch(result);
+      fused = Buffer.from(await res.arrayBuffer());
+    } else {
+      fused = Buffer.from(await (result as Blob).arrayBuffer());
+    }
+
+    // Resize back to original size if needed
+    if (compW !== subMeta.width || compH !== subMeta.height) {
+      fused = await sharp(fused).resize(subMeta.width, subMeta.height, { fit: "inside" }).png().toBuffer();
+    }
+
+    // Per-pixel blend: mask-controlled fusion between SD result and stage A composite
+    // maskVal=0   → keep compositePng 100% (product interior — colors preserved)
+    // maskVal=255 → use SD fused 100% (background + edge transition)
+    const { data: fusedPixels, info: fusedInfo } = await sharp(fused)
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+
+    const { data: origPixels } = await sharp(compositePng)
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+
+    const outPixels = Buffer.alloc(fusedPixels.length);
+    for (let i = 0; i < fusedInfo.width * fusedInfo.height; i++) {
+      const pi = i * 4;
+      const maskVal = maskPixels[i];
+      const t = maskVal / 255;  // 0 = keep original, 1 = use SD result
+      outPixels[pi]     = Math.round(fusedPixels[pi]     * t + origPixels[pi]     * (1 - t));
+      outPixels[pi + 1] = Math.round(fusedPixels[pi + 1] * t + origPixels[pi + 1] * (1 - t));
+      outPixels[pi + 2] = Math.round(fusedPixels[pi + 2] * t + origPixels[pi + 2] * (1 - t));
+      outPixels[pi + 3] = Math.max(fusedPixels[pi + 3], origPixels[pi + 3]);
+    }
+
+    console.log("[bg-worker] img2img fusion done");
+
+    return sharp(outPixels, { raw: { width: fusedInfo.width, height: fusedInfo.height, channels: 4 } })
+      .png()
+      .toBuffer();
+  } catch (e: any) {
+    console.error("[bg-worker] img2img fusion failed:", e.message, "— using stage A composite");
+    return compositePng; // graceful fallback
+  }
 }
 
 async function generateBackground(prompt: string): Promise<Buffer> {
