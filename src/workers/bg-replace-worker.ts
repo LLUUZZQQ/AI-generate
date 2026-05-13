@@ -173,6 +173,13 @@ async function processTask(taskId: string) {
 
   for (const result of task.results) {
     try {
+      // Check if task was cancelled mid-processing
+      const current = await prisma.bgReplaceTask.findUnique({ where: { id: taskId }, select: { status: true } });
+      if (!current || current.status === "cancelled" || current.status === "paused") {
+        console.log("[bg-worker] Task", taskId, "was", current?.status, "— stopping");
+        return;
+      }
+
       console.log("[bg-worker] Downloading, originalKey:", result.originalKey, "S3_BUCKET:", process.env.S3_BUCKET);
       let original: Buffer;
       if (result.originalKey.startsWith("http")) {

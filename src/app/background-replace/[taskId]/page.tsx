@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, Download, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, Loader2, XCircle, PauseCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ResultCompare } from "@/components/background-replace/result-compare";
@@ -56,6 +56,21 @@ export default function BgReplaceTaskPage() {
 
   const getResultUrl = (resultId: string) => {
     return `/api/background-replace/${taskId}/result/${resultId}`;
+  };
+
+  const handleCancel = async (pause: boolean) => {
+    const res = await fetch(`/api/background-replace/${taskId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pause }),
+    });
+    const data = await res.json();
+    if (data.code === 0) {
+      toast.success(pause ? "已暂停" : "已取消，积分已退还");
+      fetchTask();
+    } else {
+      toast.error(data.message || "操作失败");
+    }
   };
 
   const downloadAll = () => {
@@ -114,6 +129,31 @@ export default function BgReplaceTaskPage() {
               <p className="text-[10px] text-foreground/20 mt-2">
                 {task.status === "pending" ? "正在等待 Worker 处理" : "AI 正在移除背景 · 合成场景 · 优化细节"}
               </p>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              {task.status === "processing" && (
+                <Button size="sm" variant="ghost" onClick={() => handleCancel(true)}
+                  className="text-white/40 hover:text-yellow-400 h-8 px-2">
+                  <PauseCircle className="w-4 h-4" />
+                </Button>
+              )}
+              <Button size="sm" variant="ghost" onClick={() => handleCancel(false)}
+                className="text-white/40 hover:text-red-400 h-8 px-2">
+                <XCircle className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Paused banner */}
+      {task.status === "paused" && (
+        <div className="glass p-5 mb-6 border-yellow-500/20">
+          <div className="flex items-center gap-3">
+            <PauseCircle className="w-5 h-5 text-yellow-400" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-yellow-300/70">任务已暂停</p>
+              <p className="text-[10px] text-white/20 mt-1">不会消耗积分，恢复后可继续处理</p>
             </div>
           </div>
         </div>
