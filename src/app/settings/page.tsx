@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TransactionList } from "@/components/user/transaction-list";
-import { User, Mail, Clock, Shield, Lock, Eye, EyeOff } from "lucide-react";
+import { User, Mail, Clock, Shield, Lock, Eye, EyeOff, Coins } from "lucide-react";
 
 const plans = [
   { amount: 100, credits: 100, price: 10, name: "入门包", desc: "处理 100 张" },
@@ -24,6 +24,7 @@ export default function SettingsPage() {
       queryClient.invalidateQueries({ queryKey: ["user-me"] });
     }, 500);
   }
+  const [tab, setTab] = useState<"account" | "billing">("account");
   const [selectedPlan, setSelectedPlan] = useState<typeof plans[0] | null>(null);
   const [paying, setPaying] = useState(false);
 
@@ -93,8 +94,21 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-10 md:py-14">
-      <h1 className="text-2xl font-semibold tracking-tight mb-8">个人中心</h1>
+      <h1 className="text-2xl font-semibold tracking-tight mb-6">个人中心</h1>
 
+      {/* Tabs */}
+      <div className="flex gap-2 mb-8">
+        {[{ k: "account", icon: User, label: "账户信息" }, { k: "billing", icon: Coins, label: "充值中心" }].map(t => (
+          <button key={t.k} onClick={() => setTab(t.k as any)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all ${
+              tab === t.k ? "bg-purple-500/15 border border-purple-400/30 text-purple-300" : "bg-white/[0.03] border border-white/[0.06] text-white/50 hover:text-white/70"
+            }`}>
+            <t.icon className="w-4 h-4" /> {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "account" && (<>
       {/* Account Info Card */}
       <h3 className="text-xs font-semibold text-foreground/25 uppercase tracking-wider mb-4">账户信息</h3>
       {isLoading ? <Skeleton className="h-40 w-full rounded-2xl mb-10" /> : user && (
@@ -162,6 +176,9 @@ export default function SettingsPage() {
         </Button>
       </div>
 
+      </>)}
+
+      {tab === "billing" && (<>
       {/* Recharge */}
       <h3 className="text-xs font-semibold text-foreground/25 uppercase tracking-wider mb-4">充值套餐</h3>
       <div className="grid grid-cols-3 gap-3 mb-10">
@@ -179,6 +196,8 @@ export default function SettingsPage() {
       <div className="glass rounded-xl p-4">
         <TransactionList />
       </div>
+
+      </>)}
 
       <Dialog open={!!selectedPlan} onOpenChange={(open) => !open && setSelectedPlan(null)}>
         <DialogContent className="glass border-border !bg-background/95">

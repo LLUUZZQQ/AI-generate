@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Wand2, LayoutGrid, Upload, Trash2, Image } from "lucide-react";
+import { Wand2, LayoutGrid, Upload, Trash2, Image, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 type BgMode = "preset" | "ai" | "custom";
@@ -92,13 +92,19 @@ export function BgSelector({
       </div>
 
       {/* My Presets */}
-      {mode === "preset" && (
-        savedBgs.length === 0 ? (
+      {mode === "preset" && (<>
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs text-white/25">{savedBgs.length > 0 ? `${savedBgs.length} 个预设` : ""}</span>
+          <button type="button" onClick={() => onModeChange("custom")}
+            className="flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 transition-colors">
+            <Plus className="w-3.5 h-3.5" /> 添加预设
+          </button>
+        </div>
+        {savedBgs.length === 0 ? (
           <div className="text-center py-10">
             <Image className="w-10 h-10 text-white/10 mx-auto mb-3" />
             <p className="text-sm text-white/30">还没有预设背景</p>
-            <p className="text-xs text-white/15 mt-2">在「自定义上传」中上传背景图后</p>
-            <p className="text-xs text-white/15">会自动保存为预设，方便下次使用</p>
+            <p className="text-xs text-white/15 mt-2">点击「添加预设」上传背景图</p>
           </div>
         ) : (
           <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
@@ -126,8 +132,8 @@ export function BgSelector({
               );
             })}
           </div>
-        )
-      )}
+        )}
+      </>)}
 
       {/* AI prompt */}
       {mode === "ai" && (
