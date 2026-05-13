@@ -7,10 +7,15 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
   const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  if (!session?.user) redirect("/login");
 
-  const dbUser = await prisma.user.findUnique({ where: { id: session.user.id } });
-  if (dbUser?.role !== "admin") redirect("/");
+  // Try id first, fall back to email
+  const userId = (session.user as any).id as string | undefined;
+  const userEmail = session.user.email as string | undefined;
+
+  let dbUser = userId ? await prisma.user.findUnique({ where: { id: userId } }) : null;
+  if (!dbUser && userEmail) dbUser = await prisma.user.findUnique({ where: { email: userEmail } });
+  if (!dbUser || dbUser.role !== "admin") redirect("/");
 
   const stats = await getStats();
 
