@@ -88,18 +88,6 @@ CRITICAL RULES:
       bodyObj.max_tokens = 4096;
     }
     const body = JSON.stringify(bodyObj);
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: prompt },
-            { type: "image_url", image_url: { url: `data:${productMime};base64,${productB64}` } },
-            { type: "image_url", image_url: { url: `data:${bgMime};base64,${bgB64}` } },
-          ],
-        },
-      ],
-      max_tokens: 4096,
-    });
 
     console.log("[bg-worker] GPT-5.4: calling OpenRouter...");
     const controller = new AbortController();
