@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Coins, Loader2, Sparkles, Upload, Palette, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Coins, Loader2, Sparkles, Upload, Palette, CheckCircle2, HelpCircle } from "lucide-react";
+import { useOnboarding } from "@/components/user/onboarding-tour";
 import { Button } from "@/components/ui/button";
 import { UploadZone } from "@/components/background-replace/upload-zone";
 import { BgSelector } from "@/components/background-replace/bg-selector";
@@ -32,6 +33,7 @@ export default function NewBgReplacePage() {
   const [submitting, setSubmitting] = useState(false);
   const [recommendedIds, setRecommendedIds] = useState<string[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
+  const { start, TourModal } = useOnboarding();
 
   // Analyze product when entering step 2
   useEffect(() => {
@@ -172,7 +174,12 @@ export default function NewBgReplacePage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-10 md:py-14">
       {/* ====== Steps Indicator ====== */}
-      <div className="flex items-center justify-center mb-12">
+      <div className="flex items-center justify-center mb-12 relative">
+        <button onClick={start}
+          className="absolute right-0 top-0 text-white/20 hover:text-purple-400 transition-colors p-1"
+          title="新手教程">
+          <HelpCircle className="w-4 h-4" />
+        </button>
         <div className="flex items-center gap-1">
           {steps.map((s, i) => {
             const Icon = s.icon;
@@ -383,6 +390,7 @@ export default function NewBgReplacePage() {
           </Button>
         )}
       </div>
+      {TourModal}
     </div>
   );
 }
