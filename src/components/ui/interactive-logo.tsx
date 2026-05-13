@@ -1,134 +1,88 @@
 "use client";
 import { useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Environment, Float } from "@react-three/drei";
+import { Float, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 
-// Floating particles around the logo
-function Particles({ count = 40 }: { count?: number }) {
-  const groupRef = useRef<THREE.Group>(null);
-  const positions = useMemo(() => {
-    const pts: Float32Array[] = [];
-    for (let i = 0; i < count; i++) {
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.random() * Math.PI;
-      const r = 2.8 + Math.random() * 2.2;
-      const x = r * Math.sin(phi) * Math.cos(theta);
-      const y = r * Math.sin(phi) * Math.sin(theta);
-      const z = r * Math.cos(phi);
-      const speed = 0.2 + Math.random() * 0.6;
-      const offset = Math.random() * Math.PI * 2;
-      pts.push(new Float32Array([x, y, z, speed, offset]));
-    }
-    return pts;
-  }, [count]);
-
-  useFrame((state) => {
-    if (!groupRef.current) return;
-    const t = state.clock.elapsedTime;
-    groupRef.current.children.forEach((child, i) => {
-      const [x, y, z, speed, offset] = positions[i];
-      const a = t * speed * 0.3 + offset;
-      const s = 0.2 + Math.sin(a) * 0.1;
-      child.position.set(
-        x + Math.sin(a) * 0.3,
-        y + Math.cos(a * 1.3) * 0.3,
-        z + Math.cos(a) * 0.2,
-      );
-      child.scale.setScalar(Math.max(0.1, s));
-    });
-  });
-
-  return (
-    <group ref={groupRef}>
-      {positions.map((_, i) => (
-        <mesh key={i}>
-          <sphereGeometry args={[0.02, 8, 8]} />
-          <meshBasicMaterial color="#ccbbff" transparent opacity={0.5} />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-function FShape() {
+function OtterRelief() {
   const meshRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Mesh>(null);
 
-  const stroke = 0.78;
-  const halfH = 2.1;
-  const topW = 2.5;
-  const midW = 1.9;
-  const sx = -1.35;
-  const r = stroke * 0.5;
+  // Load textures
+  const [albedo, normalMap] = useTexture([
+    "/otters/otters.png",
+    "/otters/otters-normal.png",
+  ]);
 
+  const w = 2.6;
+  const h = 2.6;
+  const r = 0.35;
+  const sx = -w / 2;
+  const sy = -h / 2;
+
+  // Rounded rectangle shape
   const shape = useMemo(() => {
     const s = new THREE.Shape();
-    s.moveTo(sx, -halfH);
-    s.lineTo(sx, halfH - stroke);
-    s.quadraticCurveTo(sx, halfH, sx + r, halfH);
-    s.lineTo(sx + topW - r, halfH);
-    s.quadraticCurveTo(sx + topW, halfH, sx + topW, halfH - r);
-    s.lineTo(sx + topW, halfH - stroke + r);
-    s.quadraticCurveTo(sx + topW, halfH - stroke, sx + topW - r, halfH - stroke);
-    s.lineTo(sx + stroke + r, halfH - stroke);
-    s.quadraticCurveTo(sx + stroke, halfH - stroke, sx + stroke, halfH - stroke - r);
-    s.lineTo(sx + stroke, stroke + r);
-    s.quadraticCurveTo(sx + stroke, stroke, sx + stroke + r, stroke);
-    s.lineTo(sx + midW - r, stroke);
-    s.quadraticCurveTo(sx + midW, stroke, sx + midW, stroke - r);
-    s.lineTo(sx + midW, -stroke + r);
-    s.quadraticCurveTo(sx + midW, -stroke, sx + midW - r, -stroke);
-    s.lineTo(sx + stroke + r, -stroke);
-    s.quadraticCurveTo(sx + stroke, -stroke, sx + stroke, -stroke - r);
-    s.lineTo(sx + stroke, -halfH + r);
-    s.quadraticCurveTo(sx + stroke, -halfH, sx, -halfH);
+    const x1 = sx + r;
+    const x2 = sx + w - r;
+    const y1 = sy + r;
+    const y2 = sy + h - r;
+
+    s.moveTo(x1, sy);
+    s.lineTo(x2, sy);
+    s.quadraticCurveTo(sx + w, sy, sx + w, y1);
+    s.lineTo(sx + w, y2);
+    s.quadraticCurveTo(sx + w, sy + h, x2, sy + h);
+    s.lineTo(x1, sy + h);
+    s.quadraticCurveTo(sx, sy + h, sx, y2);
+    s.lineTo(sx, y1);
+    s.quadraticCurveTo(sx, sy, x1, sy);
     return s;
   }, []);
 
-  const geo = useMemo(() => {
+  // Extruded 3D block with rounded bevel
+  const geometry = useMemo(() => {
     return new THREE.ExtrudeGeometry(shape, {
-      depth: 0.6,
+      depth: 0.45,
       bevelEnabled: true,
-      bevelThickness: 0.08,
-      bevelSize: 0.07,
-      bevelSegments: 4,
+      bevelThickness: 0.12,
+      bevelSize: 0.1,
+      bevelSegments: 5,
     });
   }, [shape]);
 
-  // Larger glow mesh behind the logo
+  // Glow ring behind the block
   const glowGeo = useMemo(() => {
     const s = new THREE.Shape();
-    const pad = 0.4;
-    s.moveTo(sx - pad, -halfH - pad);
-    s.lineTo(sx - pad, halfH - stroke + pad);
-    s.quadraticCurveTo(sx - pad, halfH + pad, sx + r - pad, halfH + pad);
-    s.lineTo(sx + topW - r + pad, halfH + pad);
-    s.quadraticCurveTo(sx + topW + pad, halfH + pad, sx + topW + pad, halfH - r - pad);
-    s.lineTo(sx + topW + pad, halfH - stroke + r + pad);
-    s.quadraticCurveTo(sx + topW + pad, halfH - stroke - pad, sx + topW - r + pad, halfH - stroke - pad);
-    s.lineTo(sx + stroke + r + pad, halfH - stroke - pad);
-    s.quadraticCurveTo(sx + stroke - pad, halfH - stroke - pad, sx + stroke - pad, halfH - stroke - r - pad);
-    s.lineTo(sx + stroke - pad, stroke + r + pad);
-    s.quadraticCurveTo(sx + stroke - pad, stroke - pad, sx + stroke + r + pad, stroke - pad);
-    s.lineTo(sx + midW - r + pad, stroke - pad);
-    s.quadraticCurveTo(sx + midW + pad, stroke - pad, sx + midW + pad, stroke - r - pad);
-    s.lineTo(sx + midW + pad, -stroke + r + pad);
-    s.quadraticCurveTo(sx + midW + pad, -stroke - pad, sx + midW - r + pad, -stroke - pad);
-    s.lineTo(sx + stroke + r + pad, -stroke - pad);
-    s.quadraticCurveTo(sx + stroke - pad, -stroke - pad, sx + stroke - pad, -stroke - r - pad);
-    s.lineTo(sx + stroke - pad, -halfH + r - pad);
-    s.quadraticCurveTo(sx + stroke - pad, -halfH - pad, sx - pad, -halfH - pad);
+    const pad = 0.3;
+    const gx = sx - pad;
+    const gy = sy - pad;
+    const gw = w + pad * 2;
+    const gh = h + pad * 2;
+    const gr = r + pad;
+    const gx1 = gx + gr;
+    const gx2 = gx + gw - gr;
+    const gy1 = gy + gr;
+    const gy2 = gy + gh - gr;
+
+    s.moveTo(gx1, gy);
+    s.lineTo(gx2, gy);
+    s.quadraticCurveTo(gx + gw, gy, gx + gw, gy1);
+    s.lineTo(gx + gw, gy2);
+    s.quadraticCurveTo(gx + gw, gy + gh, gx2, gy + gh);
+    s.lineTo(gx1, gy + gh);
+    s.quadraticCurveTo(gx, gy + gh, gx, gy2);
+    s.lineTo(gx, gy1);
+    s.quadraticCurveTo(gx, gy, gx1, gy);
     return new THREE.ShapeGeometry(s);
   }, []);
 
   useFrame((state) => {
     if (meshRef.current) {
-      const mx = (state.mouse.x || 0) * 0.5;
-      const my = (state.mouse.y || 0) * 0.3;
-      meshRef.current.rotation.y += 0.003;
-      meshRef.current.rotation.x += (my - meshRef.current.rotation.x) * 0.02;
-      meshRef.current.rotation.y += (mx * 0.5 - meshRef.current.rotation.y) * 0.01;
+      const mx = (state.mouse.x || 0) * 0.4;
+      const my = (state.mouse.y || 0) * 0.25;
+      meshRef.current.rotation.y += (mx * 0.6 - meshRef.current.rotation.y) * 0.008;
+      meshRef.current.rotation.x += (my * 0.3 - meshRef.current.rotation.x) * 0.008;
     }
     if (glowRef.current) {
       glowRef.current.rotation.copy(meshRef.current?.rotation || new THREE.Euler());
@@ -136,39 +90,59 @@ function FShape() {
   });
 
   return (
-    <Float speed={1.5} rotationIntensity={0.15} floatIntensity={0.3}>
+    <Float speed={1.2} rotationIntensity={0.08} floatIntensity={0.2}>
       <group>
-        {/* Background glow */}
-        <mesh ref={glowRef as any} geometry={glowGeo} position={[0, 0, -0.5]}>
-          <meshBasicMaterial color="#7c6aff" transparent opacity={0.08} side={THREE.DoubleSide} />
-        </mesh>
-
-        {/* Main F shape */}
-        <mesh ref={meshRef} geometry={geo} position={[0, 0, -0.3]}>
-          <meshPhysicalMaterial
-            color="#e8e0ff"
-            metalness={0.0}
-            roughness={0.12}
-            clearcoat={1.0}
-            clearcoatRoughness={0.04}
+        {/* Back glow ring */}
+        <mesh ref={glowRef as any} geometry={glowGeo} position={[0, 0, -0.6]}>
+          <meshBasicMaterial
+            color="#b57bee"
             transparent
-            opacity={0.65}
-            envMapIntensity={1.0}
-            specularIntensity={1.8}
-            specularColor="#eeddff"
-            sheen={0.3}
-            sheenRoughness={0.4}
-            sheenColor="#c8b8ff"
+            opacity={0.06}
+            side={THREE.DoubleSide}
           />
         </mesh>
 
-        {/* Edge glow lines */}
-        <lineSegments geometry={new THREE.EdgesGeometry(geo)} position={[0, 0, -0.3]}>
-          <lineBasicMaterial color="#ccbbff" transparent opacity={0.35} />
-        </lineSegments>
+        {/* Inset glow plane behind the block */}
+        <mesh position={[0, 0, -0.35]} scale={[0.92, 0.92, 1]}>
+          <planeGeometry args={[w, h]} />
+          <meshBasicMaterial
+            color="#8b5cf6"
+            transparent
+            opacity={0.04}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
 
-        {/* Floating particles */}
-        <Particles count={50} />
+        {/* Main 3D extruded relief block */}
+        <mesh ref={meshRef} geometry={geometry} position={[0, 0, -0.2]}>
+          <meshPhysicalMaterial
+            map={albedo}
+            normalMap={normalMap}
+            normalScale={new THREE.Vector2(0.6, 0.6)}
+            metalness={0.05}
+            roughness={0.3}
+            clearcoat={0.3}
+            clearcoatRoughness={0.1}
+            specularIntensity={0.8}
+            specularColor="#ffffff"
+            sheen={0.2}
+            sheenRoughness={0.5}
+            sheenColor="#c8b8ff"
+            envMapIntensity={0.4}
+          />
+        </mesh>
+
+        {/* Edge highlight lines */}
+        <lineSegments
+          geometry={new THREE.EdgesGeometry(geometry)}
+          position={[0, 0, -0.2]}
+        >
+          <lineBasicMaterial
+            color="#b57bee"
+            transparent
+            opacity={0.2}
+          />
+        </lineSegments>
       </group>
     </Float>
   );
@@ -178,17 +152,28 @@ export function InteractiveLogo() {
   return (
     <div className="w-full aspect-square max-w-[420px] mx-auto cursor-grab active:cursor-grabbing select-none">
       <Canvas
-        camera={{ position: [0, 0.1, 9], fov: 35 }}
-        gl={{ alpha: true, antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.3 }}
+        camera={{ position: [0, 0.1, 7.5], fov: 38 }}
+        gl={{
+          alpha: true,
+          antialias: true,
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: 1.2,
+        }}
         dpr={[1, 2]}
+        style={{ background: "transparent" }}
       >
-        <ambientLight intensity={0.4} color="#6666aa" />
-        <directionalLight position={[3, 2, 5]} intensity={4} color="#ffffff" />
-        <directionalLight position={[-3, 2, -3]} intensity={3.5} color="#c8c0ff" />
-        <directionalLight position={[0, -3, 2]} intensity={2.5} color="#e8d0ff" />
-        <pointLight position={[0, 2, 4]} intensity={2} color="#aaccff" />
-        <FShape />
-        <Environment preset="city" />
+        {/* Dark studio environment */}
+        <color attach="background" args={["#0a0a14"]} />
+
+        {/* Premium softbox lighting */}
+        <ambientLight intensity={0.25} color="#222244" />
+        <directionalLight position={[4, 3, 6]} intensity={6} color="#ffffff" />
+        <directionalLight position={[-3, 2, -4]} intensity={3} color="#c8c0ff" />
+        <directionalLight position={[0, -4, 3]} intensity={2} color="#e8d0ff" />
+        <pointLight position={[0, 3, 4]} intensity={2.5} color="#aaccff" />
+        <pointLight position={[2, -2, 3]} intensity={1.5} color="#ffccdd" />
+
+        <OtterRelief />
       </Canvas>
     </div>
   );
