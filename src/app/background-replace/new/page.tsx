@@ -176,9 +176,9 @@ export default function NewBgReplacePage() {
       {/* ====== Steps Indicator ====== */}
       <div className="flex items-center justify-center mb-12 relative">
         <button onClick={start}
-          className="absolute right-0 top-0 text-white/20 hover:text-purple-400 transition-colors p-1"
+          className="absolute -right-2 -top-2 flex items-center gap-1.5 text-xs text-purple-400/60 hover:text-purple-400 transition-colors bg-purple-500/10 border border-purple-400/20 rounded-full px-2.5 py-1"
           title="新手教程">
-          <HelpCircle className="w-4 h-4" />
+          <HelpCircle className="w-3.5 h-3.5" /> 教程
         </button>
         <div className="flex items-center gap-1">
           {steps.map((s, i) => {

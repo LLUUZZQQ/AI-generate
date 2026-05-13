@@ -29,8 +29,14 @@ export function useOnboarding() {
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) setDone(false);
-    else setDone(true);
+    if (!stored) {
+      setDone(false);
+      // Auto-show after short delay on first visit
+      const timer = setTimeout(() => { setStep(0); setShow(true); }, 800);
+      return () => clearTimeout(timer);
+    } else {
+      setDone(true);
+    }
   }, []);
 
   const start = () => { setStep(0); setShow(true); };
