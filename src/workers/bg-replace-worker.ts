@@ -22,10 +22,28 @@ async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer): Prom
     console.log("[bg-worker] GPT-5.4 Image 2 blend: product", origMeta.width + "x" + origMeta.height,
       "bg", bgMeta.width + "x" + bgMeta.height);
 
-    const apiKey = process.env.OPENAI_API_KEY!;
+    // Exact same pattern as src/lib/models/openai.ts (known to work on OpenRouter)
+    const OpenAI = (await import("openai")).default;
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY!,
+      baseURL: "https://openrouter.ai/api/v1",
+      defaultHeaders: {
+        "HTTP-Referer": process.env.NEXT_PUBLIC_URL || "http://localhost:3000",
+        "X-Title": "FrameCraft",
+      },
+    });
 
-    // Use direct fetch — avoids SDK/auth compatibility issues with OpenRouter
-    const requestBody = {
+    // Quick test: can we even call this model via SDK?
+    console.log("[bg-worker] GPT-5.4: testing basic SDK connectivity...");
+    const testResp = await openai.chat.completions.create({
+      model: "openai/gpt-5.4-image-2",
+      messages: [{ role: "user", content: "say hello" }],
+      max_tokens: 10,
+    });
+    console.log("[bg-worker] GPT-5.4: SDK test OK —", testResp.choices?.[0]?.message?.content?.substring(0, 50));
+
+    // Now the real call with images
+    const response = await openai.chat.completions.create({
       model: "openai/gpt-5.4-image-2",
       messages: [
         {
@@ -51,27 +69,7 @@ Critical requirements:
         },
       ],
       max_tokens: 4096,
-    };
-
-    console.log("[bg-worker] GPT-5.4: calling OpenRouter via fetch...");
-    const httpRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": process.env.NEXT_PUBLIC_URL || "http://localhost:3000",
-        "X-Title": "FrameCraft",
-      },
-      body: JSON.stringify(requestBody),
     });
-
-    if (!httpRes.ok) {
-      const errText = await httpRes.text();
-      console.error("[bg-worker] GPT-5.4: HTTP", httpRes.status, errText.substring(0, 300));
-      return null;
-    }
-
-    const response = await httpRes.json() as any;
 
     // Parse response for image data
     const message = response?.choices?.[0]?.message;
