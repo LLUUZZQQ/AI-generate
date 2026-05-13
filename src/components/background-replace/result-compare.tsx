@@ -86,6 +86,16 @@ export function ResultCompare({ originalUrl, resultUrl, status, error, onRegener
               <Download className="w-3.5 h-3.5 mr-1" /> 下载
             </Button>
           )}
+          {onRegenerate && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRegenerate}
+              className="border-white/10 bg-black/60 hover:bg-black/80 text-white text-xs h-8"
+            >
+              <RefreshCw className="w-3.5 h-3.5 mr-1" /> 重新生成
+            </Button>
+          )}
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowLeft, Download, Loader2, XCircle, PauseCircle, RefreshCw } from "lucide-react";
@@ -30,6 +30,7 @@ interface Task {
 
 export default function BgReplaceTaskPage() {
   const { taskId } = useParams<{ taskId: string }>();
+  const router = useRouter();
   const [task, setTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -189,7 +190,32 @@ export default function BgReplaceTaskPage() {
               resultUrl={result.resultKey ? getResultUrl(result.id) : null}
               status={result.status as "pending" | "processing" | "done" | "failed"}
               error={result.error}
-              onRegenerate={() => toast.info("重新生成功能即将上线")}
+              onRegenerate={async () => {
+                if (!task) return;
+                try {
+                  const res = await fetch("/api/background-replace", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      fileKeys: [result.originalKey],
+                      backgroundMode: task.backgroundMode,
+                      backgroundId: task.backgroundMode === "preset" ? (task as any).backgroundId : undefined,
+                      aiPrompt: (task as any).aiPrompt || undefined,
+                      customPrompt: (task as any).customPrompt || undefined,
+                      aiModel: (task as any).aiModel || undefined,
+                    }),
+                  });
+                  const d = await res.json();
+                  if (d.code === 0) {
+                    toast.success("已创建重新生成任务");
+                    router.push(`/background-replace/${d.data.taskId}`);
+                  } else if (d.code === 40003) {
+                    toast.error("积分不足，请先充值");
+                  } else {
+                    toast.error(d.message || "创建失败");
+                  }
+                } catch { toast.error("网络错误"); }
+              }}
             />
           </Card>
         ))}
