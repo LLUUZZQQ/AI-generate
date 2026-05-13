@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Wand2, LayoutGrid, Upload, Loader2 } from "lucide-react";
+import { Wand2, LayoutGrid, Upload, Loader2, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -22,11 +22,13 @@ interface BgSelectorProps {
   onAiPromptChange: (prompt: string) => void;
   customBgFile: File | null;
   onCustomBgChange: (file: File | null) => void;
+  recommendedIds?: string[];
 }
 
 export function BgSelector({
   mode, onModeChange, selectedBgId, onSelectBg,
   aiPrompt, onAiPromptChange, customBgFile, onCustomBgChange,
+  recommendedIds,
 }: BgSelectorProps) {
   const [templates, setTemplates] = useState<BackgroundTemplate[]>([]);
   const [loading, setLoading] = useState(false);
@@ -36,10 +38,20 @@ export function BgSelector({
       setLoading(true);
       fetch("/api/background-templates")
         .then((r) => r.json())
-        .then((d) => setTemplates(d.data || []))
+        .then((d) => {
+          let list = d.data || [];
+          // Sort: recommended first, then by original order
+          if (recommendedIds && recommendedIds.length > 0) {
+            const recSet = new Set(recommendedIds);
+            const rec = list.filter((t: BackgroundTemplate) => recSet.has(t.id));
+            const rest = list.filter((t: BackgroundTemplate) => !recSet.has(t.id));
+            list = [...rec, ...rest];
+          }
+          setTemplates(list);
+        })
         .finally(() => setLoading(false));
     }
-  }, [mode]);
+  }, [mode, recommendedIds]);
 
   const modes: { key: BgMode; label: string; icon: React.ReactNode; desc: string }[] = [
     { key: "preset", label: "预设模板", icon: <LayoutGrid className="w-4 h-4" />, desc: "从图库选择真实环境背景" },
@@ -100,6 +112,11 @@ export function BgSelector({
                   <div className="w-full h-full bg-white/[0.04] flex items-center justify-center">
                     <LayoutGrid className="w-6 h-6 text-white/20" />
                   </div>
+                )}
+                {recommendedIds?.includes(t.id) && (
+                  <span className="absolute top-1.5 right-1.5 flex items-center gap-0.5 text-[9px] bg-purple-500/80 text-white px-1.5 py-0.5 rounded-full backdrop-blur-sm">
+                    <Sparkles className="w-2.5 h-2.5" /> 推荐
+                  </span>
                 )}
                 <span className="absolute bottom-1 left-1 text-[10px] bg-black/60 text-white/80 px-1.5 py-0.5 rounded">
                   {t.name}

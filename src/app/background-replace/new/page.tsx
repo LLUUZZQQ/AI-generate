@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Coins, Loader2, Sparkles, Upload, Palette, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,43 @@ export default function NewBgReplacePage() {
   const [customPrompt, setCustomPrompt] = useState("");
   const [aiModel, setAiModel] = useState("openai/gpt-5.4-image-2");
   const [submitting, setSubmitting] = useState(false);
+  const [recommendedIds, setRecommendedIds] = useState<string[]>([]);
+  const [analyzing, setAnalyzing] = useState(false);
+
+  // Analyze product when entering step 2
+  useEffect(() => {
+    if (step === 2 && files.length > 0 && recommendedIds.length === 0) {
+      analyzeFirstImage();
+    }
+  }, [step]);
+
+  const analyzeFirstImage = async () => {
+    if (files.length === 0) return;
+    setAnalyzing(true);
+    try {
+      // Quick upload first file for analysis
+      const formData = new FormData();
+      formData.append("file", files[0]);
+      const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
+      const uploadData = await uploadRes.json();
+      if (uploadData.code !== 0) return;
+      const fileKey = uploadData.data.key || uploadData.data.filename;
+
+      const analyzeRes = await fetch("/api/analyze-product", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileKey }),
+      });
+      const analyzeData = await analyzeRes.json();
+      if (analyzeData.code === 0 && analyzeData.data.recommendedBgIds) {
+        setRecommendedIds(analyzeData.data.recommendedBgIds);
+      }
+    } catch {
+      // Silent fail — just show all backgrounds
+    } finally {
+      setAnalyzing(false);
+    }
+  };
 
   const canNext = () => {
     if (step === 1) return files.length > 0;
@@ -163,6 +200,11 @@ export default function NewBgReplacePage() {
         <div className="glass p-6 md:p-8">
           <h2 className="text-lg font-semibold mb-1">选择背景</h2>
           <p className="text-sm text-foreground/25 mb-6">所有照片将使用同一个背景。支持预设场景、AI 生成或自定义上传</p>
+          {analyzing && (
+            <div className="flex items-center gap-2 text-xs text-purple-400/60 mb-4">
+              <Loader2 className="w-3 h-3 animate-spin" /> AI 正在分析产品，智能推荐背景...
+            </div>
+          )}
           <BgSelector
             mode={mode}
             onModeChange={setMode}
@@ -172,6 +214,7 @@ export default function NewBgReplacePage() {
             onAiPromptChange={setAiPrompt}
             customBgFile={customBgFile}
             onCustomBgChange={setCustomBgFile}
+            recommendedIds={recommendedIds}
           />
 
           {/* Model & Prompt Settings */}
