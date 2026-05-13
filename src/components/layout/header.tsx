@@ -5,7 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { CreditsDisplay } from "@/components/user/credits-display";
+import { ProfileDropdown } from "@/components/user/profile-dropdown";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Coins } from "lucide-react";
 
@@ -64,8 +64,8 @@ export function Header() {
         <nav className="hidden md:flex items-center gap-1">
           {session ? (
             <>
-              <CreditsDisplay />
-              <Link href="/settings"><Button size="sm" className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/20 text-purple-300 hover:from-purple-500/30 hover:to-pink-500/30 text-xs h-7 rounded-full px-3"><Coins className="w-3 h-3 mr-1" />充值</Button></Link>
+              <ProfileDropdown />
+              <Link href="/settings?tab=billing"><Button size="sm" className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/20 text-purple-300 hover:from-purple-500/30 hover:to-pink-500/30 text-xs h-7 rounded-full px-3"><Coins className="w-3 h-3 mr-1" />充值</Button></Link>
               <Link href="/"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">首页</Button></Link>
               <Link href="/background-replace"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">背景替换</Button></Link>
               <Link href="/dashboard"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">我的</Button></Link>
@@ -83,7 +83,7 @@ export function Header() {
 
         {/* Mobile */}
         <div className="flex md:hidden items-center gap-2">
-          {session && <CreditsDisplay />}
+          {session && <ProfileDropdown />}
           <Button variant="ghost" size="sm" onClick={() => setOpen(!open)} className="text-white/60">
             {open ? "✕" : "☰"}
           </Button>

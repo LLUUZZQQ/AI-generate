@@ -24,7 +24,9 @@ export default function SettingsPage() {
       queryClient.invalidateQueries({ queryKey: ["user-me"] });
     }, 500);
   }
-  const [tab, setTab] = useState<"account" | "billing">("account");
+  const [tab, setTab] = useState<"account" | "billing">(
+    searchParams.get("tab") === "billing" ? "billing" : "account"
+  );
   const [selectedPlan, setSelectedPlan] = useState<typeof plans[0] | null>(null);
   const [paying, setPaying] = useState(false);
 

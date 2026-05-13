@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Wand2, LayoutGrid, Upload, Trash2, Image, Plus } from "lucide-react";
+import { Wand2, LayoutGrid, Upload, Trash2, Image, Plus, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 type BgMode = "preset" | "ai" | "custom";
 
@@ -25,7 +26,9 @@ export function BgSelector({
 }: BgSelectorProps) {
   const [savedBgs, setSavedBgs] = useState<SavedBg[]>([]);
   const [dragOver, setDragOver] = useState(false);
+  const [presetUploading, setPresetUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const presetFileRef = useRef<HTMLInputElement>(null);
 
   // Load saved backgrounds from localStorage
   useEffect(() => {
@@ -34,6 +37,28 @@ export function BgSelector({
       if (raw) setSavedBgs(JSON.parse(raw));
     } catch { }
   }, []);
+
+  // Direct preset upload
+  const handlePresetUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPresetUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json();
+      if (data.code !== 0) { toast.error(data.message || "上传失败"); return; }
+      const key = data.data.key || data.data.filename;
+      const url = `/api/s3/${key}`;
+      saveBackground(key, file.name, url);
+      toast.success("预设已添加");
+    } catch { toast.error("上传失败"); }
+    finally {
+      setPresetUploading(false);
+      if (presetFileRef.current) presetFileRef.current.value = "";
+    }
+  };
 
   // Save new background to localStorage when customBgFile changes and is uploaded
   const saveBackground = useCallback((key: string, name: string, url: string) => {
@@ -95,9 +120,11 @@ export function BgSelector({
       {mode === "preset" && (<>
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs text-white/25">{savedBgs.length > 0 ? `${savedBgs.length} 个预设` : ""}</span>
-          <button type="button" onClick={() => onModeChange("custom")}
-            className="flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 transition-colors">
-            <Plus className="w-3.5 h-3.5" /> 添加预设
+          <button type="button" disabled={presetUploading}
+            onClick={() => presetFileRef.current?.click()}
+            className="flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 transition-colors disabled:opacity-50">
+            {presetUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+            添加预设
           </button>
         </div>
         {savedBgs.length === 0 ? (
@@ -148,6 +175,7 @@ export function BgSelector({
       {/* Custom upload with drag-drop */}
       {mode === "custom" && (
         <div>
+          <input type="file" accept="image/*" ref={presetFileRef} onChange={handlePresetUpload} className="hidden" />
           <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileSelect} className="hidden" id="custom-bg-input" />
           <div
             onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
