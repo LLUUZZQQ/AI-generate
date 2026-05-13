@@ -28,7 +28,7 @@ export default function NewBgReplacePage() {
   const [aiPrompt, setAiPrompt] = useState("");
   const [customBgFile, setCustomBgFile] = useState<File | null>(null);
   const [customPrompt, setCustomPrompt] = useState("");
-  const [aiModel, setAiModel] = useState("openai/gpt-5.4-image-2");
+  const [aiModel, setAiModel] = useState("google/gemini-3.1-flash-image-preview");
   const [submitting, setSubmitting] = useState(false);
   const [recommendedIds, setRecommendedIds] = useState<string[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
@@ -256,8 +256,8 @@ export default function NewBgReplacePage() {
                 <label className="text-xs font-medium text-foreground/40 mb-2 block">AI 融合模型</label>
                 <div className="grid grid-cols-2 gap-2">
                   {[
+                    { value: "google/gemini-3.1-flash-image-preview", label: "Gemini 3.1 Flash", sub: "更快更便宜 · 默认" },
                     { value: "openai/gpt-5.4-image-2", label: "GPT-5.4 Image 2", sub: "最佳质量" },
-                    { value: "google/gemini-3.1-flash-image-preview", label: "Gemini 3.1 Flash", sub: "更快更便宜" },
                   ].map((m) => (
                     <button
                       key={m.value}

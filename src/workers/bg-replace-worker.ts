@@ -24,7 +24,7 @@ async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer, custo
 
     const apiKey = process.env.OPENAI_API_KEY!;
 
-    const model = aiModel || "openai/gpt-5.4-image-2";
+    const model = aiModel || "google/gemini-3.1-flash-image-preview";
     const defaultPrompt = `You are a photorealistic image compositor. Take the product from the FIRST image and place it into the SECOND image's scene. The result must be INDISTINGUISHABLE from a real photograph.
 
 CRITICAL RULES:
