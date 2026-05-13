@@ -3,84 +3,82 @@ import { prisma } from "@/lib/db";
 import { downloadFromS3, uploadToS3 } from "@/lib/s3";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
-import OpenAI from "openai";
 
 const hasS3 = !!(process.env.S3_BUCKET && process.env.S3_ENDPOINT);
-const AI_BLEND_MODEL = process.env.AI_BLEND_MODEL || "gpt-4.1-mini";
 const POLL_INTERVAL = 3000; // 3 seconds
 
-async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer): Promise<Buffer | null> {
+async function replicateBlend(originalBuffer: Buffer, bgBuffer: Buffer): Promise<Buffer | null> {
   try {
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY!,
-      baseURL: process.env.OPENAI_BASE_URL || "https://openrouter.ai/api/v1",
-      defaultHeaders: {
-        "HTTP-Referer": process.env.NEXT_PUBLIC_URL || "http://localhost:3000",
-        "X-Title": "FrameCraft",
-      },
-    });
-
-    const productB64 = originalBuffer.toString("base64");
-    const bgB64 = bgBuffer.toString("base64");
+    if (!process.env.REPLICATE_API_TOKEN) {
+      console.log("[bg-worker] Replicate: no REPLICATE_API_TOKEN, skip");
+      return null;
+    }
 
     const sharp = (await import("sharp")).default;
-    const origMeta = await sharp(originalBuffer).metadata();
+
+    // Step 1: Remove background from product
+    console.log("[bg-worker] Replicate blend: removing background...");
+    const subjectBuffer = await removeBackground(originalBuffer);
+
+    // Step 2: Basic paste composite (product centered on background)
+    const subMeta = await sharp(subjectBuffer).metadata();
     const bgMeta = await sharp(bgBuffer).metadata();
-    const origMime = origMeta.format === "png" ? "image/png" : "image/jpeg";
-    const bgMime = bgMeta.format === "png" ? "image/png" : "image/jpeg";
+    if (!subMeta.width || !subMeta.height || !bgMeta.width || !bgMeta.height) return null;
 
-    console.log("[bg-worker] AI blend: calling", AI_BLEND_MODEL,
-      "product:", origMeta.width + "x" + origMeta.height,
-      "bg:", bgMeta.width + "x" + bgMeta.height);
+    // Resize product to ~60% of background width to leave room for scene context
+    const targetW = Math.round(bgMeta.width * 0.6);
+    const scale = targetW / subMeta.width;
+    const targetH = Math.round(subMeta.height * scale);
+    const resizedSubject = await sharp(subjectBuffer)
+      .resize(targetW, targetH, { fit: "inside" })
+      .png()
+      .toBuffer();
 
-    const response = await openai.responses.create({
-      model: AI_BLEND_MODEL,
-      input: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "input_text",
-              text: `You are a professional photo compositing tool. Blend the product from the FIRST image into the scene of the SECOND image.
+    // Place product centered horizontally, at bottom third vertically
+    const left = Math.round((bgMeta.width - targetW) / 2);
+    const top = Math.round(bgMeta.height * 0.55 - targetH / 2);
 
-CRITICAL:
-1. Place the product naturally in the scene — it should look like it was actually photographed there
-2. Match the lighting, shadows, and color temperature of the scene
-3. The product must sit on a surface or ground — NOT floating
-4. Keep the product's own colors and textures 100% unchanged
-5. If there are packaging items (boxes, bags) with the product, keep them too
-6. Generate realistic contact shadows where the product meets the surface
-7. Output should look like a casual smartphone photo, NOT a polished studio shot
-8. Do NOT add text, watermarks, or logos
+    const pasteComposite = await sharp(bgBuffer)
+      .composite([{ input: resizedSubject, left, top }])
+      .jpeg({ quality: 92 })
+      .toBuffer();
 
-The first image is the product. The second image is the target scene.`,
-            },
-            { type: "input_image", detail: "high", image_url: `data:${origMime};base64,${productB64}` },
-            { type: "input_image", detail: "high", image_url: `data:${bgMime};base64,${bgB64}` },
-          ],
+    const pasteB64 = pasteComposite.toString("base64");
+
+    // Step 3: SDXL img2img to blend product naturally into the scene
+    console.log("[bg-worker] Replicate: calling img2img blend...");
+    const Replicate = (await import("replicate")).default;
+    const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN! });
+
+    const output = await replicate.run(
+      "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+      {
+        input: {
+          image: `data:image/jpeg;base64,${pasteB64}`,
+          prompt: "A realistic casual photo, natural lighting, product placed in the scene, seamless blending, soft shadows, amateur smartphone quality, no text no watermark",
+          negative_prompt: "blurry, distorted, oversaturated, artificial, CGI, photoshopped, text, watermark, logo",
+          strength: 0.45,
+          num_outputs: 1,
         },
-      ],
-      tools: [{ type: "image_generation" }],
-    });
+      }
+    );
 
-    const imageOutputs = response.output.filter(
-      (o) => o.type === "image_generation_call"
-    ) as Array<{ result: string | null; status: string }>;
-    if (imageOutputs.length === 0) {
-      console.error("[bg-worker] AI blend: no image_generation_call in response");
+    const resultUrl = Array.isArray(output) ? output[0] : (output as any)?.url || output;
+    if (typeof resultUrl !== "string" || !resultUrl.startsWith("http")) {
+      console.error("[bg-worker] Replicate: unexpected output:", JSON.stringify(output).substring(0, 200));
       return null;
     }
 
-    const imageBase64 = imageOutputs[0].result;
-    if (!imageBase64) {
-      console.error("[bg-worker] AI blend: empty result in image_generation_call");
-      return null;
-    }
+    // Download result
+    console.log("[bg-worker] Replicate: downloading result...");
+    const res = await fetch(resultUrl);
+    if (!res.ok) { console.error("[bg-worker] Replicate: download failed", res.status); return null; }
+    const resultBuf = Buffer.from(await res.arrayBuffer());
 
-    console.log("[bg-worker] AI blend: success, base64 length:", imageBase64.length);
-    return Buffer.from(imageBase64, "base64");
+    console.log("[bg-worker] Replicate blend: success, size:", resultBuf.length);
+    return resultBuf;
   } catch (e: any) {
-    console.error("[bg-worker] AI blend failed:", e.message?.substring(0, 300));
+    console.error("[bg-worker] Replicate blend failed:", e.message?.substring(0, 300));
     return null;
   }
 }
@@ -157,12 +155,12 @@ async function processTask(taskId: string) {
         bg = await createSolidBackground("#f5f5f0");
       }
 
-      // Try AI-powered blending first, fall back to traditional pipeline
+      // Try Replicate-based blending first, fall back to traditional pipeline
       let composited: Buffer | null = null;
-      composited = await aiBlendBackground(original, bg);
+      composited = await replicateBlend(original, bg);
 
       if (!composited) {
-        console.log("[bg-worker] AI blend unavailable — using traditional pipeline");
+        console.log("[bg-worker] Replicate blend unavailable — using traditional pipeline");
         const subjectBuffer = await removeBackground(original);
         const result = await compositeImages(subjectBuffer, bg);
         composited = result.composited;
