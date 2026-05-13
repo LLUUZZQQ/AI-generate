@@ -28,14 +28,15 @@ export function Footer() {
             </div>
           </div>
           <div>
-            <h4 className="text-[11px] font-semibold text-foreground/30 mb-3 uppercase tracking-wider">关于</h4>
-            <div className="space-y-2 text-xs text-foreground/15">
-              <p>© 2026 FrameCraft</p>
+            <h4 className="text-[11px] font-semibold text-foreground/30 mb-3 uppercase tracking-wider">联系我们</h4>
+            <div className="space-y-2 text-xs text-foreground/25">
+              <p>微信：UU_L777777</p>
+              <p>QQ：1512065600</p>
             </div>
           </div>
         </div>
         <div className="text-center text-[10px] text-foreground/10 pt-6 border-t border-white/[0.04]">
-          AI 生成内容仅供创意参考
+          © 2026 FrameCraft · AI 生成内容仅供创意参考
         </div>
       </div>
     </footer>
