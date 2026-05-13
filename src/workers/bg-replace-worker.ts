@@ -41,9 +41,12 @@ async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer): Prom
     });
 
     console.log("[bg-worker] GPT-5.4: calling OpenRouter...");
-    const https = await import("https");
-    const resp = await new Promise<{ status: number; data: any }>((resolve, reject) => {
-      const req = https.request("https://openrouter.ai/api/v1/chat/completions", {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 90000);
+
+    let resp: Response;
+    try {
+      resp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${apiKey}`,
@@ -51,27 +54,21 @@ async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer): Prom
           "HTTP-Referer": process.env.NEXT_PUBLIC_URL || "http://localhost:3000",
           "X-Title": "FrameCraft",
         },
-      }, (res) => {
-        let data = "";
-        res.on("data", (chunk: string) => data += chunk);
-        res.on("end", () => {
-          try { resolve({ status: res.statusCode || 0, data: JSON.parse(data) }); }
-          catch { resolve({ status: res.statusCode || 0, data }); }
-        });
+        body,
+        signal: controller.signal,
       });
-      req.on("error", reject);
-      req.setTimeout(60000, () => { req.destroy(); reject(new Error("Request timeout")); });
-      req.write(body);
-      req.end();
-    });
+    } finally {
+      clearTimeout(timeout);
+    }
 
-    if (resp.status !== 200) {
-      console.error("[bg-worker] GPT-5.4: HTTP", resp.status, JSON.stringify(resp.data).substring(0, 300));
+    if (!resp.ok) {
+      const errText = await resp.text();
+      console.error("[bg-worker] GPT-5.4: HTTP", resp.status, errText.substring(0, 300));
       return null;
     }
 
-    // Parse response for image data
-    const message = resp.data?.choices?.[0]?.message;
+    const data = await resp.json() as any;
+    const message = data?.choices?.[0]?.message;
     if (!message) { console.error("[bg-worker] GPT-5.4: no message"); return null; }
 
     // Parse response for image data
