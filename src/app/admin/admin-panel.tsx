@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { Users, BarChart3, Coins, Image, Search, Edit3, Shield, Loader2 } from "lucide-react";
+import { Users, BarChart3, Coins, Image, Search, Edit3, Shield, Loader2, Ban, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Stats {
   totalUsers: number; totalBGTasks: number; totalBgResults: number;
@@ -30,7 +31,26 @@ export function AdminPanel({ stats: initial }: { stats: Stats }) {
       body: JSON.stringify({ userId, ...data }),
     });
     const d = await res.json();
-    if (d.code === 0) { setEditUser(null); searchUsers(search); }
+    if (d.code === 0) { setEditUser(null); searchUsers(search); return true; }
+    toast.error(d.message);
+    return false;
+  };
+
+  const handleBan = async (userId: string, ban: boolean) => {
+    if (!window.confirm(ban ? "确定封禁该用户？" : "确定解封该用户？")) return;
+    await updateUser(userId, { banned: ban });
+  };
+
+  const handleDelete = async (userId: string) => {
+    if (!window.confirm("确定永久删除该用户？此操作不可撤销！")) return;
+    const res = await fetch("/api/admin/users", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId }),
+    });
+    const d = await res.json();
+    if (d.code === 0) { toast.success("已删除"); searchUsers(search); }
+    else toast.error(d.message);
   };
 
   return (
@@ -129,7 +149,8 @@ export function AdminPanel({ stats: initial }: { stats: Stats }) {
                     <th className="text-left py-3 px-4">用户</th>
                     <th className="text-left py-3 px-4">积分</th>
                     <th className="text-left py-3 px-4">角色</th>
-                    <th className="text-left py-3 px-4">任务数</th>
+                    <th className="text-left py-3 px-4">状态</th>
+                    <th className="text-left py-3 px-4">任务</th>
                     <th className="text-left py-3 px-4">注册时间</th>
                     <th className="text-right py-3 px-4">操作</th>
                   </tr>
@@ -145,13 +166,27 @@ export function AdminPanel({ stats: initial }: { stats: Stats }) {
                       <td className="py-3 px-4">
                         <span className={`text-xs px-2 py-0.5 rounded-full ${u.role === "admin" ? "bg-purple-500/20 text-purple-300" : "bg-white/[0.04] text-white/30"}`}>{u.role}</span>
                       </td>
+                      <td className="py-3 px-4">
+                        {u.banned ? <span className="text-xs text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full">已封禁</span>
+                          : <span className="text-xs text-white/20">正常</span>}
+                      </td>
                       <td className="py-3 px-4 text-white/40">{u._count?.bgReplaceTasks || 0}</td>
                       <td className="py-3 px-4 text-white/25 text-xs">{new Date(u.createdAt).toLocaleDateString("zh-CN")}</td>
                       <td className="py-3 px-4 text-right">
-                        <button onClick={() => setEditUser(u)}
-                          className="inline-flex items-center gap-1 text-xs text-white/30 hover:text-purple-400 transition-colors">
-                          <Edit3 className="w-3 h-3" /> 编辑
-                        </button>
+                        <div className="flex items-center gap-1.5 justify-end">
+                          <button onClick={() => setEditUser(u)}
+                            className="inline-flex items-center gap-1 text-xs text-white/30 hover:text-purple-400 transition-colors">
+                            <Edit3 className="w-3 h-3" />
+                          </button>
+                          <button onClick={() => handleBan(u.id, !u.banned)}
+                            className={`inline-flex items-center gap-1 text-xs transition-colors ${u.banned ? "text-green-400/50 hover:text-green-400" : "text-yellow-400/50 hover:text-yellow-400"}`}>
+                            <Ban className="w-3 h-3" />
+                          </button>
+                          <button onClick={() => handleDelete(u.id)}
+                            className="inline-flex items-center gap-1 text-xs text-white/25 hover:text-red-400 transition-colors">
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -174,11 +209,16 @@ export function AdminPanel({ stats: initial }: { stats: Stats }) {
                   </div>
                   <div>
                     <label className="text-xs text-white/30 block mb-1">角色</label>
-                    <select id="roleInput" defaultValue={editUser.role}
-                      className="w-full bg-white/[0.06] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white/80">
-                      <option value="user">user</option>
-                      <option value="admin">admin</option>
-                    </select>
+                    <div className="relative">
+                      <select id="roleInput" defaultValue={editUser.role}
+                        className="w-full appearance-none bg-white/[0.06] border border-white/[0.1] rounded-lg px-3 py-2 pr-8 text-sm text-white/80 focus:outline-none focus:border-purple-400/40">
+                        <option value="user">普通用户</option>
+                        <option value="admin">管理员</option>
+                      </select>
+                      <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path d="M6 9l6 6 6-6"/>
+                      </svg>
+                    </div>
                   </div>
                   <div className="flex gap-3 pt-2">
                     <button onClick={() => setEditUser(null)}

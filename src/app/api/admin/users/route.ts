@@ -22,7 +22,7 @@ export const GET = withAuth(async (req: NextRequest, _ctx: any, user: { id: stri
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * pageSize,
       take: pageSize,
-      select: { id: true, name: true, email: true, credits: true, role: true, createdAt: true, _count: { select: { bgReplaceTasks: true } } },
+      select: { id: true, name: true, email: true, credits: true, role: true, banned: true, createdAt: true, _count: { select: { bgReplaceTasks: true } } },
     }),
     prisma.user.count({ where }),
   ]);
@@ -34,18 +34,29 @@ export const PATCH = withAuth(async (req: NextRequest, _ctx: any, user: { id: st
   const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
   if (dbUser?.role !== "admin") return error(40300, "无权访问", 403);
 
-  const { userId, credits, role, ban } = await req.json();
+  const { userId, credits, role, banned } = await req.json();
 
   if (userId) {
-    const updated = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        ...(credits !== undefined ? { credits } : {}),
-        ...(role !== undefined ? { role } : {}),
-      },
-    });
-    return success({ id: updated.id, credits: updated.credits, role: updated.role });
+    const data: any = {};
+    if (credits !== undefined) data.credits = credits;
+    if (role !== undefined) data.role = role;
+    if (banned !== undefined) data.banned = banned;
+
+    const updated = await prisma.user.update({ where: { id: userId }, data });
+    return success({ id: updated.id, credits: updated.credits, role: updated.role, banned: updated.banned });
   }
 
   return error(40001, "缺少userId");
+});
+
+export const DELETE = withAuth(async (req: NextRequest, _ctx: any, user: { id: string }) => {
+  const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+  if (dbUser?.role !== "admin") return error(40300, "无权访问", 403);
+
+  const { userId } = await req.json();
+  if (!userId) return error(40001, "缺少userId");
+  if (userId === user.id) return error(40005, "不能删除自己");
+
+  await prisma.user.delete({ where: { id: userId } });
+  return success({ message: "已删除" });
 });

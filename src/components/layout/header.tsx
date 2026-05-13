@@ -58,6 +58,8 @@ export function Header() {
               <Link href="/"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">首页</Button></Link>
               <Link href="/background-replace"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">背景替换</Button></Link>
               <Link href="/dashboard"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">我的</Button></Link>
+              <Link href="/settings"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">设置</Button></Link>
+              <Link href="/admin"><Button variant="ghost" size="sm" className="text-white/25 hover:text-purple-400 text-[11px]">管理</Button></Link>
               <ThemeToggle />
               <Button variant="outline" size="sm" className="border-white/10 hover:bg-white/5 ml-2" onClick={() => signOut()}>退出</Button>
             </>
@@ -85,6 +87,8 @@ export function Header() {
               <Link href="/" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">🏠 首页</Link>
               <Link href="/background-replace" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">📸 背景替换</Link>
               <Link href="/dashboard" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">👤 我的</Link>
+              <Link href="/settings" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">⚙️ 设置</Link>
+              <Link href="/admin" onClick={() => setOpen(false)} className="block py-2.5 text-xs text-white/40 hover:text-purple-400">🛡 管理</Link>
               <div className="py-2"><ThemeToggle /></div>
               <Button variant="outline" size="sm" className="w-full border-white/10" onClick={() => signOut()}>退出</Button>
             </>
