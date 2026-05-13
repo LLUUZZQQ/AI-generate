@@ -77,8 +77,8 @@ export function AdminPanel({ stats: initial }: { stats: Stats }) {
               {initial.bgTasksByDay.map((d: any) => (
                 <div key={d.day} className="flex-1 flex flex-col items-center gap-1">
                   <span className="text-xs font-medium text-white/70">{d.count}</span>
-                  <div className="w-full bg-purple-500/30 rounded-t" style={{ height: `${Math.max(4, (d.count / Math.max(...initial.bgTasksByDay.map((x: any) => x.count), 1)) * 100)}%` }} />
-                  <span className="text-[9px] text-white/20">{d.day?.substring(5)}</span>
+                  <div className="w-full bg-purple-500/30 rounded-t" style={{ height: `${Math.max(4, (d.count / Math.max(...initial.bgTasksByDay.map((x: any) => x.count || 0), 1)) * 100)}%` }} />
+                  <span className="text-[9px] text-white/20">{typeof d.day === "string" ? d.day.substring(5) : d.day}</span>
                 </div>
               ))}
               {initial.bgTasksByDay.length === 0 && <span className="text-white/20 text-sm">暂无数据</span>}

@@ -23,7 +23,7 @@ async function getStats() {
     prisma.bgReplaceTask.count(),
     prisma.bgReplaceResult.count(),
     prisma.user.findMany({ orderBy: { createdAt: "desc" }, take: 5, select: { id: true, name: true, email: true, credits: true, createdAt: true } }),
-    prisma.$queryRawUnsafe(`SELECT DATE(created_at) as day, COUNT(*)::int as count FROM bg_replace_tasks WHERE created_at > NOW() - INTERVAL '7 days' GROUP BY day ORDER BY day`) as Promise<any[]>,
+    prisma.$queryRawUnsafe(`SELECT TO_CHAR(DATE(created_at), 'YYYY-MM-DD') as day, COUNT(*)::int as count FROM bg_replace_tasks WHERE created_at > NOW() - INTERVAL '7 days' GROUP BY day ORDER BY day`) as Promise<any[]>,
   ]);
 
   const creditAgg = await prisma.creditTransaction.aggregate({ where: { type: "background_replace" }, _sum: { amount: true } });
