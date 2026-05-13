@@ -5,46 +5,34 @@ import { success, error } from "@/lib/response";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { z } from "zod";
 
+// IP registration cooldown: 1 registration per IP per 24 hours
+const ipCooldown = new Map<string, number>();
+
 const registerSchema = z.object({
   name: z.string().min(2).max(20),
   email: z.string().email(),
   password: z.string().min(6).max(50),
-  captcha: z.string().length(4),
 });
-
-// Simple in-memory captcha store (clears on server restart)
-const captchaStore = new Map<string, { code: string; expires: number }>();
-
-// Clean expired captchas
-setInterval(() => {
-  const now = Date.now();
-  for (const [k, v] of captchaStore) { if (now > v.expires) captchaStore.delete(k); }
-}, 60_000);
-
-export async function GET() {
-  const code = Math.floor(1000 + Math.random() * 9000).toString();
-  const id = Math.random().toString(36).slice(2, 10);
-  captchaStore.set(id, { code, expires: Date.now() + 5 * 60 * 1000 });
-  return success({ captchaId: id, captcha: code });
-}
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for") || "unknown";
+
+  // Rate limit: 5 requests per minute
   if (!checkRateLimit(`register:${ip}`, 5, 60000)) {
     return error(42900, "请求过于频繁，请稍后重试", 429);
+  }
+
+  // IP cooldown: 1 registration per 24 hours
+  const lastReg = ipCooldown.get(ip);
+  if (lastReg && Date.now() - lastReg < 24 * 60 * 60 * 1000) {
+    return error(42901, "该网络今日注册次数已达上限，请明天再试", 429);
   }
 
   const body = await req.json();
   const parsed = registerSchema.safeParse(body);
   if (!parsed.success) return error(40001, "请填写完整信息");
 
-  const { name, email, password, captcha } = parsed.data;
-  const captchaId = req.headers.get("x-captcha-id") || "";
-
-  const stored = captchaStore.get(captchaId);
-  if (!stored || stored.expires < Date.now()) return error(40002, "验证码已过期");
-  if (stored.code !== captcha) return error(40003, "验证码错误");
-  captchaStore.delete(captchaId);
+  const { name, email, password } = parsed.data;
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) return error(40004, "该邮箱已注册");
@@ -53,6 +41,14 @@ export async function POST(req: NextRequest) {
   await prisma.user.create({
     data: { name, email, password: hashed, credits: 20 },
   });
+
+  ipCooldown.set(ip, Date.now());
+
+  // Clean old cooldown entries periodically
+  if (ipCooldown.size > 1000) {
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    for (const [k, v] of ipCooldown) { if (v < cutoff) ipCooldown.delete(k); }
+  }
 
   return success({ message: "注册成功" });
 }

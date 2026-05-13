@@ -1,6 +1,6 @@
 "use client";
 import { signIn } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -10,41 +10,24 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [captcha, setCaptcha] = useState("");
-  const [captchaId, setCaptchaId] = useState("");
-  const [captchaCode, setCaptchaCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
-
-  const fetchCaptcha = async () => {
-    try {
-      const res = await fetch("/api/auth/register");
-      const json = await res.json();
-      if (json.code === 0) {
-        setCaptchaId(json.data.captchaId);
-        setCaptchaCode(json.data.captcha);
-      }
-    } catch {}
-  };
-
-  useEffect(() => { fetchCaptcha(); }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || name.trim().length < 2) { setError("用户名至少2个字符"); return; }
     if (password.length < 6) { setError("密码至少6位"); return; }
-    if (captcha.length !== 4) { setError("请输入4位验证码"); return; }
 
     setLoading(true); setError("");
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-captcha-id": captchaId },
-        body: JSON.stringify({ name: name.trim(), email, password, captcha }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), email, password }),
       });
       const json = await res.json();
-      if (json.code !== 0) { setError(json.message); fetchCaptcha(); setCaptcha(""); return; }
+      if (json.code !== 0) { setError(json.message); return; }
 
       // Auto login after register
       const result = await signIn("credentials", { email, password, redirect: false });
@@ -82,18 +65,6 @@ export default function RegisterPage() {
             <Input type="password" placeholder="至少6位" value={password}
               onChange={(e) => setPassword(e.target.value)} required
               className="bg-white/[0.02] border-border h-10 rounded-xl" />
-          </div>
-          <div>
-            <label className="text-[11px] font-medium text-foreground/30 mb-1.5 block">验证码</label>
-            <div className="flex gap-2">
-              <Input placeholder="4位数字" value={captcha} maxLength={4}
-                onChange={(e) => setCaptcha(e.target.value.replace(/\D/g, ""))} required
-                className="bg-white/[0.02] border-border h-10 rounded-xl flex-1" />
-              <button type="button" onClick={fetchCaptcha}
-                className="h-10 px-3 rounded-xl text-sm font-bold tracking-[4px] bg-white/[0.03] border border-border hover:bg-white/[0.06] transition-colors text-purple-400 select-none">
-                {captchaCode || "----"}
-              </button>
-            </div>
           </div>
           {error && <p className="text-xs text-red-400">{error}</p>}
           <Button type="submit" className="w-full h-10 bg-gradient-to-r from-purple-500 to-pink-500 border-0" disabled={loading}>
