@@ -100,6 +100,9 @@ export function BgSelector({
 
   return (
     <div className="space-y-6">
+      {/* Hidden file input for preset upload — always mounted */}
+      <input type="file" accept="image/*" ref={presetFileRef} onChange={handlePresetUpload} className="hidden" />
+
       {/* Mode tabs */}
       <div className="flex gap-2">
         {modes.map((m) => (
@@ -175,7 +178,6 @@ export function BgSelector({
       {/* Custom upload with drag-drop */}
       {mode === "custom" && (
         <div>
-          <input type="file" accept="image/*" ref={presetFileRef} onChange={handlePresetUpload} className="hidden" />
           <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileSelect} className="hidden" id="custom-bg-input" />
           <div
             onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
