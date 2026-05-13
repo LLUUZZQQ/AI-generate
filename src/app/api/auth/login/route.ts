@@ -2,8 +2,14 @@ import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { success, error } from "@/lib/response";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for") || "unknown";
+  if (!checkRateLimit(`login:${ip}`, 10, 60000)) {
+    return error(42900, "请求过于频繁，请稍后重试", 429);
+  }
+
   const { email, password } = await req.json();
   if (!email || !password) return error(40001, "请填写邮箱和密码");
 

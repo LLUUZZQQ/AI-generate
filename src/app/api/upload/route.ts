@@ -4,10 +4,14 @@ import path from "path";
 import { auth } from "@/lib/auth";
 import { success, error } from "@/lib/response";
 import { uploadToS3 } from "@/lib/s3";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return error(40100, "请先登录", 401);
+  if (!checkRateLimit(`upload:${session.user.id}`, 20, 60000)) {
+    return error(42900, "请求过于频繁，请稍后重试", 429);
+  }
 
   const formData = await req.formData();
   const file = formData.get("file") as File | null;

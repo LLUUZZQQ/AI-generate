@@ -593,8 +593,13 @@ const server = http.createServer((_req, res) => {
   res.writeHead(200, { "Content-Type": "text/plain" });
   res.end("OK");
 });
+server.on("error", (e: any) => {
+  if (e.code === "EADDRINUSE") {
+    console.log("[bg-worker] Port " + PORT + " in use (shared worker mode), polling only");
+  }
+});
 server.listen(PORT, () => {
   console.log("[bg-worker] Worker listening on port " + PORT + ", polling every " + POLL_INTERVAL + "ms");
-  poll(); // immediate first run
+  poll();
 });
 setInterval(poll, POLL_INTERVAL);

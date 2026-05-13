@@ -142,7 +142,12 @@
       "PowerShell(npx tsx scripts/reset-stuck.ts)",
       "WebFetch(domain:openrouter.ai)",
       "PowerShell(npx prisma db push --accept-data-loss 2>&1)",
-      "PowerShell(npx prisma generate 2>&1)"
+      "PowerShell(npx prisma generate 2>&1)",
+      "PowerShell(vercel *)",
+      "mcp__plugin_vercel_vercel__get_runtime_logs",
+      "PowerShell(npx prisma db push 2>&1)",
+      "PowerShell(npx tsx scripts/check-db-schema.ts)",
+      "PowerShell(npx tsx scripts/add-columns.ts)"
     ]
   }
 }

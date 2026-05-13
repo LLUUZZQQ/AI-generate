@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { success, error } from "@/lib/response";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { z } from "zod";
 
 const registerSchema = z.object({
@@ -28,6 +29,11 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for") || "unknown";
+  if (!checkRateLimit(`register:${ip}`, 5, 60000)) {
+    return error(42900, "请求过于频繁，请稍后重试", 429);
+  }
+
   const body = await req.json();
   const parsed = registerSchema.safeParse(body);
   if (!parsed.success) return error(40001, "请填写完整信息");

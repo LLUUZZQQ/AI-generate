@@ -37,6 +37,7 @@ model CreditTransaction {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId], map: "idx_credit_transactions_user")
   @@map("credit_transactions")
 }
 
@@ -54,6 +55,7 @@ model TrendingTopic {
 
   contents Content[]
 
+  @@index([platformId], map: "idx_trending_topics_platform")
   @@map("trending_topics")
 }
 
@@ -76,6 +78,8 @@ model Content {
   topic   TrendingTopic     @relation(fields: [topicId], references: [id])
   suggestion PublishSuggestion?
 
+  @@index([userId], map: "idx_contents_user")
+  @@index([topicId], map: "idx_contents_topic")
   @@map("contents")
 }
 
@@ -175,6 +179,7 @@ model BgReplaceTask {
   user    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   results BgReplaceResult[]
 
+  @@index([userId, createdAt(sort: Desc)], map: "idx_bg_replace_tasks_user_created")
   @@map("bg_replace_tasks")
 }
 
@@ -190,5 +195,6 @@ model BgReplaceResult {
 
   task BgReplaceTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
+  @@index([taskId], map: "idx_bg_replace_results_task")
   @@map("bg_replace_results")
 }
