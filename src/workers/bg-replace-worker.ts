@@ -23,11 +23,13 @@ async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer): Prom
       "bg", bgMeta.width + "x" + bgMeta.height);
 
     // Exact same pattern as src/lib/models/openai.ts (known to work on OpenRouter)
+    const apiKey = process.env.OPENAI_API_KEY!;
     const OpenAI = (await import("openai")).default;
     const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY!,
+      apiKey,
       baseURL: "https://openrouter.ai/api/v1",
       defaultHeaders: {
+        "Authorization": `Bearer ${apiKey}`,  // Force auth header explicitly
         "HTTP-Referer": process.env.NEXT_PUBLIC_URL || "http://localhost:3000",
         "X-Title": "FrameCraft",
       },
