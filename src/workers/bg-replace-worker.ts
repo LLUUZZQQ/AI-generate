@@ -31,7 +31,7 @@ async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer): Prom
         {
           role: "user",
           content: [
-            { type: "text", text: "Take the main product from the first image and naturally place it into the second image's scene. Product must sit on a surface, not float. Match lighting and shadows. Keep product colors exactly. Casual phone photo style. No text or watermark." },
+            { type: "text", text: "Take EVERYTHING from the first image — the product AND any packaging, boxes, bags, accessories — and naturally place it ALL into the second image's scene. CRITICAL: If the first image shows shoes in a box, KEEP THE BOX. Do NOT remove packaging. Place everything on a surface, not floating. Match lighting and shadows. Keep all colors exactly. Casual phone photo style. No text or watermark." },
             { type: "image_url", image_url: { url: `data:${productMime};base64,${productB64}` } },
             { type: "image_url", image_url: { url: `data:${bgMime};base64,${bgB64}` } },
           ],
