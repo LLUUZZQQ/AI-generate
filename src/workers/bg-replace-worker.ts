@@ -25,6 +25,8 @@ async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer, custo
     const apiKey = process.env.OPENAI_API_KEY!;
 
     const model = aiModel || "google/gemini-3.1-flash-image-preview";
+    const isRecraft = model.includes("recraft");
+
     const defaultPrompt = `You are a photorealistic image compositor. Take the product from the FIRST image and place it into the SECOND image's scene. The result must be INDISTINGUISHABLE from a real photograph.
 
 CRITICAL RULES:
@@ -39,13 +41,53 @@ CRITICAL RULES:
 9. NOISE: Add subtle sensor noise/grain matching the background to unify the image. Real phone photos have noise.
 10. QUALITY: Ordinary smartphone photo quality — NOT studio, NOT CGI, NOT HDR, NOT overly sharp. Slight imperfection makes it real.
 11. NO text, watermark, or logo.`;
+
+    const recraftPrompt = `Refine this product photo composite. Blend the product naturally into the background scene. Keep product colors and proportions exactly as-is. Make it look like a single real photograph — natural lighting, realistic shadows, amateur phone photo quality. No text or watermark.`;
     const prompt = customPrompt
-      ? `${defaultPrompt}\n\nADDITIONAL USER INSTRUCTIONS: ${customPrompt}`
-      : defaultPrompt;
+      ? `${isRecraft ? recraftPrompt : defaultPrompt}\n\nADDITIONAL USER INSTRUCTIONS: ${customPrompt}`
+      : isRecraft ? recraftPrompt : defaultPrompt;
+
+    // Recraft needs a single composite image, not two separate images
+    let requestMessages;
+    if (isRecraft) {
+      // Pre-composite: paste product onto background for Recraft to refine
+      const productMeta = await sharp(originalBuffer).metadata();
+      const bgMeta = await sharp(bgBuffer).metadata();
+      const targetW = Math.round(bgMeta.width! * 0.55);
+      const scale = targetW / productMeta.width!;
+      const targetH = Math.round(productMeta.height! * scale);
+      const resizedProduct = await sharp(originalBuffer).resize(targetW, targetH, { fit: "inside" }).png().toBuffer();
+      const left = Math.round((bgMeta.width! - targetW) / 2);
+      const top = Math.round(bgMeta.height! * 0.5 - targetH / 2);
+      const composite = await sharp(bgBuffer).composite([{ input: resizedProduct, left, top }]).jpeg({ quality: 92 }).toBuffer();
+      requestMessages = [
+        { role: "user", content: [
+          { type: "text", text: prompt },
+          { type: "image_url", image_url: { url: `data:image/jpeg;base64,${composite.toString("base64")}` } },
+        ]},
+      ];
+    } else {
+      requestMessages = [
+        { role: "user", content: [
+          { type: "text", text: prompt },
+          { type: "image_url", image_url: { url: `data:${productMime};base64,${productB64}` } },
+          { type: "image_url", image_url: { url: `data:${bgMime};base64,${bgB64}` } },
+        ]},
+      ];
+    }
 
     // Call OpenRouter with OpenRouter key
-    const body = JSON.stringify({
+    const bodyObj: any = {
       model,
+      messages: requestMessages,
+    };
+    if (isRecraft) {
+      bodyObj.modalities = ["image"];
+      bodyObj.image_config = { strength: 0.55 };
+    } else {
+      bodyObj.max_tokens = 4096;
+    }
+    const body = JSON.stringify(bodyObj);
       messages: [
         {
           role: "user",
