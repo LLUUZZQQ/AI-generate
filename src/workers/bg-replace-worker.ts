@@ -40,7 +40,8 @@ async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer): Prom
       max_tokens: 4096,
     });
 
-    console.log("[bg-worker] GPT-5.4: sending via native https...");
+    console.log("[bg-worker] GPT-5.4: key prefix:", apiKey.substring(0, 12) + "...",
+      "suffix:..." + apiKey.substring(apiKey.length - 8));
     const https = await import("https");
     const resp = await new Promise<{ status: number; data: any }>((resolve, reject) => {
       const req = https.request("https://openrouter.ai/api/v1/chat/completions", {
