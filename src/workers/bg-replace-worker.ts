@@ -9,7 +9,6 @@ const POLL_INTERVAL = 3000; // 3 seconds
 
 async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer): Promise<Buffer | null> {
   try {
-    const OpenAI = (await import("openai")).default;
     const sharp = (await import("sharp")).default;
 
     const origMeta = await sharp(originalBuffer).metadata();
@@ -24,14 +23,9 @@ async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer): Prom
       "bg", bgMeta.width + "x" + bgMeta.height);
 
     const apiKey = process.env.OPENAI_API_KEY!;
-    console.log("[bg-worker] GPT-5.4: key present:", !!apiKey, "len:", apiKey.length);
 
-    const openai = new OpenAI({
-      apiKey,
-      baseURL: "https://openrouter.ai/api/v1",
-    });
-
-    const response = await openai.chat.completions.create({
+    // Use direct fetch — avoids SDK/auth compatibility issues with OpenRouter
+    const requestBody = {
       model: "openai/gpt-5.4-image-2",
       messages: [
         {
@@ -57,15 +51,30 @@ Critical requirements:
         },
       ],
       max_tokens: 4096,
-    }, {
+    };
+
+    console.log("[bg-worker] GPT-5.4: calling OpenRouter via fetch...");
+    const httpRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
       headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
         "HTTP-Referer": process.env.NEXT_PUBLIC_URL || "http://localhost:3000",
         "X-Title": "FrameCraft",
       },
+      body: JSON.stringify(requestBody),
     });
 
+    if (!httpRes.ok) {
+      const errText = await httpRes.text();
+      console.error("[bg-worker] GPT-5.4: HTTP", httpRes.status, errText.substring(0, 300));
+      return null;
+    }
+
+    const response = await httpRes.json() as any;
+
     // Parse response for image data
-    const message = response.choices?.[0]?.message;
+    const message = response?.choices?.[0]?.message;
     if (!message) { console.error("[bg-worker] GPT-5.4: no message"); return null; }
 
     // Parse response for image data
