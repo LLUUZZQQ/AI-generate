@@ -1,80 +1,77 @@
 ---
 name: ai-saas-fullstack
 description: >
-  Build production-ready AI-powered SaaS applications with premium visual design.
-  Use this skill whenever the user wants to build an AI website, AI SaaS product,
-  AI tool platform, or any web app that involves AI processing (image, text, video,
-  audio). Also trigger when the user mentions "AI 网站", landing page design, dashboard
-  design, AI pipeline, or wants to deploy a full-stack AI application. Covers the
-  complete lifecycle: visual design system, AI processing pipeline, dashboard/admin
-  panel, and multi-platform deployment (Vercel + Railway + Supabase + S3).
+  Build complete AI-powered SaaS applications from scratch. Covers: AI image processing
+  pipelines (multi-model fusion, background replacement), full-stack Next.js architecture
+  (Vercel + Railway + Supabase), premium dark-themed UI (glass morphism, bento grid, Framer
+  Motion), admin panel with user management, credit system, onboarding tours, and smart
+  presets. Use when user says "build me an AI website", "AI SaaS platform", "AI image
+  processing tool", "background replacement service", "AI fusion pipeline", or wants to
+  create any web app involving AI image/text/video processing with a production-grade
+  architecture. Also trigger when the user asks for admin dashboards, user management
+  panels, credit/billing systems, or dark-themed landing pages with glass design.
 ---
 
-# AI SaaS Fullstack Guide
+# AI SaaS Fullstack
 
-Build production-ready AI SaaS applications. Based on patterns proven across multiple shipped AI products.
+Build production-grade AI-powered SaaS applications. Based on the FrameCraft project —
+an AI product photo background replacement platform that went from zero to production.
+
+## Architecture
+
+```
+Browser → Vercel (Next.js frontend + API)
+              ↓ queries
+          Supabase (PostgreSQL)
+              ↓ polled by
+          Railway (background worker)
+              ↓ calls
+          OpenRouter (GPT-5.4 / Gemini / Recraft)
+              ↓ reads/writes
+          Cloudflare R2 (S3-compatible storage)
+```
+
+## Project Setup
+
+Start with Next.js + TypeScript + Tailwind + shadcn:
+
+```bash
+npx create-next-app@latest my-ai-saas --typescript --tailwind --eslint --app --src-dir --import-alias "@/*" --no-turbopack
+npx shadcn@latest init -d
+npx shadcn@latest add button card input label select tabs dialog dropdown-menu avatar badge skeleton separator toast sonner
+npm install @prisma/client @prisma/adapter-pg pg prisma
+npm install next-auth@beta @auth/prisma-adapter bcryptjs
+npm install @aws-sdk/client-s3 @aws-sdk/lib-storage sharp
+npm install three @react-three/fiber @react-three/drei framer-motion
+npm install @tanstack/react-query lucide-react zod
+npm install tsx -D
+```
+
+Create `prisma.config.ts`:
+```ts
+import { defineConfig, env } from 'prisma/config';
+export default defineConfig({
+  schema: 'prisma/schema.prisma',
+  datasource: { url: env('DATABASE_URL') },
+});
+```
 
 ## Design System
 
-### Color & Typography
-
-Use a **deep dark background** with a single accent color for a premium, focused feel. The background should never be pure black — a dark purple-black or blue-black reads as intentional and polished.
-
+### Colors
 ```css
 :root {
-  --background: #191421;       /* deep purple-black, not #000 */
-  --foreground: #f0f0f5;       /* soft white, never pure #fff for text */
-  --primary: #b57bee;          /* single accent — purple works for AI/creative */
-  --border: rgba(255,255,255,0.055);  /* subtle borders, never harsh */
-  --radius: 0.875rem;          /* large default radius */
-  --font-sans: "Inter", system-ui, sans-serif;
-}
-
-body {
-  letter-spacing: -0.011em;    /* tighter tracking for modern feel */
+  --background: #191421;
+  --foreground: #f0f0f5;
+  --primary: #b57bee;
+  --border: rgba(255,255,255,0.055);
+  --radius: 0.875rem;
 }
 ```
 
-Key principles:
-- One accent color throughout the entire site. Don't use multiple competing accent colors.
-- Text is never pure white — use `#f0f0f5` for primary, `rgba(255,255,255,0.3)` for secondary.
-- Borders are always subtle — `rgba(255,255,255,0.06)` to `0.08` range.
-- Large border-radius everywhere (0.75rem minimum for cards).
+Never pure black backgrounds. Text never pure white. Borders always subtle (0.06-0.08 opacity).
 
-### Ambient Background
-
-Always add a subtle ambient glow behind the page content. This makes the dark background feel alive rather than flat:
-
-```css
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background-image:
-    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(181,123,238,0.06), transparent 70%),
-    radial-gradient(ellipse 50% 40% at 80% 70%, rgba(96,165,250,0.03), transparent 60%);
-  pointer-events: none;
-}
-```
-
-Optionally add a subtle grain texture overlay:
-```css
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  opacity: 0.035;
-  background-image: url("data:image/svg+xml,..."); /* SVG noise filter */
-  pointer-events: none;
-}
-```
-
-### Glass Cards (Glass Morphism)
-
-The `.glass` class is the core building block for cards, sections, and panels:
-
+### Glass Cards
 ```css
 .glass {
   background: rgba(255,255,255,0.02);
@@ -83,477 +80,230 @@ The `.glass` class is the core building block for cards, sections, and panels:
   backdrop-filter: blur(20px);
   transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
-
 .glass:hover {
   background: rgba(255,255,255,0.035);
   border-color: rgba(255,255,255,0.16);
   transform: translateY(-2px);
-  box-shadow: 0 16px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(181,123,238,0.08);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.4);
 }
 ```
-
-Use `.glass` for: feature cards, step content containers, metrics bars, showcase frames, and settings sections. The hover float effect (`translateY(-2px)`) makes the page feel responsive and premium.
-
-### Gradient Text
-
-For headlines that need emphasis, use a gradient that stays within the accent color family:
-
-```css
-.gradient-text {
-  background: linear-gradient(135deg, #d4b8f0 0%, #b57bee 40%, #f0a0c0 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-```
-
-Limit gradient text to 2-3 words per section. Overuse dilutes the effect.
-
-### Bento Grid Layout
-
-Bento grids (cards of varying sizes in a masonry-like layout) are the standard pattern for SaaS feature showcases:
-
-```tsx
-{/* 2/3 + 1/3 row */}
-<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-  <div className="md:col-span-2 glass p-6">{/* Large card */}</div>
-  <div className="glass p-6">{/* Small card */}</div>
-</div>
-
-{/* 4-column row with mixed spans */}
-<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-  <div className="md:col-span-2 glass p-6">{/* Half-width */}</div>
-  <div className="glass p-6">{/* Quarter */}</div>
-  <div className="glass p-6">{/* Quarter */}</div>
-  <div className="glass p-6">{/* Quarter */}</div>
-  <div className="md:col-span-2 glass p-6">{/* Half-width */}</div>
-</div>
-```
-
-Gap should be `gap-4` (1rem) consistently. Cards should use `.glass` class. Mix card widths to create visual interest.
 
 ### Navigation
-
-Use a **floating pill-shaped header** that sits slightly below the top of the viewport:
-
+Floating pill header with backdrop blur:
 ```tsx
-<header className="sticky top-3 z-50 mx-auto max-w-2xl">
+<header className="sticky top-3 z-50">
   <nav className="rounded-2xl border border-white/[0.06] bg-background/70 backdrop-blur-xl px-6 py-3">
-    {/* Logo + nav links */}
-  </nav>
-</header>
 ```
 
-The `top-3` offset with backdrop blur creates a floating island effect. Keep the nav minimal — 3-4 links max, plus logo and CTA button.
+### Landing Page Sections
+Hero → Partner logos (marquee) → Trust stats → Features (bento) → How it works → Use cases → Before/After slider → Metrics bar → Closing CTA
 
-### Scroll Animations
+### 3D Element
+Use `@react-three/fiber` + `@react-three/drei` for a hero 3D logo. Keep in a wrapper client component with `dynamic(() => import(...), { ssr: false })`. Use Environment preset="city" and MeshPhysicalMaterial with clearcoat for frosted glass look.
 
-Animate content as it scrolls into view using Framer Motion:
+## AI Pipeline
 
-```tsx
-// scroll-reveal.tsx
-import { motion, useInView } from "framer-motion";
+### Multi-Model Image Fusion
 
-export function ScrollReveal({ children }: { children: React.ReactNode }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-60px" });
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 20 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ type: "spring", stiffness: 100, damping: 20, mass: 0.8 }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-```
+The core pipeline: user uploads product photo + selects background → AI blends naturally.
 
-Spring transitions feel more alive than ease-out. `stiffness: 100, damping: 20` is a good universal preset.
-
-### 3D Interactive Element
-
-A Three.js/R3F element (logo, icon, or abstract shape) in the hero section signals "AI/tech" immediately:
-
-- Use `@react-three/fiber` + `@react-three/drei`
-- MeshPhysicalMaterial with clearcoat for a frosted glass look
-- Continuous slow rotation + mouse-driven parallax
-- Float animation for subtle breathing effect
-- Environment map (`preset="city"`) for realistic reflections
-- Add floating particles (points with AdditiveBlending) around the object
-- Keep the Canvas in a wrapper component — server components cannot contain R3F directly
-
-Important: ALL Three.js types must use `any` in TypeScript to avoid namespace import issues with Next.js dynamic imports. Create the Canvas in a wrapper client component, never directly in a server component.
-
-### Partner/Trust Section
-
-Show social proof between the hero and features:
-
-1. **Platform logo marquee** — auto-scrolling row of platform names where the product is used. Use CSS `@keyframes marquee` for smooth infinite scroll. Duplicate the content for seamless looping. Add gradient fade edges with `mask-image` or pseudo-elements.
-
-2. **Trust stats** — 3 numbers in a row: users served, items processed, success rate. Use gradient text for the numbers. Keep the font size large (text-xl) but the labels tiny (text-[10px]).
-
-### Before/After Compare Slider
-
-Essential for visual AI products. Let users see the transformation:
-
-- Drag-based slider with a divider line
-- Auto-play animation (sine wave, 5s cycle, pauses on interaction)
-- Resume auto-play after 4 seconds of inactivity
-- Glass handle knob with glow shadow
-- Labels (before/after) as floating badges
-- Play/pause toggle visible on hover
-- Use `requestAnimationFrame` for smooth animation
-
-## AI Processing Pipeline
-
-### Architecture
-
-```
-Browser → Vercel (Next.js API) → S3/R2 (file storage)
-                ↓
-         Database (task + result records)
-                ↓
-         Railway (background worker, DB polling)
-                ↓
-         AI Service (Remove.bg, HuggingFace, OpenAI, etc.)
-                ↓
-         S3/R2 (processed results) → Proxy API → Browser
-```
-
-### File Upload → S3
-
-Use Cloudflare R2 (S3-compatible, free egress). The S3 client MUST use lazy initialization — reading env vars at module load time will be `undefined` on Vercel's build environment:
+**Worker pattern — DB polling (simpler than Redis/BullMQ):**
 
 ```typescript
-// lib/s3.ts
-import { S3Client } from "@aws-sdk/client-s3";
-
-let _client: S3Client | null = null;
-
-export function getS3Client(): S3Client {
-  if (!_client) {
-    _client = new S3Client({
-      region: "auto",
-      endpoint: process.env.S3_ENDPOINT!,
-      credentials: {
-        accessKeyId: process.env.S3_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,
-      },
-    });
-  }
-  return _client;
-}
-
-export async function uploadToS3(key: string, body: Buffer, contentType: string) {
-  const s3 = getS3Client();
-  await s3.send(new PutObjectCommand({
-    Bucket: process.env.S3_BUCKET!,
-    Key: key,
-    Body: body,
-    ContentType: contentType,
-  }));
-  return `${process.env.S3_PUBLIC_URL}/${key}`;
-}
-```
-
-Never use module-level `new S3Client({...})` — it captures env vars at build time when they don't exist yet.
-
-### Image Proxy
-
-Never expose S3 URLs directly to the browser. Route all images through an API proxy:
-
-```
-GET /api/s3/[...key] — downloads from S3, serves with proper Content-Type
-GET /api/background-replace/[taskId]/result/[resultId] — result-specific proxy with cache headers
-```
-
-The proxy approach lets you add auth checks, set Cache-Control headers, and keep your S3 bucket private.
-
-### Database Schema Pattern
-
-For AI tasks, use a two-level model: Task (the request) → Results (individual outputs):
-
-```prisma
-model BgReplaceTask {
-  id             String   @id @default(cuid())
-  userId         String
-  backgroundMode String   @default("preset")  // ai | preset | custom
-  backgroundId   String?
-  imageCount     Int      @default(0)
-  cost           Int      @default(0)
-  status         String   @default("pending")  // pending | processing | done | failed
-  createdAt      DateTime @default(now())
-  results        BgReplaceResult[]
-}
-
-model BgReplaceResult {
-  id          String  @id @default(cuid())
-  taskId      String
-  originalKey String   // S3 key of uploaded image
-  resultKey   String?  // S3 key of processed image (null until done)
-  status      String  @default("pending")
-  error       String?
-  createdAt   DateTime @default(now())
-}
-```
-
-### Credit System
-
-Simple integer-based credit system per user:
-
-- `User.credits` (int) — current balance
-- `CreditTransaction` — every deduction and recharge is recorded
-- Charge credits BEFORE creating the task (prevents race conditions)
-- Show credit cost clearly: "1 credit per image" / "¥0.10 per image"
-
-### Worker Pattern (DB Polling)
-
-For most AI SaaS projects, **DB polling is simpler and more reliable than Redis/BullMQ**:
-
-```typescript
-// workers/bg-replace-worker.ts
-import http from "http";
-
-const POLL_INTERVAL = 3000; // 3 seconds
-
+const POLL_INTERVAL = 3000;
 async function poll() {
   const task = await prisma.bgReplaceTask.findFirst({
     where: { status: "pending" },
-    include: { results: true },
     orderBy: { createdAt: "asc" },
   });
   if (!task) return;
   await processTask(task);
 }
-
-// HTTP server — CRITICAL for Railway
-const server = http.createServer((_req, res) => {
-  res.writeHead(200).end("OK");
-});
-server.listen(process.env.PORT || 3000);
-
 setInterval(poll, POLL_INTERVAL);
 ```
 
-Why DB polling over Redis:
-- No Redis dependency (one less service to manage and pay for)
-- No connection issues across platforms (Vercel ↔ Upstash ↔ Railway)
-- Simpler debugging (everything is in the database)
-- For < 100 tasks/minute, polling at 3s intervals is perfectly fine
-- The HTTP server keeps Railway from sleeping the deployment
+**Model fallback chain:**
+```
+AI blend (Gemini/GPT-5.4) → traditional pipeline (remove.bg + composite)
+```
 
-### AI Service Fallback Pattern
+**Prompt engineering for realism:**
+The prompt must explicitly address: product preservation (colors, proportions, packaging), grounding (surface contact, shadows), lighting (direction, color temp), perspective (camera angle), depth of field, sensor noise, and quality level (phone photo, not studio). See the reference prompt in this skill for the exact wording.
 
-Always implement a primary → secondary fallback for AI APIs:
+**Size restoration after AI:**
+AI models output fixed dimensions. After receiving the result, resize back to original product dimensions:
 
 ```typescript
-async function removeBackground(imageBuffer: Buffer): Promise<Buffer> {
-  // Primary: Remove.bg API (commercial, reliable, fast)
-  try {
-    const res = await fetch("https://api.remove.bg/v1.0/removebg", {
-      method: "POST",
-      headers: { "X-Api-Key": process.env.REMOVEBG_API_KEY! },
-      body: formData,
-    });
-    if (res.ok) return Buffer.from(await res.arrayBuffer());
-  } catch (e) {
-    console.warn("Remove.bg failed, falling back to HuggingFace");
+if (origMeta.width && origMeta.height) {
+  const aiMeta = await sharp(resultBuf).metadata();
+  if (aiMeta.width !== origMeta.width || aiMeta.height !== origMeta.height) {
+    resultBuf = await sharp(resultBuf)
+      .resize(origMeta.width, origMeta.height, { fit: "contain" })
+      .png().toBuffer();
   }
-
-  // Fallback: HuggingFace Inference (free tier, slower, less reliable)
-  const hf = new HfInference(process.env.HF_TOKEN);
-  const blob = await hf.imageBackgroundRemoval({ model: "briaai/RMBG-2.0", data: imageBuffer });
-  return Buffer.from(await (blob as Blob).arrayBuffer());
 }
 ```
 
-Key principles:
-- Try the paid/fast service first, fall back to free
-- Log all fallbacks so you know when your primary is down
-- Lazy-init API clients (don't construct them at module level)
+**Recraft model special handling:**
+Recraft requires `modalities: ["image"]`, only one input image, and an `image_config` with `strength`. Pre-composite product onto background with sharp before sending.
 
-### Image Composition
+### Image Storage — S3/R2
 
-When compositing a processed subject onto a new background with sharp:
+Always lazy-init the S3 client — don't construct at module level:
 
 ```typescript
-import sharp from "sharp";
-
-async function compositeImages(subjectBuf: Buffer, bgBuf: Buffer): Promise<Buffer> {
-  const subject = sharp(subjectBuf);
-  const subjectMeta = await subject.metadata();
-
-  // Keep subject at original size
-  // Scale background to match or slightly larger
-  const bg = await sharp(bgBuf)
-    .resize({ width: subjectMeta.width, height: subjectMeta.height, fit: "cover" })
-    .toBuffer();
-
-  // Add shadow for depth
-  const shadow = await sharp(subjectBuf)
-    .resize(Math.floor(subjectMeta.width! * 0.9), Math.floor(subjectMeta.height! * 0.85))
-    .blur(15)
-    .modulate({ brightness: 0.1 })
-    .toBuffer();
-
-  return sharp(bg)
-    .composite([
-      { input: shadow, gravity: "south", blend: "over" },
-      { input: subjectBuf, blend: "over" },
-    ])
-    .png()
-    .toBuffer();
+let _client: S3Client | null = null;
+export function getS3Client(): S3Client {
+  if (!_client) {
+    _client = new S3Client({...});
+  }
+  return _client;
 }
 ```
 
-## Dashboard / Admin Panel
-
-### Layout Pattern
-
-The dashboard should have these sections, in this order:
-
-1. **Header** — User greeting + Export button + New Task CTA
-2. **Stats Grid** — 4 cards in a 2x2 or 4-column grid: Credits, Month Tasks, Total Processed, Month Spent
-3. **Quick Templates** — 4 template cards in a row, each linking to new-task with template preset
-4. **Result Gallery** — 6-column grid of recent completed results (12 items), each linking to task detail
-5. **Task List** — Recent tasks with: hover-to-reveal checkboxes, batch delete, status badges, cost info
-
-### Stats API
-
-Create a dedicated stats endpoint that aggregates everything in one query:
-
+Proxy all images through API routes — never expose S3 URLs:
 ```
-GET /api/user/stats → { totalTasks, totalImages, monthTasks, monthSpent, todayTasks, completedTasks, recentResults[] }
+GET /api/s3/[...key] → downloads from S3, serves with correct Content-Type
 ```
 
-One API call per dashboard load, not one per card.
+### Task Schema
+```prisma
+model BgReplaceTask {
+  id             String   @id @default(cuid())
+  userId         String
+  backgroundMode String   @default("preset")
+  backgroundId   String?
+  customBgKey    String?
+  aiPrompt       String?
+  customPrompt   String?
+  aiModel        String?
+  imageCount     Int      @default(0)
+  cost           Int      @default(0)
+  status         String   @default("pending")
+  createdAt      DateTime @default(now())
+  results        BgReplaceResult[]
+  @@index([userId, createdAt(sort: Desc)])
+}
 
-### Batch Operations
+model BgReplaceResult {
+  id          String  @id @default(cuid())
+  taskId      String
+  originalKey String
+  resultKey   String?
+  status      String  @default("pending")
+  error       String?
+  @@index([taskId])
+}
+```
 
-- Hover reveals a checkbox on each task row
-- Checking any task shows a floating action bar at the bottom
-- The action bar uses `glass` styling with `backdrop-blur-xl`
-- Support: select all, deselect all, delete selected, download selected
-- Confirm destructive actions with `window.confirm()`
+### Credit System
 
-### CSV Export
+Simple integer credits. Deduct before task creation. Record every transaction. Refund on cancel/failure.
 
-Generate CSV client-side from existing task data — no additional API needed:
+## Frontend Features
 
+### Task Creation Page (`/background-replace/new`)
+Three-step wizard: Upload photos → Choose background → Confirm & submit.
+
+- **Upload zone**: drag-and-drop, file preview, max 20 images
+- **Background selector**: 3 tabs — My Presets / AI Generate / Custom Upload
+- **My Presets**: saved backgrounds from localStorage, add/delete directly
+- **Custom Upload**: drag-and-drop with visual feedback
+- **Smart recommendation**: after upload, call vision API to analyze product and suggest matching backgrounds
+- **Advanced settings** (collapsible): model selector (button toggle, not native select), custom prompt textarea
+- **Batch processing**: multi-select backgrounds → one task per background × all product photos
+
+### Task Detail Page (`/background-replace/[taskId]`)
+- Auto-refreshing status with progress animation
+- Cancel/pause buttons with confirmation dialog
+- Result cards with before/after toggle, download, and regenerate
+- Regenerate creates new task with same settings + confirmation prompt
+
+### Dashboard (`/dashboard`)
+- Stats grid (credits, month tasks, total processed, month spent)
+- Quick presets from user's saved backgrounds
+- Result gallery with hover controls
+- Batch delete with floating action bar
+- CSV export
+
+### Settings (`/settings`)
+- Two tabs: Account Info + Billing
+- Account: editable name, email, role badge, registration date, credits, spending tier (铜/银/金/钻石)
+- Change password: old + new with visibility toggle
+- Billing: plan cards + transaction history
+
+### Admin Panel (`/admin`)
+- Auth guard: only role=admin can access
+- Overview tab: stats cards, 7-day task chart with date range filter
+- Users tab: search, CRUD, ban/unban, delete
+- Edit modal: credits + role with styled select
+- Show in nav only for admins
+
+### Onboarding Tour
+Trigger on first visit to task page. 3-step modal slides with progress dots. Skip saves to localStorage. Help button (labeled "教程") for replay.
+
+### Regenerate
+Re-submit same product + background as new task. Pass all original settings (backgroundMode, backgroundId, customBgKey, aiModel, customPrompt). Confirm dialog before creating.
+
+## Auth & Security
+
+### Registration
+- Block disposable email domains (mailinator, 10minutemail, etc.)
+- IP-based cooldown: 1 registration per IP per 24 hours
+- Rate limit: 5 attempts per minute per IP
+
+### Auth Guard
+Check `banned` field on every API request:
 ```typescript
-const exportCSV = () => {
-  const header = "日期,图片数,背景模式,消耗积分,状态\n";
-  const rows = tasks.map((t: any) =>
-    `${new Date(t.createdAt).toLocaleDateString("zh-CN")},${t.imageCount},${t.backgroundMode},${t.cost},${t.status}`
-  ).join("\n");
-  const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a"); a.href = url; a.download = "export.csv"; a.click();
-  URL.revokeObjectURL(url);
-};
+const dbUser = await prisma.user.findUnique({ where: { id: userId }, select: { banned: true } });
+if (dbUser?.banned) throw new Error("BANNED");
 ```
+
+### Login
+Banned users blocked at login. Rate limited. Validate via own API first, then NextAuth signIn.
 
 ## Deployment
 
-### Architecture
-
-```
-Vercel (Next.js frontend + API routes)
-    ↓ queries
-Supabase (PostgreSQL, connection pooler port 6543)
-    ↓ polled by
-Railway (background worker, HTTP server for wake-up)
-    ↓ reads/writes
-Cloudflare R2 (S3-compatible object storage)
-
-Optional: Upstash Redis (only if > 100 tasks/minute or need real-time queues)
-```
-
 ### Vercel
+```bash
+npm i -g vercel
+vercel login
+vercel --prod --yes
+```
+- Add `"postinstall": "prisma generate"` to package.json
+- Use Supabase connection pooler (port 6543) for DATABASE_URL
+- Migrations need direct URL (port 5432) — use `npx prisma db push` with DIRECT_URL
 
-- Always add `"postinstall": "prisma generate"` to `package.json` scripts
-- Use Supabase connection pooler URL (port 6543) for `DATABASE_URL` — direct connection (port 5432) resolves to IPv6 which Vercel's build environment can't reach
-- Server components that query DB must use `export const dynamic = "force-dynamic"` or route to API endpoints
-- Use `suppressHydrationWarning` on `<html>` tag
-
-### Railway Workers
-
-- Workers must have an HTTP server alongside them — Railway sleeps deployments with no HTTP traffic
-- Set a start command: `npm run worker:all` (or equivalent)
-- Ensure `tsx` is in `dependencies`, not `devDependencies` (Railway uses `--production` install)
-- Branch must be set to `main` in Railway settings
+### Railway
+- Start command: `npm run worker:bg`
+- Worker must have HTTP server (keeps Railway from sleeping)
+- `tsx` must be in `dependencies`, not `devDependencies`
+- Set branch to `main` in Railway settings
 
 ### Supabase
-
-- Use Singapore region (`ap-southeast-1`) for lowest latency from China
-- Disable RLS (Row Level Security) — manage permissions in application code
-- Connection pooler URL always for the app, direct URL only for schema migrations
-
-### Environment Variables
-
-Required across all platforms:
-
-```
-DATABASE_URL   — Supabase pooled connection (port 6543)
-DIRECT_URL     — Supabase direct connection (port 5432)
-S3_ENDPOINT    — Cloudflare R2 endpoint
-S3_BUCKET      — R2 bucket name
-S3_ACCESS_KEY_ID / S3_SECRET_ACCESS_KEY
-S3_PUBLIC_URL  — R2 public URL (or proxy through your API)
-AUTH_SECRET    — NextAuth secret
-REMOVEBG_API_KEY — Primary AI service
-HF_TOKEN       — HuggingFace fallback
-```
+- Singapore region for low latency
+- Disable RLS (manage in app code)
+- Pooler URL for app, direct URL for migrations
 
 ## Common Pitfalls
 
-### Next.js 16 + Prisma 7
+- S3 client at module level → env vars undefined at build time → lazy init
+- `force-dynamic` on pages that query DB directly → prevents IPv6 build errors
+- Chinese filenames on S3 → use English keys
+- native `<select>` styling → use `appearance-none` + custom arrow, or button toggles
+- `<option>` `bg-*` classes don't work cross-browser → don't style options
+- Session JWT doesn't auto-refresh after DB credit changes → fetch real-time from API
+- OpenRouter requires `sk-or-v1-` key format, not `sk-proj-`
+- Worker port conflict when running multiple workers → catch EADDRINUSE
 
-- Prisma 7 requires `@prisma/adapter-pg` + `prisma.config.ts` with `env('DATABASE_URL')`
-- Avoid `ssr: false` with `next/dynamic` in Server Components — create wrapper client components instead
-- `force-dynamic` on DB-queried pages to prevent build-time pre-rendering failures
+## Model Selection
 
-### S3 on Vercel
+Available on OpenRouter for image editing (text+image in → image out):
 
-- NEVER construct S3 client at module level — env vars are `undefined` during build
-- ALWAYS use lazy initialization (getter function pattern)
+| Model | Price | Speed | Quality |
+|---|---|---|---|
+| `google/gemini-3.1-flash-image-preview` | ~free | fastest | good |
+| `openai/gpt-5.4-image-2` | cheap | fast | best |
 
-### Chinese Filenames
-
-- Chinese filenames cause S3 404 on some platforms (URL path extraction issues)
-- Always rename files to English/ASCII before uploading to S3
-
-### Railway Worker
-
-- Must have HTTP server (keeps deployment alive)
-- Branch must be `main` — deploying a feature branch causes "Missing script" errors
-- Use DB polling unless you genuinely need real-time processing at scale
-
-### Auth
-
-- With JWT strategy, session callback receives `token` not `user`
-- Never allow login without password validation
-- Validate credentials via own API before calling `signIn()` to avoid redirect issues
-
-### Design Consistency
-
-- All pages use the same design tokens (colors, radius, font, glass class)
-- All buttons use `rounded-full` or `rounded-xl` — never square corners
-- All input fields use the same border/background/radius
-- Card hover effects are consistent throughout: float up + border brighten + box shadow
-
-## Landing Page Section Order
-
-The proven section order for SaaS landing pages:
-
-1. **Hero** — 3D element (left) + headline + CTA (right)
-2. **Partner logos** — auto-scrolling marquee
-3. **Trust stats** — 3 numbers (users, items processed, success rate)
-4. **Features** — Bento grid with glass cards, include a browser-frame mockup with animated workflow
-5. **How it works** — 3 steps with large number overlays
-6. **Use cases** — Bento grid targeting specific user segments
-7. **Before/After showcase** — CompareSlider with auto-play (for visual AI products)
-8. **Metrics bar** — 3 key numbers (price, speed, variety)
-9. **Closing CTA** — magnetic button, same gradient as hero CTA
+Recraft models (`recraft/recraft-v4`, `recraft/recraft-v4-pro`) need special handling
+(see AI Pipeline section) and may not be fully supported through OpenRouter.
