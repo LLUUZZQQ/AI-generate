@@ -192,17 +192,20 @@ export default function BgReplaceTaskPage() {
               error={result.error}
               onRegenerate={async () => {
                 if (!task) return;
+                if (!window.confirm("确定重新生成？将创建新任务，消耗 1 积分。")) return;
                 try {
+                  const t = task as any;
                   const res = await fetch("/api/background-replace", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                       fileKeys: [result.originalKey],
-                      backgroundMode: task.backgroundMode,
-                      backgroundId: task.backgroundMode === "preset" ? (task as any).backgroundId : undefined,
-                      aiPrompt: (task as any).aiPrompt || undefined,
-                      customPrompt: (task as any).customPrompt || undefined,
-                      aiModel: (task as any).aiModel || undefined,
+                      backgroundMode: t.backgroundMode,
+                      backgroundId: t.backgroundId || undefined,
+                      customBgKey: t.customBgKey || undefined,
+                      aiPrompt: t.aiPrompt || undefined,
+                      customPrompt: t.customPrompt || undefined,
+                      aiModel: t.aiModel || undefined,
                     }),
                   });
                   const d = await res.json();
