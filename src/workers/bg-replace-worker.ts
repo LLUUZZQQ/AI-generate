@@ -9,36 +9,20 @@ const POLL_INTERVAL = 3000; // 3 seconds
 
 async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer): Promise<Buffer | null> {
   try {
-    const sharp = (await import("sharp")).default;
     const OpenAI = (await import("openai")).default;
+    const sharp = (await import("sharp")).default;
 
-    // Step 1: Remove background from product
-    console.log("[bg-worker] AI blend: removing background...");
-    const subjectBuffer = await removeBackground(originalBuffer);
-
-    // Step 2: Basic paste composite
-    const subMeta = await sharp(subjectBuffer).metadata();
+    const origMeta = await sharp(originalBuffer).metadata();
     const bgMeta = await sharp(bgBuffer).metadata();
-    if (!subMeta.width || !subMeta.height || !bgMeta.width || !bgMeta.height) return null;
 
-    const targetW = Math.round(bgMeta.width * 0.6);
-    const scale = targetW / subMeta.width;
-    const targetH = Math.round(subMeta.height * scale);
-    const resizedSubject = await sharp(subjectBuffer)
-      .resize(targetW, targetH, { fit: "inside" })
-      .png()
-      .toBuffer();
+    const productB64 = originalBuffer.toString("base64");
+    const bgB64 = bgBuffer.toString("base64");
+    const productMime = origMeta.format === "png" ? "image/png" : "image/jpeg";
+    const bgMime = bgMeta.format === "png" ? "image/png" : "image/jpeg";
 
-    const left = Math.round((bgMeta.width - targetW) / 2);
-    const top = Math.round(bgMeta.height * 0.55 - targetH / 2);
+    console.log("[bg-worker] GPT-5.4 Image 2 blend: product", origMeta.width + "x" + origMeta.height,
+      "bg", bgMeta.width + "x" + bgMeta.height);
 
-    const pasteComposite = await sharp(bgBuffer)
-      .composite([{ input: resizedSubject, left, top }])
-      .png()
-      .toBuffer();
-
-    // Step 3: Use OpenRouter's images.edit endpoint (OpenAI-compatible)
-    console.log("[bg-worker] AI blend: calling images.edit via OpenRouter...");
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY!,
       baseURL: process.env.OPENAI_BASE_URL || "https://openrouter.ai/api/v1",
@@ -48,49 +32,88 @@ async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer): Prom
       },
     });
 
-    // Create masks: product area = mask (tell API to edit the background/product transition)
-    const productMask = await sharp(resizedSubject)
-      .extractChannel(3)
-      .resize(bgMeta.width, bgMeta.height, {
-        fit: "contain",
-        position: "center",
-        background: { r: 0, g: 0, b: 0, alpha: 0 },
-      })
-      .threshold(1)
-      .png()
-      .toBuffer();
+    const response = await openai.chat.completions.create({
+      model: "openai/gpt-5.4-image-2",
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: `Take the main product/subject from the FIRST image and naturally place it into the scene of the SECOND image.
 
-    // Save paste composite to a temp buffer that we can stream
-    const pasteB64 = pasteComposite.toString("base64");
-    const maskB64 = productMask.toString("base64");
-
-    const imageFile = new File([Buffer.from(pasteB64, "base64")], "composite.png", { type: "image/png" });
-    const maskFile = new File([Buffer.from(maskB64, "base64")], "mask.png", { type: "image/png" });
-
-    const response = await openai.images.edit({
-      model: "openai/gpt-4.1-mini",
-      image: imageFile,
-      mask: maskFile,
-      prompt: "A casual smartphone photo with natural lighting. The product blends seamlessly into the scene with realistic shadows and lighting. No text, no watermark, no logo. Like an amateur photo, not a studio shot.",
-      n: 1,
-      size: "1024x1024",
+Critical requirements:
+- The product must sit or stand naturally on a surface/ground — NOT float in mid-air
+- Match lighting, shadows, and color temperature to the scene
+- Keep the product's own colors and textures 100% unchanged
+- Include any packaging (boxes, bags) that comes with the product
+- Generate realistic shadows where the product meets the surface
+- Output as a casual smartphone photo — natural, unpolished, amateur-style
+- Do NOT add any text, watermark, or logo
+- Do NOT change the product itself — only blend it into the new scene`,
+            },
+            { type: "image_url", image_url: { url: `data:${productMime};base64,${productB64}` } },
+            { type: "image_url", image_url: { url: `data:${bgMime};base64,${bgB64}` } },
+          ],
+        },
+      ],
+      max_tokens: 4096,
     });
 
-    const resultUrl = response.data?.[0]?.url;
-    if (!resultUrl) {
-      console.error("[bg-worker] AI blend: no URL in response");
+    // Parse response for image data
+    const message = response.choices?.[0]?.message;
+    if (!message) { console.error("[bg-worker] GPT-5.4: no message"); return null; }
+
+    // Parse response for image data
+    const content = message.content;
+
+    // Some providers return base64 image as plain string
+    if (typeof content === "string") {
+      if (content.startsWith("data:image") || content.length > 1000) {
+        const b64 = content.includes("base64,") ? content.split("base64,")[1] : content;
+        console.log("[bg-worker] GPT-5.4: got base64 from content, len:", b64.length);
+        return Buffer.from(b64, "base64");
+      }
+      console.error("[bg-worker] GPT-5.4: text-only response:", content.substring(0, 200));
       return null;
     }
 
-    console.log("[bg-worker] AI blend: downloading result...");
-    const res = await fetch(resultUrl);
-    if (!res.ok) { console.error("[bg-worker] AI blend: download failed", res.status); return null; }
-    const resultBuf = Buffer.from(await res.arrayBuffer());
+    // Structured content array — look for image parts
+    if (content) {
+      for (const part of content as any[]) {
+        if (part.type === "image_url" && part.image_url?.url) {
+          const imgUrl: string = part.image_url.url;
+          console.log("[bg-worker] GPT-5.4: got image_url in content");
+          if (imgUrl.startsWith("data:")) {
+            const b64 = imgUrl.includes("base64,") ? imgUrl.split("base64,")[1] : imgUrl;
+            return Buffer.from(b64, "base64");
+          }
+          const res = await fetch(imgUrl);
+          if (res.ok) return Buffer.from(await res.arrayBuffer());
+        }
+      }
+    }
 
-    console.log("[bg-worker] AI blend: success, size:", resultBuf.length);
-    return resultBuf;
+    // Some models put image in a special field
+    const msgAny = message as any;
+    if (msgAny.images?.[0]?.image_url?.url) {
+      const imgUrl = msgAny.images[0].image_url.url;
+      console.log("[bg-worker] GPT-5.4: got images[0]");
+      if (imgUrl.startsWith("data:")) {
+        const b64 = imgUrl.includes("base64,") ? imgUrl.split("base64,")[1] : imgUrl;
+        return Buffer.from(b64, "base64");
+      }
+      const res = await fetch(imgUrl);
+      if (res.ok) return Buffer.from(await res.arrayBuffer());
+    }
+
+    console.error("[bg-worker] GPT-5.4: could not extract image from response");
+    console.error("[bg-worker] Response keys:", Object.keys(message));
+    console.error("[bg-worker] Content type:", typeof content);
+    console.error("[bg-worker] Content preview:", JSON.stringify(content).substring(0, 300));
+    return null;
   } catch (e: any) {
-    console.error("[bg-worker] AI blend failed:", e.message?.substring(0, 300));
+    console.error("[bg-worker] GPT-5.4 blend failed:", e.message?.substring(0, 300));
     return null;
   }
 }
