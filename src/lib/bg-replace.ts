@@ -9,8 +9,10 @@ export async function createBgReplaceTask(params: {
   backgroundId?: string;
   customBgKey?: string;
   aiPrompt?: string;
+  customPrompt?: string;
+  aiModel?: string;
 }) {
-  const { userId, fileKeys, backgroundMode, backgroundId, customBgKey, aiPrompt } = params;
+  const { userId, fileKeys, backgroundMode, backgroundId, customBgKey, aiPrompt, customPrompt, aiModel } = params;
   const imageCount = fileKeys.length;
   const cost = imageCount * BG_REPLACE_COST_PER_IMAGE;
 
@@ -34,6 +36,8 @@ export async function createBgReplaceTask(params: {
       backgroundId: backgroundId || null,
       customBgKey: customBgKey || null,
       aiPrompt: aiPrompt || null,
+      customPrompt: customPrompt || null,
+      aiModel: aiModel || "openai/gpt-5.4-image-2",
       imageCount,
       cost,
       status: "pending",

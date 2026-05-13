@@ -165,6 +165,8 @@ model BgReplaceTask {
   backgroundId    String?  @map("background_id")
   customBgKey     String?  @map("custom_bg_key")
   aiPrompt        String?  @map("ai_prompt")
+  customPrompt    String?  @map("custom_prompt")
+  aiModel         String?  @map("ai_model")
   imageCount      Int      @default(0) @map("image_count")
   cost            Int      @default(0)
   status          String   @default("pending")

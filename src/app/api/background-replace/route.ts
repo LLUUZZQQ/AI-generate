@@ -12,6 +12,8 @@ const createSchema = z.object({
   backgroundId: z.string().optional(),
   customBgKey: z.string().optional(),
   aiPrompt: z.string().optional(),
+  customPrompt: z.string().optional(),
+  aiModel: z.string().optional(),
 });
 
 export const POST = withAuth(async (req: NextRequest, _ctx: any, user: { id: string }) => {
@@ -23,7 +25,7 @@ export const POST = withAuth(async (req: NextRequest, _ctx: any, user: { id: str
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) return error(40001, "参数错误");
 
-  const { fileKeys, backgroundMode, backgroundId, customBgKey, aiPrompt } = parsed.data;
+  const { fileKeys, backgroundMode, backgroundId, customBgKey, aiPrompt, customPrompt, aiModel } = parsed.data;
 
   try {
     const result = await createBgReplaceTask({
@@ -33,6 +35,8 @@ export const POST = withAuth(async (req: NextRequest, _ctx: any, user: { id: str
       backgroundId,
       customBgKey,
       aiPrompt,
+      customPrompt,
+      aiModel,
     });
     return success(result);
   } catch (e: any) {

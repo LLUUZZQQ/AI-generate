@@ -7,7 +7,7 @@ import path from "path";
 const hasS3 = !!(process.env.S3_BUCKET && process.env.S3_ENDPOINT);
 const POLL_INTERVAL = 3000; // 3 seconds
 
-async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer): Promise<Buffer | null> {
+async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer, customPrompt?: string, aiModel?: string): Promise<Buffer | null> {
   try {
     const sharp = (await import("sharp")).default;
 
@@ -24,14 +24,20 @@ async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer): Prom
 
     const apiKey = process.env.OPENAI_API_KEY!;
 
+    const model = aiModel || "openai/gpt-5.4-image-2";
+    const defaultPrompt = "You are a professional product photographer. Take EVERYTHING from the first image — the product AND any packaging, boxes, bags, accessories — and naturally place it ALL into the second image's scene.\n\nCRITICAL RULES:\n1. If the first image shows shoes in a box, KEEP THE BOX. Do NOT remove any packaging.\n2. Find the most natural surface to place the product — a table, desk, stairs, stool, grass, floor, ground, or any flat surface in the scene. The product must sit ON something, never float in mid-air.\n3. Match the scene's natural lighting direction and intensity. Generate realistic ground-contact shadows under the product.\n4. Keep the product's exact colors, shape, and texture — do NOT alter them.\n5. Match the camera perspective and angle of the scene. Scale the product to fit naturally.\n6. Output must look like a real, unposed photo — not a studio shot, not a product listing, not overly polished.\n7. No text, watermark, or logo.";
+    const prompt = customPrompt
+      ? `${defaultPrompt}\n\nADDITIONAL USER INSTRUCTIONS: ${customPrompt}`
+      : defaultPrompt;
+
     // Call OpenRouter with OpenRouter key
     const body = JSON.stringify({
-      model: "openai/gpt-5.4-image-2",
+      model,
       messages: [
         {
           role: "user",
           content: [
-            { type: "text", text: "You are a professional product photographer. Take EVERYTHING from the first image — the product AND any packaging, boxes, bags, accessories — and naturally place it ALL into the second image's scene.\n\nCRITICAL RULES:\n1. If the first image shows shoes in a box, KEEP THE BOX. Do NOT remove any packaging.\n2. Find the most natural surface to place the product — a table, desk, stairs, stool, grass, floor, ground, or any flat surface in the scene. The product must sit ON something, never float in mid-air.\n3. Match the scene's natural lighting direction and intensity. Generate realistic ground-contact shadows under the product.\n4. Keep the product's exact colors, shape, and texture — do NOT alter them.\n5. Match the camera perspective and angle of the scene. Scale the product to fit naturally.\n6. Output must look like a real, unposed photo — not a studio shot, not a product listing, not overly polished.\n7. No text, watermark, or logo." },
+            { type: "text", text: prompt },
             { type: "image_url", image_url: { url: `data:${productMime};base64,${productB64}` } },
             { type: "image_url", image_url: { url: `data:${bgMime};base64,${bgB64}` } },
           ],
@@ -199,7 +205,7 @@ async function processTask(taskId: string) {
 
       // Try Replicate-based blending first, fall back to traditional pipeline
       let composited: Buffer | null = null;
-      composited = await aiBlendBackground(original, bg);
+      composited = await aiBlendBackground(original, bg, task.customPrompt ?? undefined, task.aiModel ?? undefined);
 
       if (!composited) {
         console.log("[bg-worker] GPT-5.4 blend unavailable — using traditional pipeline");

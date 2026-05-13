@@ -21,6 +21,8 @@ export default function NewBgReplacePage() {
   const [selectedBgId, setSelectedBgId] = useState<string | null>(null);
   const [aiPrompt, setAiPrompt] = useState("");
   const [customBgFile, setCustomBgFile] = useState<File | null>(null);
+  const [customPrompt, setCustomPrompt] = useState("");
+  const [aiModel, setAiModel] = useState("openai/gpt-5.4-image-2");
   const [submitting, setSubmitting] = useState(false);
 
   const canNext = () => {
@@ -76,6 +78,8 @@ export default function NewBgReplacePage() {
           backgroundId: mode === "preset" ? selectedBgId : undefined,
           customBgKey: mode === "custom" ? customBgKey : undefined,
           aiPrompt: mode === "ai" ? aiPrompt : undefined,
+          customPrompt: customPrompt.trim() || undefined,
+          aiModel,
         }),
       });
       const taskData = await taskRes.json();
@@ -169,6 +173,32 @@ export default function NewBgReplacePage() {
             customBgFile={customBgFile}
             onCustomBgChange={setCustomBgFile}
           />
+
+          {/* Model & Prompt Settings */}
+          <div className="mt-6 pt-6 border-t border-white/[0.06] space-y-4">
+            <div>
+              <label className="text-xs font-medium text-foreground/40 mb-2 block">AI 融合模型</label>
+              <select
+                value={aiModel}
+                onChange={(e) => setAiModel(e.target.value)}
+                className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white/80 focus:outline-none focus:border-purple-400/40"
+              >
+                <option value="openai/gpt-5.4-image-2">GPT-5.4 Image 2 — 最佳质量</option>
+                <option value="google/gemini-3.1-flash-image-preview">Gemini 3.1 Flash Image — 更快更便宜</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-foreground/40 mb-2 block">
+                自定义融合指令 <span className="text-foreground/15">（可选）</span>
+              </label>
+              <textarea
+                value={customPrompt}
+                onChange={(e) => setCustomPrompt(e.target.value)}
+                placeholder="例如：放在阳台的瓷砖地面上，下午自然光，鞋子要站在地上..."
+                className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/15 focus:outline-none focus:border-purple-400/40 h-20 resize-none"
+              />
+            </div>
+          </div>
         </div>
       )}
 
@@ -191,6 +221,18 @@ export default function NewBgReplacePage() {
               <div className="flex justify-between py-2.5 border-b border-white/[0.05]">
                 <span className="text-sm text-foreground/35">场景描述</span>
                 <span className="text-sm font-medium truncate max-w-[220px]">{aiPrompt}</span>
+              </div>
+            )}
+            <div className="flex justify-between py-2.5 border-b border-white/[0.05]">
+              <span className="text-sm text-foreground/35">融合模型</span>
+              <span className="text-sm font-medium">
+                {aiModel.includes("gemini") ? "Gemini 3.1 Flash" : "GPT-5.4 Image 2"}
+              </span>
+            </div>
+            {customPrompt && (
+              <div className="flex justify-between py-2.5 border-b border-white/[0.05]">
+                <span className="text-sm text-foreground/35">自定义指令</span>
+                <span className="text-sm font-medium truncate max-w-[220px]">{customPrompt}</span>
               </div>
             )}
             <div className="flex justify-between py-2.5 border-b border-white/[0.05]">
