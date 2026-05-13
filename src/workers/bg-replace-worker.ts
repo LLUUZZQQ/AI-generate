@@ -3,9 +3,80 @@ import { prisma } from "@/lib/db";
 import { downloadFromS3, uploadToS3 } from "@/lib/s3";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import OpenAI from "openai";
 
 const hasS3 = !!(process.env.S3_BUCKET && process.env.S3_ENDPOINT);
+const AI_BLEND_MODEL = process.env.AI_BLEND_MODEL || "gpt-4.1-mini";
 const POLL_INTERVAL = 3000; // 3 seconds
+
+async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer): Promise<Buffer | null> {
+  try {
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+
+    const productB64 = originalBuffer.toString("base64");
+    const bgB64 = bgBuffer.toString("base64");
+
+    const sharp = (await import("sharp")).default;
+    const origMeta = await sharp(originalBuffer).metadata();
+    const bgMeta = await sharp(bgBuffer).metadata();
+    const origMime = origMeta.format === "png" ? "image/png" : "image/jpeg";
+    const bgMime = bgMeta.format === "png" ? "image/png" : "image/jpeg";
+
+    console.log("[bg-worker] AI blend: calling", AI_BLEND_MODEL,
+      "product:", origMeta.width + "x" + origMeta.height,
+      "bg:", bgMeta.width + "x" + bgMeta.height);
+
+    const response = await openai.responses.create({
+      model: AI_BLEND_MODEL,
+      input: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text: `You are a professional photo compositing tool. Blend the product from the FIRST image into the scene of the SECOND image.
+
+CRITICAL:
+1. Place the product naturally in the scene — it should look like it was actually photographed there
+2. Match the lighting, shadows, and color temperature of the scene
+3. The product must sit on a surface or ground — NOT floating
+4. Keep the product's own colors and textures 100% unchanged
+5. If there are packaging items (boxes, bags) with the product, keep them too
+6. Generate realistic contact shadows where the product meets the surface
+7. Output should look like a casual smartphone photo, NOT a polished studio shot
+8. Do NOT add text, watermarks, or logos
+
+The first image is the product. The second image is the target scene.`,
+            },
+            { type: "input_image", detail: "high", image_url: `data:${origMime};base64,${productB64}` },
+            { type: "input_image", detail: "high", image_url: `data:${bgMime};base64,${bgB64}` },
+          ],
+        },
+      ],
+      tools: [{ type: "image_generation" }],
+    });
+
+    const imageOutputs = response.output.filter(
+      (o) => o.type === "image_generation_call"
+    ) as Array<{ result: string | null; status: string }>;
+    if (imageOutputs.length === 0) {
+      console.error("[bg-worker] AI blend: no image_generation_call in response");
+      return null;
+    }
+
+    const imageBase64 = imageOutputs[0].result;
+    if (!imageBase64) {
+      console.error("[bg-worker] AI blend: empty result in image_generation_call");
+      return null;
+    }
+
+    console.log("[bg-worker] AI blend: success, base64 length:", imageBase64.length);
+    return Buffer.from(imageBase64, "base64");
+  } catch (e: any) {
+    console.error("[bg-worker] AI blend failed:", e.message?.substring(0, 300));
+    return null;
+  }
+}
 
 async function processTask(taskId: string) {
 
@@ -71,8 +142,6 @@ async function processTask(taskId: string) {
         original = await fs.readFile(filePath);
       }
 
-      const subjectBuffer = await removeBackground(original);
-
       let bg = backgroundBuffer;
       if (task.backgroundMode === "ai") {
         bg = await generateBackground(task.aiPrompt || "indoor room, wooden floor, natural lighting, mobile phone photo");
@@ -81,7 +150,16 @@ async function processTask(taskId: string) {
         bg = await createSolidBackground("#f5f5f0");
       }
 
-      const { composited } = await compositeImages(subjectBuffer, bg);
+      // Try AI-powered blending first, fall back to traditional pipeline
+      let composited: Buffer | null = null;
+      composited = await aiBlendBackground(original, bg);
+
+      if (!composited) {
+        console.log("[bg-worker] AI blend unavailable — using traditional pipeline");
+        const subjectBuffer = await removeBackground(original);
+        const result = await compositeImages(subjectBuffer, bg);
+        composited = result.composited;
+      }
 
       let resultKey: string;
       if (hasS3) {
