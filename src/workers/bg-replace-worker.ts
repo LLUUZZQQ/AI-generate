@@ -248,36 +248,36 @@ async function compositeImages(subjectBuffer: Buffer, bgBuffer: Buffer): Promise
     .extract({ left: bgCropLeft, top: bgCropTop, width: canvasW, height: canvasH })
     .toBuffer();
 
-  // === Extract subject alpha for shadow generation ===
-  const subjectAlphaPng = await sharpModule(subjectBuffer)
-    .ensureAlpha()
-    .extractChannel(3)
-    .png()
-    .toBuffer();
+  // === Improved ellipse shadow system ===
+  // Sizes proportional to product dimensions
+  const groundY = canvasH;
 
-  // === Shape-aware ground shadow ===
-  // Only cast shadow from bottom portion of product silhouette
-  const shadowH = Math.round(subH * 0.10);
-  // Take bottom slice of alpha, compress vertically
-  const bottomAlphaSlice = await sharpModule(subjectAlphaPng)
-    .extract({ left: 0, top: subH - Math.round(subH * 0.35), width: subW, height: Math.round(subH * 0.35) })
-    .resize(subW, shadowH, { fit: "fill", kernel: "lanczos3" })
-    .extend({ top: subH - shadowH, bottom: 0, left: 0, right: 0, background: { r: 0, g: 0, b: 0, alpha: 0 } })
-    .toBuffer();
+  // Contact shadow — dark, sharp, narrow — product contact with ground
+  const contactW = Math.round(subW * 0.75);
+  const contactH = Math.round(subH * 0.03);
+  const contactX = Math.round((canvasW - contactW) / 2);
+  const contactY = groundY - Math.round(contactH * 0.3);
 
-  // Contact shadow — sharp, dark, stays very close to product base
-  const contactShadow = await sharpModule(bottomAlphaSlice)
-    .blur(2)
-    .linear(0.25, 0)
-    .ensureAlpha()
-    .toBuffer();
+  // Ambient shadow — softer, wider, lighter
+  const ambientW = Math.round(subW * 0.85);
+  const ambientH = Math.round(subH * 0.14);
+  const ambientX = Math.round((canvasW - ambientW) / 2);
+  const ambientY = groundY - Math.round(ambientH * 0.2);
 
-  // Ambient shadow — soft, wide, faint
-  const ambientShadow = await sharpModule(bottomAlphaSlice)
-    .blur(12)
-    .linear(0.10, 0)
-    .ensureAlpha()
-    .toBuffer();
+  const shadowSvg = Buffer.from(`<svg width="${canvasW}" height="${canvasH}">
+    <defs>
+      <filter id="blur-contact"><feGaussianBlur stdDeviation="3"/></filter>
+      <filter id="blur-ambient"><feGaussianBlur stdDeviation="16"/></filter>
+    </defs>
+    <ellipse cx="${Math.round(ambientX + ambientW/2)}" cy="${Math.round(ambientY + ambientH/2)}"
+             rx="${Math.round(ambientW/2)}" ry="${Math.round(ambientH/2)}"
+             fill="rgba(0,0,0,0.18)" filter="url(#blur-ambient)"/>
+    <ellipse cx="${Math.round(contactX + contactW/2)}" cy="${Math.round(contactY + contactH/2)}"
+             rx="${Math.round(contactW/2)}" ry="${Math.round(contactH/2)}"
+             fill="rgba(0,0,0,0.35)" filter="url(#blur-contact)"/>
+  </svg>`);
+
+  const shadowBuffer = await sharpModule(shadowSvg).png().toBuffer();
 
   // === Color/brightness match (luminance only, no hue shift) ===
   const bgAvg = await sharpModule(bg).resize(1, 1).raw().toBuffer();
@@ -302,17 +302,18 @@ async function compositeImages(subjectBuffer: Buffer, bgBuffer: Buffer): Promise
     .blur(1.2)
     .toBuffer();
 
-  // === Composite: bg → ambient shadow → contact shadow → subject ===
+  // === Composite: bg → shadow → subject ===
   const composited = await sharpModule(bg)
     .composite([
-      { input: ambientShadow, top: 0, left: 0 },
-      { input: contactShadow, top: 0, left: 0 },
+      { input: shadowBuffer, top: 0, left: 0 },
       { input: edgeSoftened, left: 0, top: 0 },
     ])
     .png()
     .toBuffer();
 
-  return { composited, subjectAlpha: subjectAlphaPng };
+  const subjectAlphaPng = sharpModule(subjectBuffer).ensureAlpha().extractChannel(3).png().toBuffer();
+
+  return { composited, subjectAlpha: await subjectAlphaPng };
 }
 
 async function img2imgFusion(compositePng: Buffer, subjectBuffer: Buffer, subjectAlphaPng: Buffer): Promise<Buffer> {
