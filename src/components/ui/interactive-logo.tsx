@@ -20,9 +20,10 @@ function OtterRelief() {
   albedo.colorSpace = THREE.SRGBColorSpace;
   alphaMask.colorSpace = THREE.LinearSRGBColorSpace ?? THREE.SRGBColorSpace;
 
-  const blockW = 2.6;
-  const blockH = 2.6;
-  const cornerR = 0.35;
+  // Match old F-logo scale — fill the full viewport
+  const blockW = 4.0;
+  const blockH = 4.0;
+  const cornerR = 0.5;
   const hw = blockW / 2;
   const hh = blockH / 2;
 
@@ -46,13 +47,13 @@ function OtterRelief() {
     return s;
   }, []);
 
-  // Thin extruded relief — shallow depth for plaque feel
+  // Deeper extrusion for substantial 3D relief
   const geo = useMemo(() => {
     return new THREE.ExtrudeGeometry(shape, {
-      depth: 0.35,
+      depth: 0.55,
       bevelEnabled: true,
-      bevelThickness: 0.1,
-      bevelSize: 0.08,
+      bevelThickness: 0.15,
+      bevelSize: 0.12,
       bevelSegments: 4,
     });
   }, [shape]);
@@ -148,7 +149,7 @@ export function InteractiveLogo() {
   return (
     <div className="w-full aspect-square max-w-[420px] mx-auto cursor-grab active:cursor-grabbing select-none">
       <Canvas
-        camera={{ position: [0, 0.15, 7.5], fov: 38 }}
+        camera={{ position: [0, 0.1, 9], fov: 35 }}
         gl={{
           alpha: true,
           antialias: true,
