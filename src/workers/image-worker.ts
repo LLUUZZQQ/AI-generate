@@ -1,11 +1,12 @@
 import { Worker } from "bullmq";
-import { redis } from "@/lib/redis";
+import { getRedis } from "@/lib/redis";
 import { prisma } from "@/lib/db";
 import { getModelAdapter } from "@/lib/models/registry";
 import { userFriendlyError } from "@/lib/error-messages";
 import { suggestQueue } from "@/lib/queue";
 
-const worker = new Worker("image-queue", async (job) => {
+const redis = getRedis();
+if (redis) { const worker = new Worker("image-queue", async (job: any) => {
   const { contentId, modelId, prompt, params } = job.data;
 
   await prisma.content.update({ where: { id: contentId }, data: { status: "processing" } });
@@ -20,7 +21,8 @@ const worker = new Worker("image-queue", async (job) => {
     });
 
     // Trigger suggestion generation
-    await suggestQueue.add("suggest", { contentId }, { jobId: `suggest-${contentId}` });
+    const sq = suggestQueue.get();
+    if (sq) await sq.add("suggest", { contentId }, { jobId: `suggest-${contentId}` });
   } catch (e: any) {
     await prisma.content.update({
       where: { id: contentId },
@@ -30,3 +32,4 @@ const worker = new Worker("image-queue", async (job) => {
 }, { connection: redis, concurrency: 3 });
 
 console.log("Image worker started");
+}

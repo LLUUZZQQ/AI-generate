@@ -1,10 +1,18 @@
-import "dotenv/config";
 import IORedis from "ioredis";
 
-const globalForRedis = globalThis as unknown as { redis: IORedis };
+let _redis: IORedis | null = null;
 
-export const redis = globalForRedis.redis ?? new IORedis(process.env.REDIS_URL!, {
-  maxRetriesPerRequest: null,
-});
-
-if (process.env.NODE_ENV !== "production") globalForRedis.redis = redis;
+export function getRedis(): IORedis | null {
+  if (!process.env.REDIS_URL) return null;
+  if (!_redis) {
+    try {
+      _redis = new IORedis(process.env.REDIS_URL, {
+        maxRetriesPerRequest: null,
+        lazyConnect: true,
+      });
+    } catch {
+      return null;
+    }
+  }
+  return _redis;
+}

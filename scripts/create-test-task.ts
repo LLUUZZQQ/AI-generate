@@ -54,7 +54,8 @@ async function main() {
 
   // Now add to BullMQ queue
   const { bgReplaceQueue } = await import("../src/lib/queue");
-  await bgReplaceQueue.add("bg-replace", { taskId: task.id }, { jobId: `bg-${task.id}` });
+  const q = bgReplaceQueue.get();
+  if (q) await q.add("bg-replace", { taskId: task.id }, { jobId: `bg-${task.id}` });
   console.log("Job added to queue");
 
   await p.$disconnect();

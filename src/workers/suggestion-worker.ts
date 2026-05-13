@@ -1,6 +1,9 @@
 import { Worker } from "bullmq";
-import { redis } from "@/lib/redis";
+import { getRedis } from "@/lib/redis";
 import { prisma } from "@/lib/db";
+
+const redis = getRedis();
+if (redis) {
 
 const captionTemplates = [
   (title: string) => `这个${title}也太绝了吧！AI 生成的效果直接封神 🔥`,
@@ -55,3 +58,4 @@ const worker = new Worker("suggest-queue", async (job) => {
 }, { connection: redis, concurrency: 1 });
 
 console.log("Suggestion worker started");
+}

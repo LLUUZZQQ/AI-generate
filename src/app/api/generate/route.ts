@@ -52,20 +52,13 @@ export const POST = withAuth(async (req: NextRequest, _context: any, user: { id:
     },
   });
 
-  // Push job to queue
-  const queue = type === "swap" ? swapQueue : type === "video" ? videoQueue : imageQueue;
-  await queue.add("generate", {
-    contentId: content.id,
-    modelId,
-    prompt,
-    params,
-  });
-
-  // Wake up Railway worker (fire-and-forget, don't block response)
-  const WORKER_URL = process.env.WORKER_URL;
-  if (WORKER_URL) {
-    fetch(WORKER_URL).catch(() => {});
+  // Push job to queue (Redis optional — graceful if unavailable)
+  const q = type === "swap" ? swapQueue.get() : type === "video" ? videoQueue.get() : imageQueue.get();
+  if (q) {
+    await q.add("generate", { contentId: content.id, modelId, prompt, params });
+    const WORKER_URL = process.env.WORKER_URL;
+    if (WORKER_URL) { fetch(WORKER_URL).catch(() => {}); }
   }
 
-  return success({ taskId: content.id, status: "queued" });
+  return success({ taskId: content.id, status: q ? "queued" : "pending" });
 });
