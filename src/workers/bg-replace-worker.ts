@@ -81,8 +81,7 @@ async function processTask(taskId: string) {
         bg = await createSolidBackground("#f5f5f0");
       }
 
-      const { composited: stageA, subjectAlpha } = await compositeImages(subjectBuffer, bg);
-      const composited = await img2imgFusion(stageA, subjectBuffer, subjectAlpha);
+      const { composited } = await compositeImages(subjectBuffer, bg);
 
       let resultKey: string;
       if (hasS3) {
@@ -257,24 +256,26 @@ async function compositeImages(subjectBuffer: Buffer, bgBuffer: Buffer): Promise
     .toBuffer();
 
   // === Shape-aware ground shadow ===
-  // Compress alpha vertically → simulates flat ground projection from top-front light
-  const shadowH = Math.round(subH * 0.22);
-  const shadowBase = await sharpModule(subjectAlphaPng)
+  // Only cast shadow from bottom portion of product silhouette
+  const shadowH = Math.round(subH * 0.10);
+  // Take bottom slice of alpha, compress vertically
+  const bottomAlphaSlice = await sharpModule(subjectAlphaPng)
+    .extract({ left: 0, top: subH - Math.round(subH * 0.35), width: subW, height: Math.round(subH * 0.35) })
     .resize(subW, shadowH, { fit: "fill", kernel: "lanczos3" })
     .extend({ top: subH - shadowH, bottom: 0, left: 0, right: 0, background: { r: 0, g: 0, b: 0, alpha: 0 } })
     .toBuffer();
 
-  // Contact shadow — sharp, dark, close to product base
-  const contactShadow = await sharpModule(shadowBase)
-    .blur(2.5)
-    .linear(0.35, 0)
+  // Contact shadow — sharp, dark, stays very close to product base
+  const contactShadow = await sharpModule(bottomAlphaSlice)
+    .blur(2)
+    .linear(0.25, 0)
     .ensureAlpha()
     .toBuffer();
 
-  // Ambient shadow — soft, wide, lighter
-  const ambientShadow = await sharpModule(shadowBase)
-    .blur(14)
-    .linear(0.17, 0)
+  // Ambient shadow — soft, wide, faint
+  const ambientShadow = await sharpModule(bottomAlphaSlice)
+    .blur(12)
+    .linear(0.10, 0)
     .ensureAlpha()
     .toBuffer();
 
@@ -311,36 +312,7 @@ async function compositeImages(subjectBuffer: Buffer, bgBuffer: Buffer): Promise
     .png()
     .toBuffer();
 
-  // === Noise overlay matching background noise level ===
-  const bgSample = await sharpModule(bg).resize(128, 128).greyscale().raw().toBuffer();
-  let mean = 0;
-  for (let i = 0; i < bgSample.length; i++) mean += bgSample[i];
-  mean /= bgSample.length;
-  let variance = 0;
-  for (let i = 0; i < bgSample.length; i++) variance += (bgSample[i] - mean) ** 2;
-  variance /= bgSample.length;
-  const noiseStd = Math.sqrt(variance);
-
-  // Generate subtle noise matching background grain level
-  const noiseRaw = Buffer.alloc(canvasW * canvasH);
-  const intensity = Math.min(14, Math.max(3, Math.round(noiseStd * 0.55)));
-  for (let i = 0; i < noiseRaw.length; i++) {
-    noiseRaw[i] = Math.round(128 + (Math.random() - 0.5) * intensity * 2);
-  }
-
-  const noiseLayer = await sharpModule(noiseRaw, { raw: { width: canvasW, height: canvasH, channels: 1 } })
-    .linear(0.07, 0)
-    .blur(0.5)
-    .ensureAlpha()
-    .png()
-    .toBuffer();
-
-  const finalComposite = await sharpModule(composited)
-    .composite([{ input: noiseLayer, blend: "overlay" }])
-    .png()
-    .toBuffer();
-
-  return { composited: finalComposite, subjectAlpha: subjectAlphaPng };
+  return { composited, subjectAlpha: subjectAlphaPng };
 }
 
 async function img2imgFusion(compositePng: Buffer, subjectBuffer: Buffer, subjectAlphaPng: Buffer): Promise<Buffer> {
