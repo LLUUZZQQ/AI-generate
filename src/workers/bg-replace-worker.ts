@@ -22,49 +22,16 @@ async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer): Prom
     console.log("[bg-worker] GPT-5.4 Image 2 blend: product", origMeta.width + "x" + origMeta.height,
       "bg", bgMeta.width + "x" + bgMeta.height);
 
-    // Exact same pattern as src/lib/models/openai.ts (known to work on OpenRouter)
     const apiKey = process.env.OPENAI_API_KEY!;
-    const OpenAI = (await import("openai")).default;
-    const openai = new OpenAI({
-      apiKey,
-      baseURL: "https://openrouter.ai/api/v1",
-      defaultHeaders: {
-        "Authorization": `Bearer ${apiKey}`,  // Force auth header explicitly
-        "HTTP-Referer": process.env.NEXT_PUBLIC_URL || "http://localhost:3000",
-        "X-Title": "FrameCraft",
-      },
-    });
 
-    // Quick test: can we even call this model via SDK?
-    console.log("[bg-worker] GPT-5.4: testing basic SDK connectivity...");
-    const testResp = await openai.chat.completions.create({
-      model: "openai/gpt-5.4-image-2",
-      messages: [{ role: "user", content: "say hello" }],
-      max_tokens: 10,
-    });
-    console.log("[bg-worker] GPT-5.4: SDK test OK —", testResp.choices?.[0]?.message?.content?.substring(0, 50));
-
-    // Now the real call with images
-    const response = await openai.chat.completions.create({
+    // Use Node.js native https — zero SDK/fetch dependency
+    const body = JSON.stringify({
       model: "openai/gpt-5.4-image-2",
       messages: [
         {
           role: "user",
           content: [
-            {
-              type: "text",
-              text: `Take the main product/subject from the FIRST image and naturally place it into the scene of the SECOND image.
-
-Critical requirements:
-- The product must sit or stand naturally on a surface/ground — NOT float in mid-air
-- Match lighting, shadows, and color temperature to the scene
-- Keep the product's own colors and textures 100% unchanged
-- Include any packaging (boxes, bags) that comes with the product
-- Generate realistic shadows where the product meets the surface
-- Output as a casual smartphone photo — natural, unpolished, amateur-style
-- Do NOT add any text, watermark, or logo
-- Do NOT change the product itself — only blend it into the new scene`,
-            },
+            { type: "text", text: "Take the main product from the first image and naturally place it into the second image's scene. Product must sit on a surface, not float. Match lighting and shadows. Keep product colors exactly. Casual phone photo style. No text or watermark." },
             { type: "image_url", image_url: { url: `data:${productMime};base64,${productB64}` } },
             { type: "image_url", image_url: { url: `data:${bgMime};base64,${bgB64}` } },
           ],
@@ -73,8 +40,37 @@ Critical requirements:
       max_tokens: 4096,
     });
 
+    console.log("[bg-worker] GPT-5.4: sending via native https...");
+    const https = await import("https");
+    const resp = await new Promise<{ status: number; data: any }>((resolve, reject) => {
+      const req = https.request("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": process.env.NEXT_PUBLIC_URL || "http://localhost:3000",
+          "X-Title": "FrameCraft",
+        },
+      }, (res) => {
+        let data = "";
+        res.on("data", (chunk: string) => data += chunk);
+        res.on("end", () => {
+          try { resolve({ status: res.statusCode || 0, data: JSON.parse(data) }); }
+          catch { resolve({ status: res.statusCode || 0, data }); }
+        });
+      });
+      req.on("error", reject);
+      req.write(body);
+      req.end();
+    });
+
+    if (resp.status !== 200) {
+      console.error("[bg-worker] GPT-5.4: HTTP", resp.status, JSON.stringify(resp.data).substring(0, 300));
+      return null;
+    }
+
     // Parse response for image data
-    const message = response?.choices?.[0]?.message;
+    const message = resp.data?.choices?.[0]?.message;
     if (!message) { console.error("[bg-worker] GPT-5.4: no message"); return null; }
 
     // Parse response for image data
