@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TransactionList } from "@/components/user/transaction-list";
+import { User, Mail, Clock, Shield, Lock, Eye, EyeOff } from "lucide-react";
 
 const plans = [
   { amount: 100, credits: 100, price: 10, name: "入门包", desc: "处理 100 张" },
@@ -26,11 +27,50 @@ export default function SettingsPage() {
   const [selectedPlan, setSelectedPlan] = useState<typeof plans[0] | null>(null);
   const [paying, setPaying] = useState(false);
 
-  const { data, isLoading } = useQuery({
+  // Profile edit state
+  const [editName, setEditName] = useState("");
+  const [editingName, setEditingName] = useState(false);
+
+  // Password change state
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [showOld, setShowOld] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [changingPw, setChangingPw] = useState(false);
+
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["user-me"],
     queryFn: async () => { const res = await fetch("/api/user/me"); return res.json(); },
   });
-  const credits = data?.data?.user?.credits ?? 0;
+  const user = data?.data?.user;
+  const credits = user?.credits ?? 0;
+
+  const updateProfile = async (payload: any) => {
+    const res = await fetch("/api/user/me", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json();
+    if (json.code === 0) { toast.success(json.data?.message || json.data?.name ? "昵称已更新" : "已更新"); refetch(); return true; }
+    toast.error(json.message || "操作失败");
+    return false;
+  };
+
+  const handleSaveName = async () => {
+    if (editName.trim().length < 2) { toast.error("昵称至少2个字符"); return; }
+    const ok = await updateProfile({ name: editName });
+    if (ok) setEditingName(false);
+  };
+
+  const handleChangePassword = async () => {
+    if (!oldPassword) { toast.error("请输入旧密码"); return; }
+    if (newPassword.length < 6) { toast.error("新密码至少6位"); return; }
+    setChangingPw(true);
+    const ok = await updateProfile({ oldPassword, newPassword });
+    if (ok) { setOldPassword(""); setNewPassword(""); }
+    setChangingPw(false);
+  };
 
   const handleRecharge = async () => {
     if (!selectedPlan) return;
@@ -53,16 +93,76 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-10 md:py-14">
-      <h1 className="text-2xl font-semibold tracking-tight mb-8">设置</h1>
+      <h1 className="text-2xl font-semibold tracking-tight mb-8">个人中心</h1>
 
-      {isLoading ? (
-        <Skeleton className="h-6 w-32 mb-8" />
-      ) : (
-        <p className="text-sm text-foreground/30 mb-8">
-          当前积分 <span className="text-foreground font-semibold text-lg ml-1">{credits.toLocaleString()}</span>
-        </p>
+      {/* Account Info Card */}
+      <h3 className="text-xs font-semibold text-foreground/25 uppercase tracking-wider mb-4">账户信息</h3>
+      {isLoading ? <Skeleton className="h-40 w-full rounded-2xl mb-10" /> : user && (
+        <div className="glass p-5 mb-10 space-y-3">
+          <div className="flex items-center gap-3">
+            <User className="w-4 h-4 text-white/25" />
+            {editingName ? (
+              <div className="flex items-center gap-2">
+                <input value={editName} onChange={(e) => setEditName(e.target.value)}
+                  className="bg-white/[0.06] border border-white/[0.1] rounded-lg px-3 py-1.5 text-sm text-white/80 w-40" />
+                <button onClick={handleSaveName} className="text-xs text-purple-400 hover:text-purple-300">保存</button>
+                <button onClick={() => setEditingName(false)} className="text-xs text-white/30 hover:text-white/50">取消</button>
+              </div>
+            ) : (
+              <>
+                <span className="text-sm text-white/70">{user.name || "未设置"}</span>
+                <button onClick={() => { setEditName(user.name || ""); setEditingName(true); }}
+                  className="text-xs text-white/25 hover:text-purple-400">编辑</button>
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <Mail className="w-4 h-4 text-white/25" />
+            <span className="text-sm text-white/50">{user.email}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Shield className="w-4 h-4 text-white/25" />
+            <span className="text-sm text-white/50">{user.role === "admin" ? "管理员" : "普通用户"}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Clock className="w-4 h-4 text-white/25" />
+            <span className="text-sm text-white/40">{new Date(user.createdAt).toLocaleDateString("zh-CN")} 注册</span>
+          </div>
+          <div className="pt-2 border-t border-white/[0.05]">
+            <span className="text-sm text-white/30">当前积分 </span>
+            <span className="text-lg font-bold text-white/80">{credits.toLocaleString()}</span>
+          </div>
+        </div>
       )}
 
+      {/* Change Password */}
+      <h3 className="text-xs font-semibold text-foreground/25 uppercase tracking-wider mb-4">修改密码</h3>
+      <div className="glass p-5 mb-10 space-y-4">
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+          <input type={showOld ? "text" : "password"} placeholder="旧密码" value={oldPassword}
+            onChange={(e) => setOldPassword(e.target.value)}
+            className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg pl-10 pr-10 py-2.5 text-sm text-white/80 focus:outline-none focus:border-purple-400/40" />
+          <button onClick={() => setShowOld(!showOld)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/50">
+            {showOld ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+          <input type={showNew ? "text" : "password"} placeholder="新密码（至少6位）" value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg pl-10 pr-10 py-2.5 text-sm text-white/80 focus:outline-none focus:border-purple-400/40" />
+          <button onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/50">
+            {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+        <Button size="sm" onClick={handleChangePassword} disabled={changingPw}
+          className="bg-purple-500/20 border border-purple-400/30 text-purple-300 hover:bg-purple-500/30 rounded-xl h-9">
+          {changingPw ? "修改中..." : "修改密码"}
+        </Button>
+      </div>
+
+      {/* Recharge */}
       <h3 className="text-xs font-semibold text-foreground/25 uppercase tracking-wider mb-4">充值套餐</h3>
       <div className="grid grid-cols-3 gap-3 mb-10">
         {plans.map((plan) => (
