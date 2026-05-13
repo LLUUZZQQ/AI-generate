@@ -199,7 +199,7 @@ async function processTask(taskId: string) {
       composited = await aiBlendBackground(original, bg);
 
       if (!composited) {
-        console.log("[bg-worker] Replicate blend unavailable — using traditional pipeline");
+        console.log("[bg-worker] GPT-5.4 blend unavailable — using traditional pipeline");
         const subjectBuffer = await removeBackground(original);
         const result = await compositeImages(subjectBuffer, bg);
         composited = result.composited;
