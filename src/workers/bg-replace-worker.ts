@@ -7,25 +7,20 @@ import path from "path";
 const hasS3 = !!(process.env.S3_BUCKET && process.env.S3_ENDPOINT);
 const POLL_INTERVAL = 3000; // 3 seconds
 
-async function replicateBlend(originalBuffer: Buffer, bgBuffer: Buffer): Promise<Buffer | null> {
+async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer): Promise<Buffer | null> {
   try {
-    if (!process.env.REPLICATE_API_TOKEN) {
-      console.log("[bg-worker] Replicate: no REPLICATE_API_TOKEN, skip");
-      return null;
-    }
-
     const sharp = (await import("sharp")).default;
+    const OpenAI = (await import("openai")).default;
 
     // Step 1: Remove background from product
-    console.log("[bg-worker] Replicate blend: removing background...");
+    console.log("[bg-worker] AI blend: removing background...");
     const subjectBuffer = await removeBackground(originalBuffer);
 
-    // Step 2: Basic paste composite (product centered on background)
+    // Step 2: Basic paste composite
     const subMeta = await sharp(subjectBuffer).metadata();
     const bgMeta = await sharp(bgBuffer).metadata();
     if (!subMeta.width || !subMeta.height || !bgMeta.width || !bgMeta.height) return null;
 
-    // Resize product to ~60% of background width to leave room for scene context
     const targetW = Math.round(bgMeta.width * 0.6);
     const scale = targetW / subMeta.width;
     const targetH = Math.round(subMeta.height * scale);
@@ -34,51 +29,68 @@ async function replicateBlend(originalBuffer: Buffer, bgBuffer: Buffer): Promise
       .png()
       .toBuffer();
 
-    // Place product centered horizontally, at bottom third vertically
     const left = Math.round((bgMeta.width - targetW) / 2);
     const top = Math.round(bgMeta.height * 0.55 - targetH / 2);
 
     const pasteComposite = await sharp(bgBuffer)
       .composite([{ input: resizedSubject, left, top }])
-      .jpeg({ quality: 92 })
+      .png()
       .toBuffer();
 
+    // Step 3: Use OpenRouter's images.edit endpoint (OpenAI-compatible)
+    console.log("[bg-worker] AI blend: calling images.edit via OpenRouter...");
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY!,
+      baseURL: process.env.OPENAI_BASE_URL || "https://openrouter.ai/api/v1",
+      defaultHeaders: {
+        "HTTP-Referer": process.env.NEXT_PUBLIC_URL || "http://localhost:3000",
+        "X-Title": "FrameCraft",
+      },
+    });
+
+    // Create masks: product area = mask (tell API to edit the background/product transition)
+    const productMask = await sharp(resizedSubject)
+      .extractChannel(3)
+      .resize(bgMeta.width, bgMeta.height, {
+        fit: "contain",
+        position: "center",
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      })
+      .threshold(1)
+      .png()
+      .toBuffer();
+
+    // Save paste composite to a temp buffer that we can stream
     const pasteB64 = pasteComposite.toString("base64");
+    const maskB64 = productMask.toString("base64");
 
-    // Step 3: SDXL img2img to blend product naturally into the scene
-    console.log("[bg-worker] Replicate: calling img2img blend...");
-    const Replicate = (await import("replicate")).default;
-    const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN! });
+    const imageFile = new File([Buffer.from(pasteB64, "base64")], "composite.png", { type: "image/png" });
+    const maskFile = new File([Buffer.from(maskB64, "base64")], "mask.png", { type: "image/png" });
 
-    const output = await replicate.run(
-      "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
-      {
-        input: {
-          image: `data:image/jpeg;base64,${pasteB64}`,
-          prompt: "A realistic casual photo, natural lighting, product placed in the scene, seamless blending, soft shadows, amateur smartphone quality, no text no watermark",
-          negative_prompt: "blurry, distorted, oversaturated, artificial, CGI, photoshopped, text, watermark, logo",
-          strength: 0.45,
-          num_outputs: 1,
-        },
-      }
-    );
+    const response = await openai.images.edit({
+      model: "openai/gpt-4.1-mini",
+      image: imageFile,
+      mask: maskFile,
+      prompt: "A casual smartphone photo with natural lighting. The product blends seamlessly into the scene with realistic shadows and lighting. No text, no watermark, no logo. Like an amateur photo, not a studio shot.",
+      n: 1,
+      size: "1024x1024",
+    });
 
-    const resultUrl = Array.isArray(output) ? output[0] : (output as any)?.url || output;
-    if (typeof resultUrl !== "string" || !resultUrl.startsWith("http")) {
-      console.error("[bg-worker] Replicate: unexpected output:", JSON.stringify(output).substring(0, 200));
+    const resultUrl = response.data?.[0]?.url;
+    if (!resultUrl) {
+      console.error("[bg-worker] AI blend: no URL in response");
       return null;
     }
 
-    // Download result
-    console.log("[bg-worker] Replicate: downloading result...");
+    console.log("[bg-worker] AI blend: downloading result...");
     const res = await fetch(resultUrl);
-    if (!res.ok) { console.error("[bg-worker] Replicate: download failed", res.status); return null; }
+    if (!res.ok) { console.error("[bg-worker] AI blend: download failed", res.status); return null; }
     const resultBuf = Buffer.from(await res.arrayBuffer());
 
-    console.log("[bg-worker] Replicate blend: success, size:", resultBuf.length);
+    console.log("[bg-worker] AI blend: success, size:", resultBuf.length);
     return resultBuf;
   } catch (e: any) {
-    console.error("[bg-worker] Replicate blend failed:", e.message?.substring(0, 300));
+    console.error("[bg-worker] AI blend failed:", e.message?.substring(0, 300));
     return null;
   }
 }
@@ -157,7 +169,7 @@ async function processTask(taskId: string) {
 
       // Try Replicate-based blending first, fall back to traditional pipeline
       let composited: Buffer | null = null;
-      composited = await replicateBlend(original, bg);
+      composited = await aiBlendBackground(original, bg);
 
       if (!composited) {
         console.log("[bg-worker] Replicate blend unavailable — using traditional pipeline");
