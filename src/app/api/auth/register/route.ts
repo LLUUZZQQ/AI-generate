@@ -8,9 +8,26 @@ import { z } from "zod";
 // IP registration cooldown: 1 registration per IP per 24 hours
 const ipCooldown = new Map<string, number>();
 
+// Common disposable email domains
+const disposableDomains = new Set([
+  "mailinator.com", "guerrillamail.com", "10minutemail.com", "tempmail.com",
+  "yopmail.com", "throwaway.email", "sharklasers.com", "guerrillamail.info",
+  "trashmail.com", "temp-mail.org", "fakeinbox.com", "emailondeck.com",
+  "dispostable.com", "maildrop.cc", "harakirimail.com", "getnada.com",
+]);
+
 const registerSchema = z.object({
   name: z.string().min(2).max(20),
-  email: z.string().email(),
+  email: z.string().email().refine((e) => {
+    const domain = e.split("@")[1]?.toLowerCase();
+    if (!domain) return false;
+    if (disposableDomains.has(domain)) return false;
+    // Block obviously fake patterns
+    const local = e.split("@")[0];
+    if (local.length < 2) return false;
+    if (/^[a-z0-9]$/i.test(local)) return false; // single char
+    return true;
+  }, "请使用真实邮箱"),
   password: z.string().min(6).max(50),
 });
 

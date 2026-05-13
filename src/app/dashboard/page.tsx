@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -28,11 +28,11 @@ export default function DashboardPage() {
   });
   const stats = statsData?.data;
 
-  const { data: templatesData } = useQuery({
-    queryKey: ["bg-templates"],
-    queryFn: async () => { const res = await fetch("/api/background-templates"); return res.json(); },
-  });
-  const templates = templatesData?.data ?? [];
+  const [presets, setPresets] = useState<any[]>([]);
+  useEffect(() => {
+    try { const raw = localStorage.getItem("framecraft_saved_bgs"); if (raw) setPresets(JSON.parse(raw)); }
+    catch {}
+  }, []);
 
   const { data: tasksData } = useQuery({
     queryKey: ["bg-tasks", "recent"],
@@ -132,29 +132,29 @@ export default function DashboardPage() {
       </div>
 
       {/* ======== QUICK TEMPLATES ======== */}
-      {templates.length > 0 && (
+      {presets.length > 0 && (
         <div className="mb-10">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium text-foreground/50 flex items-center gap-2">
-              <LayoutGrid className="w-3.5 h-3.5" /> 快捷模板
+              <LayoutGrid className="w-3.5 h-3.5" /> 快捷预设
             </h3>
             <Link href="/background-replace/new" className="text-[10px] text-foreground/20 hover:text-foreground/40 transition-colors flex items-center gap-0.5">
               查看全部 <ChevronRight className="w-3 h-3" />
             </Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {templates.slice(0, 4).map((t: any) => (
-              <Link key={t.id} href={`/background-replace/new?template=${t.id}`}>
+            {presets.slice(0, 4).map((p: any) => (
+              <Link key={p.key} href="/background-replace/new">
                 <Card className="p-3 border-border bg-white/[0.02] hover:bg-white/[0.05] transition-all cursor-pointer group h-full">
                   <div className="aspect-[4/3] rounded-lg overflow-hidden bg-white/[0.03] mb-3 border border-white/[0.04]">
-                    {t.thumbnailUrl ? (
-                      <img src={t.thumbnailUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={t.name} />
+                    {p.url ? (
+                      <img src={p.url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={p.name} />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-foreground/8"><ImageIcon className="w-6 h-6" /></div>
                     )}
                   </div>
-                  <p className="text-xs font-medium truncate">{t.name}</p>
-                  <p className="text-[10px] text-foreground/25 mt-0.5">{t.category}</p>
+                  <p className="text-xs font-medium truncate">{p.name}</p>
+                  <p className="text-[10px] text-foreground/25 mt-0.5">我的预设</p>
                 </Card>
               </Link>
             ))}

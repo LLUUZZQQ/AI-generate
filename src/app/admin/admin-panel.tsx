@@ -14,6 +14,7 @@ export function AdminPanel({ stats: initial }: { stats: Stats }) {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [editUser, setEditUser] = useState<any>(null);
+  const [dateRange, setDateRange] = useState({ from: "", to: "" });
 
   const searchUsers = useCallback(async (q: string) => {
     setLoading(true);
@@ -92,7 +93,16 @@ export function AdminPanel({ stats: initial }: { stats: Stats }) {
 
           {/* 7-day task chart */}
           <div className="glass p-5">
-            <h3 className="text-sm font-medium text-white/50 mb-4">近 7 天任务量</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-medium text-white/50">任务量趋势</h3>
+              <div className="flex items-center gap-2">
+                <input type="date" value={dateRange.from} onChange={e => setDateRange(p => ({ ...p, from: e.target.value }))}
+                  className="bg-white/[0.04] border border-white/[0.1] rounded-lg px-2 py-1 text-xs text-white/60 focus:outline-none focus:border-purple-400/40" />
+                <span className="text-white/20 text-xs">至</span>
+                <input type="date" value={dateRange.to} onChange={e => setDateRange(p => ({ ...p, to: e.target.value }))}
+                  className="bg-white/[0.04] border border-white/[0.1] rounded-lg px-2 py-1 text-xs text-white/60 focus:outline-none focus:border-purple-400/40" />
+              </div>
+            </div>
             <div className="flex items-end gap-2 h-32">
               {initial.bgTasksByDay.map((d: any) => (
                 <div key={d.day} className="flex-1 flex flex-col items-center gap-1">
