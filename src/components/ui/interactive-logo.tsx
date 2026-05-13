@@ -27,16 +27,17 @@ function OtterRelief() {
   return (
     <Float speed={1.3} rotationIntensity={0.04} floatIntensity={0.15}>
       <mesh ref={meshRef}>
-        <planeGeometry args={[4.4, 4.4]} />
+        <planeGeometry args={[3.2, 3.2]} />
         <meshStandardMaterial
+          color="#ffffff"
           map={albedo}
           alphaMap={alphaMask}
           normalMap={normalMap}
-          normalScale={new THREE.Vector2(1.2, 1.2)}
-          metalness={0.02}
-          roughness={0.3}
+          normalScale={new THREE.Vector2(0.5, 0.5)}
+          metalness={0.08}
+          roughness={0.18}
           transparent
-          alphaTest={0.05}
+          alphaTest={0.1}
           side={THREE.DoubleSide}
         />
       </mesh>
@@ -59,10 +60,11 @@ export function InteractiveLogo() {
       >
         <color attach="background" args={["#0a0a14"]} />
 
-        <ambientLight intensity={0.4} color="#2a2a44" />
-        <directionalLight position={[5, 4, 8]} intensity={8} color="#ffffff" />
-        <directionalLight position={[-4, 2, -4]} intensity={3} color="#d0c8ff" />
-        <pointLight position={[0, 4, 5]} intensity={2.5} color="#aaccff" />
+        <ambientLight intensity={0.5} color="#3a3a55" />
+        <directionalLight position={[5, 5, 8]} intensity={7} color="#ffffff" />
+        <directionalLight position={[-4, 2, -4]} intensity={3.5} color="#e8e0ff" />
+        <directionalLight position={[0, -3, 3]} intensity={2} color="#ffd0e0" />
+        <pointLight position={[0, 4, 5]} intensity={2} color="#ddeeff" />
 
         <OtterRelief />
       </Canvas>
