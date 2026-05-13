@@ -112,21 +112,34 @@ export default function NewBgReplacePage() {
         customBgKey = uploadData.data.key || uploadData.data.filename;
       }
 
+      // Save custom background as preset
+      if (mode === "custom" && customBgKey) {
+        try {
+          const saved = localStorage.getItem("framecraft_saved_bgs");
+          const list: any[] = saved ? JSON.parse(saved) : [];
+          const url = customBgFile ? URL.createObjectURL(customBgFile) : `/api/s3/${customBgKey}`;
+          list.unshift({ key: customBgKey, name: customBgFile?.name || "背景", url, savedAt: Date.now() });
+          localStorage.setItem("framecraft_saved_bgs", JSON.stringify(list.slice(0, 20)));
+        } catch {}
+      }
+
       // Determine backgrounds to process
-      const bgIds = mode === "preset"
-        ? selectedBgIds
-        : [undefined]; // AI or custom — one task
+      const bgKeys = mode === "preset"
+        ? selectedBgIds  // localStorage keys = S3 keys
+        : mode === "custom"
+          ? [customBgKey]
+          : [undefined]; // AI
 
       const createdIds: string[] = [];
-      for (const bgId of bgIds) {
+      for (const bgKey of bgKeys) {
         const taskRes = await fetch("/api/background-replace", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             fileKeys,
-            backgroundMode: mode,
-            backgroundId: mode === "preset" ? bgId : undefined,
-            customBgKey: mode === "custom" ? customBgKey : undefined,
+            backgroundMode: bgKey ? "custom" : "ai",
+            backgroundId: undefined,
+            customBgKey: bgKey || undefined,
             aiPrompt: mode === "ai" ? aiPrompt : undefined,
             customPrompt: customPrompt.trim() || undefined,
             aiModel,
@@ -290,7 +303,7 @@ export default function NewBgReplacePage() {
             <div className="flex justify-between py-2.5 border-b border-white/[0.05]">
               <span className="text-sm text-foreground/35">背景方式</span>
               <span className="text-sm font-medium">
-                {mode === "ai" ? "AI 智能生成" : mode === "preset" ? `预设模板 ×${selectedBgIds.length}` : "自定义上传"}
+                {mode === "ai" ? "AI 智能生成" : mode === "preset" ? `我的预设 ×${selectedBgIds.length}` : "自定义上传"}
               </span>
             </div>
             {mode === "preset" && selectedBgIds.length > 1 && (

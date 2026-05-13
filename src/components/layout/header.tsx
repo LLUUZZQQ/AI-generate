@@ -2,15 +2,25 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { CreditsDisplay } from "@/components/user/credits-display";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { Coins } from "lucide-react";
 
 export function Header() {
   const { data: session } = useSession();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  const { data: userData } = useQuery({
+    queryKey: ["user-me"],
+    queryFn: async () => { const res = await fetch("/api/user/me"); return res.json(); },
+    enabled: !!session,
+    staleTime: 30000,
+  });
+  const isAdmin = userData?.data?.user?.role === "admin";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -55,11 +65,11 @@ export function Header() {
           {session ? (
             <>
               <CreditsDisplay />
+              <Link href="/settings"><Button size="sm" className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/20 text-purple-300 hover:from-purple-500/30 hover:to-pink-500/30 text-xs h-7 rounded-full px-3"><Coins className="w-3 h-3 mr-1" />充值</Button></Link>
               <Link href="/"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">首页</Button></Link>
               <Link href="/background-replace"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">背景替换</Button></Link>
               <Link href="/dashboard"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">我的</Button></Link>
-              <Link href="/settings"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">设置</Button></Link>
-              <Link href="/admin"><Button variant="ghost" size="sm" className="text-white/25 hover:text-purple-400 text-[11px]">管理</Button></Link>
+              {isAdmin && <Link href="/admin"><Button variant="ghost" size="sm" className="text-white/25 hover:text-purple-400 text-[11px]">管理</Button></Link>}
               <ThemeToggle />
               <Button variant="outline" size="sm" className="border-white/10 hover:bg-white/5 ml-2" onClick={() => signOut()}>退出</Button>
             </>
@@ -87,8 +97,8 @@ export function Header() {
               <Link href="/" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">🏠 首页</Link>
               <Link href="/background-replace" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">📸 背景替换</Link>
               <Link href="/dashboard" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">👤 我的</Link>
-              <Link href="/settings" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">⚙️ 设置</Link>
-              <Link href="/admin" onClick={() => setOpen(false)} className="block py-2.5 text-xs text-white/40 hover:text-purple-400">🛡 管理</Link>
+              <Link href="/settings" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">⚙️ 设置 · 充值</Link>
+              {isAdmin && <Link href="/admin" onClick={() => setOpen(false)} className="block py-2.5 text-xs text-white/40 hover:text-purple-400">🛡 管理</Link>}
               <div className="py-2"><ThemeToggle /></div>
               <Button variant="outline" size="sm" className="w-full border-white/10" onClick={() => signOut()}>退出</Button>
             </>

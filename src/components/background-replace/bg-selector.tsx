@@ -1,17 +1,11 @@
 "use client";
-import { useState, useEffect } from "react";
-import { Wand2, LayoutGrid, Upload, Loader2, Sparkles, Check } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Wand2, LayoutGrid, Upload, Trash2, Image } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 
-type BgMode = "ai" | "preset" | "custom";
+type BgMode = "preset" | "ai" | "custom";
 
-interface BackgroundTemplate {
-  id: string;
-  name: string;
-  category: string;
-  thumbnailUrl: string | null;
-}
+interface SavedBg { key: string; name: string; url: string; savedAt: number; }
 
 interface BgSelectorProps {
   mode: BgMode;
@@ -28,35 +22,55 @@ interface BgSelectorProps {
 export function BgSelector({
   mode, onModeChange, selectedBgIds, onToggleBg,
   aiPrompt, onAiPromptChange, customBgFile, onCustomBgChange,
-  recommendedIds,
 }: BgSelectorProps) {
-  const [templates, setTemplates] = useState<BackgroundTemplate[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [savedBgs, setSavedBgs] = useState<SavedBg[]>([]);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Load saved backgrounds from localStorage
   useEffect(() => {
-    if (mode === "preset") {
-      setLoading(true);
-      fetch("/api/background-templates")
-        .then((r) => r.json())
-        .then((d) => {
-          let list = d.data || [];
-          // Sort: recommended first, then by original order
-          if (recommendedIds && recommendedIds.length > 0) {
-            const recSet = new Set(recommendedIds);
-            const rec = list.filter((t: BackgroundTemplate) => recSet.has(t.id));
-            const rest = list.filter((t: BackgroundTemplate) => !recSet.has(t.id));
-            list = [...rec, ...rest];
-          }
-          setTemplates(list);
-        })
-        .finally(() => setLoading(false));
-    }
-  }, [mode, recommendedIds]);
+    try {
+      const raw = localStorage.getItem("framecraft_saved_bgs");
+      if (raw) setSavedBgs(JSON.parse(raw));
+    } catch { }
+  }, []);
+
+  // Save new background to localStorage when customBgFile changes and is uploaded
+  const saveBackground = useCallback((key: string, name: string, url: string) => {
+    setSavedBgs(prev => {
+      if (prev.some(b => b.key === key)) return prev;
+      const updated = [{ key, name, url, savedAt: Date.now() }, ...prev].slice(0, 20);
+      localStorage.setItem("framecraft_saved_bgs", JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
+  // Delete saved background
+  const deleteSaved = (key: string) => {
+    const updated = savedBgs.filter(b => b.key !== key);
+    setSavedBgs(updated);
+    localStorage.setItem("framecraft_saved_bgs", JSON.stringify(updated));
+    if (selectedBgIds.includes(key)) onToggleBg(key);
+  };
+
+  // Drag-and-drop handlers
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setDragOver(true); };
+  const handleDragLeave = () => setDragOver(false);
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault(); setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file?.type.startsWith("image/")) onCustomBgChange(file);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    onCustomBgChange(file);
+  };
 
   const modes: { key: BgMode; label: string; icon: React.ReactNode; desc: string }[] = [
-    { key: "preset", label: "预设模板", icon: <LayoutGrid className="w-4 h-4" />, desc: "从图库选择真实环境背景" },
+    { key: "preset", label: "我的预设", icon: <LayoutGrid className="w-4 h-4" />, desc: "已保存的背景图片" },
     { key: "ai", label: "AI 生成", icon: <Wand2 className="w-4 h-4" />, desc: "描述你想要的背景场景" },
-    { key: "custom", label: "自定义上传", icon: <Upload className="w-4 h-4" />, desc: "上传你自己的背景图" },
+    { key: "custom", label: "自定义上传", icon: <Upload className="w-4 h-4" />, desc: "上传新背景图" },
   ];
 
   return (
@@ -64,71 +78,51 @@ export function BgSelector({
       {/* Mode tabs */}
       <div className="flex gap-2">
         {modes.map((m) => (
-          <button
-            key={m.key}
-            onClick={() => onModeChange(m.key)}
+          <button key={m.key} onClick={() => onModeChange(m.key)}
             className={`flex-1 p-4 rounded-xl border text-left transition-all ${
-              mode === m.key
-                ? "border-purple-400/50 bg-purple-500/10"
-                : "border-white/[0.08] bg-white/[0.02] hover:border-white/[0.15]"
-            }`}
-          >
+              mode === m.key ? "border-purple-400/50 bg-purple-500/10" : "border-white/[0.08] bg-white/[0.02] hover:border-white/[0.15]"
+            }`}>
             <div className="flex items-center gap-2 mb-1.5">
               <span className={mode === m.key ? "text-purple-400" : "text-white/40"}>{m.icon}</span>
-              <span className={`text-sm font-medium ${mode === m.key ? "text-purple-400" : "text-white/70"}`}>
-                {m.label}
-              </span>
+              <span className={`text-sm font-medium ${mode === m.key ? "text-purple-400" : "text-white/70"}`}>{m.label}</span>
             </div>
             <p className="text-xs text-white/40">{m.desc}</p>
           </button>
         ))}
       </div>
 
-      {/* Preset templates grid */}
+      {/* My Presets */}
       {mode === "preset" && (
-        loading ? (
-          <div className="grid grid-cols-3 gap-3">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Skeleton key={i} className="aspect-square rounded-lg" />
-            ))}
+        savedBgs.length === 0 ? (
+          <div className="text-center py-10">
+            <Image className="w-10 h-10 text-white/10 mx-auto mb-3" />
+            <p className="text-sm text-white/30">还没有预设背景</p>
+            <p className="text-xs text-white/15 mt-2">在「自定义上传」中上传背景图后</p>
+            <p className="text-xs text-white/15">会自动保存为预设，方便下次使用</p>
           </div>
-        ) : templates.length === 0 ? (
-          <p className="text-sm text-white/40 text-center py-8">暂无预设背景模板</p>
         ) : (
           <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-            {templates.map((t) => {
-              const isSelected = selectedBgIds.includes(t.id);
+            {savedBgs.map((bg) => {
+              const isSelected = selectedBgIds.includes(bg.key);
               return (
-                <button
-                  key={t.id}
-                  onClick={() => onToggleBg(t.id)}
-                  className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                    isSelected
-                      ? "border-purple-400 ring-2 ring-purple-400/30"
-                      : "border-white/[0.08] hover:border-white/[0.2]"
-                  }`}
-                >
-                  {t.thumbnailUrl ? (
-                    <img src={t.thumbnailUrl} alt={t.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-white/[0.04] flex items-center justify-center">
-                      <LayoutGrid className="w-6 h-6 text-white/20" />
-                    </div>
-                  )}
-                  {isSelected && (
-                    <span className="absolute top-1.5 left-1.5 w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center">
-                      <Check className="w-3 h-3 text-white" />
-                    </span>
-                  )}
-                  {!isSelected && recommendedIds?.includes(t.id) && (
-                    <span className="absolute top-1.5 right-1.5 flex items-center gap-0.5 text-[9px] bg-purple-500/80 text-white px-1.5 py-0.5 rounded-full backdrop-blur-sm">
-                      <Sparkles className="w-2.5 h-2.5" /> 推荐
-                    </span>
-                  )}
-                  <span className="absolute bottom-1 left-1 text-[10px] bg-black/60 text-white/80 px-1.5 py-0.5 rounded">
-                    {t.name}
-                  </span>
-                </button>
+                <div key={bg.key} className="relative">
+                  <button onClick={() => onToggleBg(bg.key)}
+                    className={`w-full aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                      isSelected ? "border-purple-400 ring-2 ring-purple-400/30" : "border-white/[0.08] hover:border-white/[0.2]"
+                    }`}>
+                    <img src={bg.url} alt={bg.name} className="w-full h-full object-cover" />
+                    {isSelected && (
+                      <span className="absolute top-1.5 left-1.5 w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center text-white text-xs">✓</span>
+                    )}
+                  </button>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-[10px] text-white/30 truncate max-w-[80%]">{bg.name}</span>
+                    <button onClick={() => deleteSaved(bg.key)}
+                      className="text-white/15 hover:text-red-400 transition-colors">
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
               );
             })}
           </div>
@@ -138,52 +132,39 @@ export function BgSelector({
       {/* AI prompt */}
       {mode === "ai" && (
         <div className="space-y-3">
-          <Input
-            placeholder="例如：浅色木地板，自然光线，旁边有绿植，手机拍摄"
-            value={aiPrompt}
-            onChange={(e) => onAiPromptChange(e.target.value)}
-            className="bg-white/[0.04] border-white/[0.12] text-sm h-12"
-          />
+          <Input placeholder="例如：浅色木地板，自然光线，旁边有绿植，手机拍摄"
+            value={aiPrompt} onChange={(e) => onAiPromptChange(e.target.value)}
+            className="bg-white/[0.04] border-white/[0.12] text-sm h-12" />
           <p className="text-xs text-white/40">AI 将根据描述生成真实室内场景作为背景</p>
         </div>
       )}
 
-      {/* Custom upload */}
+      {/* Custom upload with drag-drop */}
       {mode === "custom" && (
         <div>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files?.[0] || null;
-              onCustomBgChange(file);
-            }}
-            className="hidden"
-            id="custom-bg-input"
-          />
-          <label htmlFor="custom-bg-input">
-            <div className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
-              customBgFile
-                ? "border-purple-400/50 bg-purple-500/5"
-                : "border-white/[0.12] hover:border-white/[0.25] bg-white/[0.02]"
+          <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileSelect} className="hidden" id="custom-bg-input" />
+          <div
+            onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
+              dragOver ? "border-purple-400/60 bg-purple-500/10" :
+              customBgFile ? "border-purple-400/50 bg-purple-500/5" :
+              "border-white/[0.12] hover:border-white/[0.25] bg-white/[0.02]"
             }`}>
-              {customBgFile ? (
-                <div className="space-y-2">
-                  <img
-                    src={URL.createObjectURL(customBgFile)}
-                    alt="Custom background"
-                    className="max-h-40 mx-auto rounded-lg"
-                  />
-                  <p className="text-sm text-purple-400">{customBgFile.name}</p>
-                </div>
-              ) : (
-                <div className="text-sm text-white/40">
-                  <Upload className="w-8 h-8 mx-auto mb-2 text-white/20" />
-                  点击上传背景图
-                </div>
-              )}
-            </div>
-          </label>
+            {customBgFile ? (
+              <div className="space-y-2">
+                <img src={URL.createObjectURL(customBgFile)} alt="Custom" className="max-h-40 mx-auto rounded-lg" />
+                <p className="text-sm text-purple-400">{customBgFile.name}</p>
+                <p className="text-xs text-white/30">点击更换 / 拖放新图片</p>
+              </div>
+            ) : (
+              <div className="text-sm text-white/40">
+                <Upload className="w-10 h-10 mx-auto mb-3 text-white/15" />
+                <p>拖放图片到这里，或点击选择</p>
+                <p className="text-xs text-white/20 mt-1.5">支持 JPG / PNG / WebP</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
