@@ -253,9 +253,9 @@ export default function NewBgReplacePage() {
           />
 
           {/* Model & Prompt Settings */}
-          <details className="mt-6 pt-6 border-t border-white/[0.06] group">
-            <summary className="text-xs font-medium text-foreground/30 hover:text-foreground/50 cursor-pointer select-none transition-colors flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-purple-400/40 group-open:bg-purple-400/60 transition-colors" />
+          <details className="mt-6 pt-6 border-t border-white/[0.1] group">
+            <summary className="text-xs font-medium text-white/55 hover:text-white/80 cursor-pointer select-none transition-colors flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-purple-400/50 group-open:bg-purple-400/70 transition-colors" />
               高级设置（AI 融合模型 · 自定义指令）
             </summary>
             <div className="mt-4 space-y-4">
