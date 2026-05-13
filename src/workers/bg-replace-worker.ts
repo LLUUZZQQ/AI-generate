@@ -24,7 +24,7 @@ async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer): Prom
 
     const apiKey = process.env.OPENAI_API_KEY!;
 
-    // Use Node.js native https — zero SDK/fetch dependency
+    // Call OpenRouter with OpenRouter key
     const body = JSON.stringify({
       model: "openai/gpt-5.4-image-2",
       messages: [
@@ -40,8 +40,7 @@ async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer): Prom
       max_tokens: 4096,
     });
 
-    console.log("[bg-worker] GPT-5.4: key prefix:", apiKey.substring(0, 12) + "...",
-      "suffix:..." + apiKey.substring(apiKey.length - 8));
+    console.log("[bg-worker] GPT-5.4: calling OpenAI directly...");
     const https = await import("https");
     const resp = await new Promise<{ status: number; data: any }>((resolve, reject) => {
       const req = https.request("https://openrouter.ai/api/v1/chat/completions", {
