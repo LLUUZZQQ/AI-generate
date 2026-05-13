@@ -265,17 +265,20 @@ export default function NewBgReplacePage() {
                   {[
                     { value: "google/gemini-3.1-flash-image-preview", label: "Gemini 3.1 Flash", sub: "更快更便宜 · 默认" },
                     { value: "openai/gpt-5.4-image-2", label: "GPT-5.4 Image 2", sub: "最佳质量" },
-                    { value: "recraft/recraft-v4", label: "Recraft V4", sub: "2K 专业品质 · ¥1/张" },
-                    { value: "recraft/recraft-v4-pro", label: "Recraft V4 Pro", sub: "2K 旗舰品质 · ¥1.75/张" },
-                  ].map((m) => (
+                    { value: "recraft/recraft-v4", label: "Recraft V4", sub: "暂不可用", disabled: true },
+                    { value: "recraft/recraft-v4-pro", label: "Recraft V4 Pro", sub: "暂不可用", disabled: true },
+                  ].map((m: any) => (
                     <button
                       key={m.value}
                       type="button"
-                      onClick={() => setAiModel(m.value)}
+                      disabled={m.disabled}
+                      onClick={() => !m.disabled && setAiModel(m.value)}
                       className={`text-left px-3 py-2.5 rounded-lg border text-sm transition-all ${
-                        aiModel === m.value
-                          ? "border-purple-400/40 bg-purple-500/10 text-purple-300"
-                          : "border-white/[0.08] bg-white/[0.02] text-white/50 hover:border-white/[0.15]"
+                        m.disabled
+                          ? "border-white/[0.03] bg-white/[0.01] text-white/15 cursor-not-allowed"
+                          : aiModel === m.value
+                            ? "border-purple-400/40 bg-purple-500/10 text-purple-300"
+                            : "border-white/[0.08] bg-white/[0.02] text-white/50 hover:border-white/[0.15]"
                       }`}
                     >
                       <div className="font-medium text-xs">{m.label}</div>
