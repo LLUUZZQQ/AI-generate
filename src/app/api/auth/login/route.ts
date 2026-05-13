@@ -15,6 +15,7 @@ export async function POST(req: NextRequest) {
 
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user || !user.password) return error(40100, "邮箱或密码错误");
+  if (user.banned) return error(40301, "账号已被封禁");
 
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) return error(40100, "邮箱或密码错误");
