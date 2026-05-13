@@ -109,7 +109,9 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">工作台</h1>
-          <p className="text-xs text-foreground/25 mt-1">你好，{user?.name ?? user?.email ?? "..."}</p>
+          <p className="text-sm text-white/50 mt-1">
+            你好，<span className="font-semibold text-white/70">{user?.name ?? user?.email ?? "..."}</span>
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" className="h-8 px-3 text-xs border-border hover:bg-white/[0.03]" onClick={exportCSV}>
