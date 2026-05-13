@@ -11,7 +11,14 @@ const POLL_INTERVAL = 3000; // 3 seconds
 
 async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer): Promise<Buffer | null> {
   try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY!,
+      baseURL: process.env.OPENAI_BASE_URL || "https://openrouter.ai/api/v1",
+      defaultHeaders: {
+        "HTTP-Referer": process.env.NEXT_PUBLIC_URL || "http://localhost:3000",
+        "X-Title": "FrameCraft",
+      },
+    });
 
     const productB64 = originalBuffer.toString("base64");
     const bgB64 = bgBuffer.toString("base64");
