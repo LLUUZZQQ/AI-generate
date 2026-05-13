@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, Download, Loader2, XCircle, PauseCircle } from "lucide-react";
+import { ArrowLeft, Download, Loader2, XCircle, PauseCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ResultCompare } from "@/components/background-replace/result-compare";
@@ -59,6 +59,7 @@ export default function BgReplaceTaskPage() {
   };
 
   const handleCancel = async (pause: boolean) => {
+    if (!pause && !window.confirm("确定取消任务？积分将自动退还。")) return;
     const res = await fetch(`/api/background-replace/${taskId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -130,17 +131,17 @@ export default function BgReplaceTaskPage() {
                 {task.status === "pending" ? "正在等待 Worker 处理" : "AI 正在移除背景 · 合成场景 · 优化细节"}
               </p>
             </div>
-            <div className="flex gap-2 shrink-0">
+            <div className="flex items-center gap-2 shrink-0">
               {task.status === "processing" && (
-                <Button size="sm" variant="ghost" onClick={() => handleCancel(true)}
-                  className="text-white/40 hover:text-yellow-400 h-8 px-2">
-                  <PauseCircle className="w-4 h-4" />
-                </Button>
+                <button onClick={() => handleCancel(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/[0.08] text-xs text-white/50 hover:text-yellow-300 hover:border-yellow-500/20 hover:bg-yellow-500/5 transition-all">
+                  <PauseCircle className="w-3.5 h-3.5" /> 暂停
+                </button>
               )}
-              <Button size="sm" variant="ghost" onClick={() => handleCancel(false)}
-                className="text-white/40 hover:text-red-400 h-8 px-2">
-                <XCircle className="w-4 h-4" />
-              </Button>
+              <button onClick={() => handleCancel(false)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/[0.08] text-xs text-white/50 hover:text-red-400 hover:border-red-500/20 hover:bg-red-500/5 transition-all">
+                <XCircle className="w-3.5 h-3.5" /> 取消
+              </button>
             </div>
           </div>
         </div>

@@ -183,18 +183,25 @@ export default function NewBgReplacePage() {
             <div className="mt-4 space-y-4">
               <div>
                 <label className="text-xs font-medium text-foreground/40 mb-2 block">AI 融合模型</label>
-                <div className="relative">
-                  <select
-                    value={aiModel}
-                    onChange={(e) => setAiModel(e.target.value)}
-                    className="w-full appearance-none bg-white/[0.04] border border-white/[0.1] rounded-lg px-3 py-2.5 pr-10 text-sm text-white/80 focus:outline-none focus:border-purple-400/40 focus:ring-1 focus:ring-purple-400/20 transition-colors cursor-pointer"
-                  >
-                    <option value="openai/gpt-5.4-image-2">GPT-5.4 Image 2 — 最佳质量</option>
-                    <option value="google/gemini-3.1-flash-image-preview">Gemini 3.1 Flash — 更快更便宜</option>
-                  </select>
-                  <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                    <path d="M6 9l6 6 6-6" />
-                  </svg>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: "openai/gpt-5.4-image-2", label: "GPT-5.4 Image 2", sub: "最佳质量" },
+                    { value: "google/gemini-3.1-flash-image-preview", label: "Gemini 3.1 Flash", sub: "更快更便宜" },
+                  ].map((m) => (
+                    <button
+                      key={m.value}
+                      type="button"
+                      onClick={() => setAiModel(m.value)}
+                      className={`text-left px-3 py-2.5 rounded-lg border text-sm transition-all ${
+                        aiModel === m.value
+                          ? "border-purple-400/40 bg-purple-500/10 text-purple-300"
+                          : "border-white/[0.08] bg-white/[0.02] text-white/50 hover:border-white/[0.15]"
+                      }`}
+                    >
+                      <div className="font-medium text-xs">{m.label}</div>
+                      <div className="text-[10px] text-foreground/25 mt-0.5">{m.sub}</div>
+                    </button>
+                  ))}
                 </div>
               </div>
               <div>
