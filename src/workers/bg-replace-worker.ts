@@ -23,13 +23,12 @@ async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer): Prom
     console.log("[bg-worker] GPT-5.4 Image 2 blend: product", origMeta.width + "x" + origMeta.height,
       "bg", bgMeta.width + "x" + bgMeta.height);
 
+    const apiKey = process.env.OPENAI_API_KEY!;
+    console.log("[bg-worker] GPT-5.4: key present:", !!apiKey, "len:", apiKey.length);
+
     const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY!,
-      baseURL: process.env.OPENAI_BASE_URL || "https://openrouter.ai/api/v1",
-      defaultHeaders: {
-        "HTTP-Referer": process.env.NEXT_PUBLIC_URL || "http://localhost:3000",
-        "X-Title": "FrameCraft",
-      },
+      apiKey,
+      baseURL: "https://openrouter.ai/api/v1",
     });
 
     const response = await openai.chat.completions.create({
@@ -58,6 +57,11 @@ Critical requirements:
         },
       ],
       max_tokens: 4096,
+    }, {
+      headers: {
+        "HTTP-Referer": process.env.NEXT_PUBLIC_URL || "http://localhost:3000",
+        "X-Title": "FrameCraft",
+      },
     });
 
     // Parse response for image data
