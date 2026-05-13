@@ -40,7 +40,7 @@ async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer): Prom
       max_tokens: 4096,
     });
 
-    console.log("[bg-worker] GPT-5.4: calling OpenAI directly...");
+    console.log("[bg-worker] GPT-5.4: calling OpenRouter...");
     const https = await import("https");
     const resp = await new Promise<{ status: number; data: any }>((resolve, reject) => {
       const req = https.request("https://openrouter.ai/api/v1/chat/completions", {
@@ -60,6 +60,7 @@ async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer): Prom
         });
       });
       req.on("error", reject);
+      req.setTimeout(60000, () => { req.destroy(); reject(new Error("Request timeout")); });
       req.write(body);
       req.end();
     });
