@@ -33,18 +33,15 @@ const engNames: Record<string, string> = {
 async function generateImage(prompt: string): Promise<Buffer | null> {
   const apiKey = process.env.OPENAI_API_KEY!;
   const body = JSON.stringify({
-    model: "openai/gpt-5.4-image-2",
-    messages: [{
-      role: "user",
-      content: [
-        { type: "text", text: `Generate a photorealistic image: ${prompt}\n\nIMPORTANT: No text, no watermark, no logo, no products or objects in the scene. Just an empty background scene.` },
-      ],
-    }],
-    max_tokens: 4096,
+    model: "openai/dall-e-3",
+    prompt: `${prompt} No text, watermark, or logo. No products or objects. Just empty background scene.`,
+    n: 1,
+    size: "1024x1024",
+    response_format: "b64_json",
   });
 
-  console.log("  Calling OpenRouter...");
-  const resp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+  console.log("  Calling OpenRouter images.generate...");
+  const resp = await fetch("https://openrouter.ai/api/v1/images/generations", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${apiKey}`,
@@ -53,48 +50,31 @@ async function generateImage(prompt: string): Promise<Buffer | null> {
       "X-Title": "FrameCraft",
     },
     body,
-    signal: AbortSignal.timeout(60000),
+    signal: AbortSignal.timeout(120000),
   });
 
   if (!resp.ok) {
     const errText = await resp.text();
-    console.error("  HTTP", resp.status, errText.substring(0, 200));
+    console.error("  HTTP", resp.status, errText.substring(0, 300));
     return null;
   }
 
   const data = await resp.json() as any;
-  const content = data?.choices?.[0]?.message?.content;
 
-  // Try base64 in content
-  if (typeof content === "string" && content.length > 1000) {
-    const b64 = content.includes("base64,") ? content.split("base64,")[1] : content;
-    return Buffer.from(b64, "base64");
+  // Try b64_json first
+  if (data?.data?.[0]?.b64_json) {
+    return Buffer.from(data.data[0].b64_json, "base64");
   }
 
-  // Try structured content
-  if (Array.isArray(content)) {
-    for (const part of content as any[]) {
-      if (part.type === "image_url" && part.image_url?.url) {
-        const url: string = part.image_url.url;
-        if (url.startsWith("data:")) {
-          const b64 = url.includes("base64,") ? url.split("base64,")[1] : url;
-          return Buffer.from(b64, "base64");
-        }
-        const imgResp = await fetch(url);
-        if (imgResp.ok) return Buffer.from(await imgResp.arrayBuffer());
-      }
-    }
-  }
-
-  // Try images field
-  const images = data?.choices?.[0]?.message?.images;
-  if (images?.[0]?.image_url?.url) {
-    const url: string = images[0].image_url.url;
+  // Try URL
+  const url = data?.data?.[0]?.url;
+  if (url) {
+    console.log("  Downloading from URL...");
     const imgResp = await fetch(url);
     if (imgResp.ok) return Buffer.from(await imgResp.arrayBuffer());
   }
 
-  console.error("  Could not extract image from response");
+  console.error("  Could not extract image from response:", JSON.stringify(data).substring(0, 200));
   return null;
 }
 

@@ -25,7 +25,20 @@ async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer, custo
     const apiKey = process.env.OPENAI_API_KEY!;
 
     const model = aiModel || "openai/gpt-5.4-image-2";
-    const defaultPrompt = "You are a professional product photographer. Take EVERYTHING from the first image — the product AND any packaging, boxes, bags, accessories — and naturally place it ALL into the second image's scene.\n\nCRITICAL RULES:\n1. If the first image shows shoes in a box, KEEP THE BOX. Do NOT remove any packaging.\n2. Find the most natural surface to place the product — a table, desk, stairs, stool, grass, floor, ground, or any flat surface in the scene. The product must sit ON something, never float in mid-air.\n3. Match the scene's natural lighting direction and intensity. Generate realistic ground-contact shadows under the product.\n4. Keep the product's exact colors, shape, and texture — do NOT alter them.\n5. Match the camera perspective and angle of the scene. Scale the product to fit naturally.\n6. Output must look like a real, unposed photo — not a studio shot, not a product listing, not overly polished.\n7. No text, watermark, or logo.";
+    const defaultPrompt = `You are a photorealistic image compositor. Take the product from the FIRST image and place it into the SECOND image's scene. The result must be INDISTINGUISHABLE from a real photograph.
+
+CRITICAL RULES:
+1. PRESERVE everything in the product image — product, packaging, boxes, bags, accessories. Do NOT discard anything.
+2. PROPORTION: Do NOT scale, stretch, or resize the product. Keep its exact original size and proportions. The product must look the same size as in the original photo.
+3. GROUNDING: Place the product on a real surface in the scene (floor, table, ground, grass, desk, stairs). The product must physically touch the surface. Generate accurate contact shadows where the product meets the surface.
+4. LIGHTING: Analyze the background's light source direction, color temperature, and intensity. Match the product's lighting exactly. If the background has warm afternoon sunlight, the product must have warm afternoon sunlight on it.
+5. SHADOWS: Generate realistic, soft shadows that match the background light direction. Shadow softness must match the background's shadow softness. Contact shadows should be sharp, cast shadows softer.
+6. PERSPECTIVE: Match the camera angle and perspective of the background exactly. If the background is shot from above, view the product from above. If eye-level, keep eye-level.
+7. DEPTH OF FIELD: Match the background's focus. If the background has shallow depth of field (blurry far away), match that blur on the product edges if they would be at the same depth.
+8. COLOR & TEXTURE: Keep product colors 100% identical. Do NOT shift hues, saturation, or white balance on the product itself. The product's material texture must remain unchanged.
+9. NOISE: Add subtle sensor noise/grain matching the background to unify the image. Real phone photos have noise.
+10. QUALITY: Ordinary smartphone photo quality — NOT studio, NOT CGI, NOT HDR, NOT overly sharp. Slight imperfection makes it real.
+11. NO text, watermark, or logo.`;
     const prompt = customPrompt
       ? `${defaultPrompt}\n\nADDITIONAL USER INSTRUCTIONS: ${customPrompt}`
       : defaultPrompt;
@@ -79,52 +92,73 @@ async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer, custo
 
     // Parse response for image data
     const content = message.content;
+    let resultBuf: Buffer | null = null;
 
     // Some providers return base64 image as plain string
     if (typeof content === "string") {
       if (content.startsWith("data:image") || content.length > 1000) {
         const b64 = content.includes("base64,") ? content.split("base64,")[1] : content;
         console.log("[bg-worker] GPT-5.4: got base64 from content, len:", b64.length);
-        return Buffer.from(b64, "base64");
+        resultBuf = Buffer.from(b64, "base64");
+      } else {
+        console.error("[bg-worker] GPT-5.4: text-only response:", content.substring(0, 200));
       }
-      console.error("[bg-worker] GPT-5.4: text-only response:", content.substring(0, 200));
-      return null;
     }
 
     // Structured content array — look for image parts
-    if (content) {
+    if (!resultBuf && content) {
       for (const part of content as any[]) {
         if (part.type === "image_url" && part.image_url?.url) {
           const imgUrl: string = part.image_url.url;
           console.log("[bg-worker] GPT-5.4: got image_url in content");
           if (imgUrl.startsWith("data:")) {
             const b64 = imgUrl.includes("base64,") ? imgUrl.split("base64,")[1] : imgUrl;
-            return Buffer.from(b64, "base64");
+            resultBuf = Buffer.from(b64, "base64");
+          } else {
+            const imgRes = await fetch(imgUrl);
+            if (imgRes.ok) resultBuf = Buffer.from(await imgRes.arrayBuffer());
           }
-          const res = await fetch(imgUrl);
-          if (res.ok) return Buffer.from(await res.arrayBuffer());
+          break;
         }
       }
     }
 
     // Some models put image in a special field
-    const msgAny = message as any;
-    if (msgAny.images?.[0]?.image_url?.url) {
-      const imgUrl = msgAny.images[0].image_url.url;
-      console.log("[bg-worker] GPT-5.4: got images[0]");
-      if (imgUrl.startsWith("data:")) {
-        const b64 = imgUrl.includes("base64,") ? imgUrl.split("base64,")[1] : imgUrl;
-        return Buffer.from(b64, "base64");
+    if (!resultBuf) {
+      const msgAny = message as any;
+      if (msgAny.images?.[0]?.image_url?.url) {
+        const imgUrl = msgAny.images[0].image_url.url;
+        console.log("[bg-worker] GPT-5.4: got images[0]");
+        if (imgUrl.startsWith("data:")) {
+          const b64 = imgUrl.includes("base64,") ? imgUrl.split("base64,")[1] : imgUrl;
+          resultBuf = Buffer.from(b64, "base64");
+        } else {
+          const imgRes = await fetch(imgUrl);
+          if (imgRes.ok) resultBuf = Buffer.from(await imgRes.arrayBuffer());
+        }
       }
-      const res = await fetch(imgUrl);
-      if (res.ok) return Buffer.from(await res.arrayBuffer());
     }
 
-    console.error("[bg-worker] GPT-5.4: could not extract image from response");
-    console.error("[bg-worker] Response keys:", Object.keys(message));
-    console.error("[bg-worker] Content type:", typeof content);
-    console.error("[bg-worker] Content preview:", JSON.stringify(content).substring(0, 300));
-    return null;
+    if (!resultBuf) {
+      console.error("[bg-worker] GPT-5.4: could not extract image");
+      return null;
+    }
+
+    // Restore original dimensions — AI output may be scaled
+    if (origMeta.width && origMeta.height) {
+      const aiMeta = await sharp(resultBuf).metadata();
+      if (aiMeta.width !== origMeta.width || aiMeta.height !== origMeta.height) {
+        console.log("[bg-worker] GPT-5.4: resizing", aiMeta.width + "x" + aiMeta.height,
+          "→", origMeta.width + "x" + origMeta.height);
+        resultBuf = await sharp(resultBuf)
+          .resize(origMeta.width, origMeta.height, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+          .png()
+          .toBuffer();
+      }
+    }
+
+    console.log("[bg-worker] GPT-5.4: done, size:", resultBuf.length);
+    return resultBuf;
   } catch (e: any) {
     console.error("[bg-worker] GPT-5.4 blend failed:", e.message?.substring(0, 300));
     return null;

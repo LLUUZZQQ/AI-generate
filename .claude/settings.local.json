@@ -149,7 +149,8 @@
       "PowerShell(npx tsx scripts/check-db-schema.ts)",
       "PowerShell(npx tsx scripts/add-columns.ts)",
       "PowerShell(npx tsx scripts/process-otter-image.ts 2>&1)",
-      "PowerShell(git *)"
+      "PowerShell(git *)",
+      "PowerShell(npx tsx scripts/generate-template-scenes.ts 2>&1)"
     ]
   }
 }
