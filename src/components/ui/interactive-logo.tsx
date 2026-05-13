@@ -8,11 +8,15 @@ function OtterRelief() {
   const meshRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Mesh>(null);
 
-  // Load textures
-  const [albedo, normalMap] = useTexture([
-    "/otters/otters.png",
-    "/otters/otters-normal.png",
+  // Load high-quality assets: albedo + alpha mask + normal map
+  const [albedo, alphaMask, normalMap] = useTexture([
+    "/otters/albedo.png",
+    "/otters/alpha-mask.png",
+    "/otters/normal.png",
   ]);
+
+  // Make alpha mask transparent (white = opaque, black = transparent)
+  alphaMask.flipY = false;
 
   const w = 2.6;
   const h = 2.6;
@@ -115,20 +119,15 @@ function OtterRelief() {
 
         {/* Main 3D extruded relief block */}
         <mesh ref={meshRef} geometry={geometry} position={[0, 0, -0.2]}>
-          <meshPhysicalMaterial
+          <meshStandardMaterial
             map={albedo}
+            alphaMap={alphaMask}
             normalMap={normalMap}
-            normalScale={new THREE.Vector2(0.6, 0.6)}
-            metalness={0.05}
-            roughness={0.3}
-            clearcoat={0.3}
-            clearcoatRoughness={0.1}
-            specularIntensity={0.8}
-            specularColor="#ffffff"
-            sheen={0.2}
-            sheenRoughness={0.5}
-            sheenColor="#c8b8ff"
-            envMapIntensity={0.4}
+            normalScale={new THREE.Vector2(1.0, 1.0)}
+            metalness={0.02}
+            roughness={0.35}
+            transparent
+            side={THREE.FrontSide}
           />
         </mesh>
 
@@ -152,12 +151,12 @@ export function InteractiveLogo() {
   return (
     <div className="w-full aspect-square max-w-[420px] mx-auto cursor-grab active:cursor-grabbing select-none">
       <Canvas
-        camera={{ position: [0, 0.1, 7.5], fov: 38 }}
+        camera={{ position: [0, 0.15, 7.5], fov: 38 }}
         gl={{
           alpha: true,
           antialias: true,
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.2,
+          toneMappingExposure: 1.15,
         }}
         dpr={[1, 2]}
         style={{ background: "transparent" }}
@@ -165,13 +164,16 @@ export function InteractiveLogo() {
         {/* Dark studio environment */}
         <color attach="background" args={["#0a0a14"]} />
 
-        {/* Premium softbox lighting */}
-        <ambientLight intensity={0.25} color="#222244" />
-        <directionalLight position={[4, 3, 6]} intensity={6} color="#ffffff" />
-        <directionalLight position={[-3, 2, -4]} intensity={3} color="#c8c0ff" />
-        <directionalLight position={[0, -4, 3]} intensity={2} color="#e8d0ff" />
-        <pointLight position={[0, 3, 4]} intensity={2.5} color="#aaccff" />
-        <pointLight position={[2, -2, 3]} intensity={1.5} color="#ffccdd" />
+        {/* Key light — main white softbox from top-right */}
+        <directionalLight position={[5, 4, 7]} intensity={9} color="#ffffff" />
+        {/* Fill light — cool purple from left */}
+        <directionalLight position={[-4, 2, -3]} intensity={3.5} color="#c8c0ff" />
+        {/* Rim light — warm from behind/below */}
+        <directionalLight position={[0, -3, -4]} intensity={2} color="#ffd0e0" />
+        {/* Top accent */}
+        <pointLight position={[0, 4, 5]} intensity={3} color="#aaccff" />
+        {/* Ambient fill */}
+        <ambientLight intensity={0.3} color="#222244" />
 
         <OtterRelief />
       </Canvas>

@@ -147,7 +147,8 @@
       "mcp__plugin_vercel_vercel__get_runtime_logs",
       "PowerShell(npx prisma db push 2>&1)",
       "PowerShell(npx tsx scripts/check-db-schema.ts)",
-      "PowerShell(npx tsx scripts/add-columns.ts)"
+      "PowerShell(npx tsx scripts/add-columns.ts)",
+      "PowerShell(npx tsx scripts/process-otter-image.ts 2>&1)"
     ]
   }
 }
