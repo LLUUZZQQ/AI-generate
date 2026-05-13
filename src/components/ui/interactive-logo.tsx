@@ -14,74 +14,45 @@ function OtterRelief() {
     "/otters/normal.png",
   ]);
 
-  // Normal map: Three.js expects Y-up normals, flip if needed
-  normalMap.flipY = true;
+  // Texture encoding
   normalMap.colorSpace = THREE.LinearSRGBColorSpace ?? THREE.SRGBColorSpace;
   albedo.colorSpace = THREE.SRGBColorSpace;
-  alphaMask.colorSpace = THREE.LinearSRGBColorSpace ?? THREE.SRGBColorSpace;
 
-  // Match old F-logo scale — fill the full viewport
-  const blockW = 4.0;
-  const blockH = 4.0;
-  const cornerR = 0.5;
-  const hw = blockW / 2;
-  const hh = blockH / 2;
+  // Block fills same area as the old F-logo
+  const size = 4.4;
+  const r = 0.45;
+  const half = size / 2;
 
-  // Rounded rectangle 2D shape
   const shape = useMemo(() => {
     const s = new THREE.Shape();
-    const l = -hw + cornerR;
-    const r = hw - cornerR;
-    const b = -hh + cornerR;
-    const t = hh - cornerR;
-
-    s.moveTo(l, -hh);
-    s.lineTo(r, -hh);
-    s.quadraticCurveTo(hw, -hh, hw, b);
-    s.lineTo(hw, t);
-    s.quadraticCurveTo(hw, hh, r, hh);
-    s.lineTo(l, hh);
-    s.quadraticCurveTo(-hw, hh, -hw, t);
-    s.lineTo(-hw, b);
-    s.quadraticCurveTo(-hw, -hh, l, -hh);
+    const l = -half + r, ri = half - r, b = -half + r, t = half - r;
+    s.moveTo(l, -half); s.lineTo(ri, -half);
+    s.quadraticCurveTo(half, -half, half, b); s.lineTo(half, t);
+    s.quadraticCurveTo(half, half, ri, half); s.lineTo(l, half);
+    s.quadraticCurveTo(-half, half, -half, t); s.lineTo(-half, b);
+    s.quadraticCurveTo(-half, -half, l, -half);
     return s;
   }, []);
 
-  // Deeper extrusion for substantial 3D relief
-  const geo = useMemo(() => {
-    return new THREE.ExtrudeGeometry(shape, {
-      depth: 0.55,
-      bevelEnabled: true,
-      bevelThickness: 0.15,
-      bevelSize: 0.12,
-      bevelSegments: 4,
-    });
-  }, [shape]);
+  const geo = useMemo(() => new THREE.ExtrudeGeometry(shape, {
+    depth: 0.6,
+    bevelEnabled: true,
+    bevelThickness: 0.14,
+    bevelSize: 0.12,
+    bevelSegments: 5,
+  }), [shape]);
 
-  // Glow silhouette
   const glowGeo = useMemo(() => {
-    const s = new THREE.Shape();
     const pad = 0.35;
-    const gx = -hw - pad;
-    const gy = -hh - pad;
-    const gw = blockW + pad * 2;
-    const gh = blockH + pad * 2;
-    const gr = cornerR + pad;
-
-    const l = gx + gr;
-    const r2 = gx + gw - gr;
-    const b = gy + gr;
-    const t = gy + gh - gr;
-
-    s.moveTo(l, gy);
-    s.lineTo(r2, gy);
-    s.quadraticCurveTo(gx + gw, gy, gx + gw, b);
-    s.lineTo(gx + gw, t);
-    s.quadraticCurveTo(gx + gw, gy + gh, r2, gy + gh);
-    s.lineTo(l, gy + gh);
-    s.quadraticCurveTo(gx, gy + gh, gx, t);
-    s.lineTo(gx, b);
-    s.quadraticCurveTo(gx, gy, l, gy);
+    const s = new THREE.Shape();
+    const g = half + pad;
+    const gr = r + pad;
+    const l = -g + gr, ri = g - gr, b = -g + gr, t2 = g - gr;
+    s.moveTo(l, -g); s.lineTo(ri, -g);
+    s.quadraticCurveTo(g, -g, g, b); s.lineTo(g, t2);
+    s.quadraticCurveTo(g, g, ri, g); s.lineTo(l, g);
+    s.quadraticCurveTo(-g, g, -g, t2); s.lineTo(-g, b);
+    s.quadraticCurveTo(-g, -g, l, -g);
     return new THREE.ShapeGeometry(s);
   }, []);
 
@@ -89,8 +60,9 @@ function OtterRelief() {
     if (meshRef.current) {
       const mx = (state.mouse.x || 0) * 0.4;
       const my = (state.mouse.y || 0) * 0.25;
-      meshRef.current.rotation.y += (mx * 0.6 - meshRef.current.rotation.y) * 0.008;
-      meshRef.current.rotation.x += (my * 0.3 - meshRef.current.rotation.x) * 0.008;
+      meshRef.current.rotation.y += 0.002;
+      meshRef.current.rotation.x += (my - meshRef.current.rotation.x) * 0.015;
+      meshRef.current.rotation.y += (mx * 0.4 - meshRef.current.rotation.y) * 0.01;
     }
     if (glowRef.current) {
       glowRef.current.rotation.copy(meshRef.current?.rotation || new THREE.Euler());
@@ -98,46 +70,36 @@ function OtterRelief() {
   });
 
   return (
-    <Float speed={1.2} rotationIntensity={0.08} floatIntensity={0.2}>
+    <Float speed={1.3} rotationIntensity={0.06} floatIntensity={0.2}>
       <group>
-        {/* Back glow silhouette */}
-        <mesh ref={glowRef as any} geometry={glowGeo} position={[0, 0, -0.55]}>
-          <meshBasicMaterial
-            color="#8b5cf6"
-            transparent
-            opacity={0.07}
-            side={THREE.DoubleSide}
-          />
+        {/* Back glow */}
+        <mesh ref={glowRef as any} geometry={glowGeo} position={[0, 0, -0.65]}>
+          <meshBasicMaterial color="#8b5cf6" transparent opacity={0.06} side={THREE.DoubleSide} />
         </mesh>
 
-        {/* Inner glow behind relief */}
-        <mesh position={[0, 0, -0.3]}>
-          <planeGeometry args={[blockW * 0.9, blockH * 0.9]} />
-          <meshBasicMaterial
-            color="#b57bee"
-            transparent
-            opacity={0.04}
-            side={THREE.DoubleSide}
-          />
+        {/* Inner ambient glow behind relief */}
+        <mesh position={[0, 0, -0.4]} scale={[0.9, 0.9, 1]}>
+          <planeGeometry args={[size, size]} />
+          <meshBasicMaterial color="#b57bee" transparent opacity={0.04} side={THREE.DoubleSide} />
         </mesh>
 
-        {/* Main extruded relief */}
-        <mesh ref={meshRef} geometry={geo} position={[0, 0, -0.15]}>
+        {/* 3D EXTRUDED RELIEF BLOCK */}
+        <mesh ref={meshRef} geometry={geo} position={[0, 0, -0.2]}>
           <meshStandardMaterial
             map={albedo}
             alphaMap={alphaMask}
             normalMap={normalMap}
-            normalScale={new THREE.Vector2(1.0, 1.0)}
-            metalness={0.02}
-            roughness={0.35}
+            normalScale={new THREE.Vector2(1.2, 1.2)}
+            metalness={0.03}
+            roughness={0.28}
             transparent
-            alphaTest={0.1}
+            alphaTest={0.05}
             side={THREE.DoubleSide}
           />
         </mesh>
 
-        {/* Edge wireframe */}
-        <lineSegments geometry={new THREE.EdgesGeometry(geo)} position={[0, 0, -0.15]}>
+        {/* Edge wireframe accent */}
+        <lineSegments geometry={new THREE.EdgesGeometry(geo)} position={[0, 0, -0.2]}>
           <lineBasicMaterial color="#b57bee" transparent opacity={0.15} />
         </lineSegments>
       </group>
@@ -147,9 +109,9 @@ function OtterRelief() {
 
 export function InteractiveLogo() {
   return (
-    <div className="w-full aspect-square max-w-[420px] mx-auto cursor-grab active:cursor-grabbing select-none">
+    <div className="w-full aspect-square max-w-[440px] mx-auto cursor-grab active:cursor-grabbing select-none">
       <Canvas
-        camera={{ position: [0, 0.1, 9], fov: 35 }}
+        camera={{ position: [0, 0.2, 9], fov: 34 }}
         gl={{
           alpha: true,
           antialias: true,
@@ -160,16 +122,11 @@ export function InteractiveLogo() {
       >
         <color attach="background" args={["#0a0a14"]} />
 
-        {/* Key light — softbox from above-right */}
-        <directionalLight position={[5, 5, 8]} intensity={10} color="#ffffff" />
-        {/* Fill — cooler, from left */}
-        <directionalLight position={[-5, 2, -3]} intensity={4} color="#d0c8ff" />
-        {/* Rim — warm, from behind-below */}
+        <ambientLight intensity={0.25} color="#222244" />
+        <directionalLight position={[6, 5, 9]} intensity={10} color="#ffffff" />
+        <directionalLight position={[-5, 3, -4]} intensity={4} color="#d0c8ff" />
         <directionalLight position={[0, -4, -5]} intensity={2.5} color="#ffd0e0" />
-        {/* Top highlight */}
-        <pointLight position={[0, 5, 5]} intensity={3} color="#aaccff" />
-        {/* Ambient */}
-        <ambientLight intensity={0.35} color="#1a1a33" />
+        <pointLight position={[0, 5, 6]} intensity={3} color="#aaccff" />
 
         <OtterRelief />
       </Canvas>
