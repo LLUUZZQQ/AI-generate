@@ -18,7 +18,13 @@ export default function NewBgReplacePage() {
   const [step, setStep] = useState(1);
   const [files, setFiles] = useState<File[]>([]);
   const [mode, setMode] = useState<"ai" | "preset" | "custom">("preset");
-  const [selectedBgId, setSelectedBgId] = useState<string | null>(null);
+  const [selectedBgIds, setSelectedBgIds] = useState<string[]>([]);
+
+  const toggleBg = (id: string) => {
+    setSelectedBgIds((prev) =>
+      prev.includes(id) ? prev.filter((bid) => bid !== id) : [...prev, id]
+    );
+  };
   const [aiPrompt, setAiPrompt] = useState("");
   const [customBgFile, setCustomBgFile] = useState<File | null>(null);
   const [customPrompt, setCustomPrompt] = useState("");
@@ -65,7 +71,7 @@ export default function NewBgReplacePage() {
   const canNext = () => {
     if (step === 1) return files.length > 0;
     if (step === 2) {
-      if (mode === "preset") return !!selectedBgId;
+      if (mode === "preset") return selectedBgIds.length > 0;
       if (mode === "ai") return aiPrompt.trim().length > 0;
       if (mode === "custom") return !!customBgFile;
     }
@@ -77,6 +83,7 @@ export default function NewBgReplacePage() {
     setSubmitting(true);
 
     try {
+      // Upload all product files first
       const fileKeys: string[] = [];
       for (const file of files) {
         const formData = new FormData();
@@ -88,8 +95,7 @@ export default function NewBgReplacePage() {
           setSubmitting(false);
           return;
         }
-        const key = uploadData.data.key || uploadData.data.filename;
-        fileKeys.push(key);
+        fileKeys.push(uploadData.data.key || uploadData.data.filename);
       }
 
       let customBgKey: string | undefined;
@@ -106,35 +112,44 @@ export default function NewBgReplacePage() {
         customBgKey = uploadData.data.key || uploadData.data.filename;
       }
 
-      const taskRes = await fetch("/api/background-replace", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fileKeys,
-          backgroundMode: mode,
-          backgroundId: mode === "preset" ? selectedBgId : undefined,
-          customBgKey: mode === "custom" ? customBgKey : undefined,
-          aiPrompt: mode === "ai" ? aiPrompt : undefined,
-          customPrompt: customPrompt.trim() || undefined,
-          aiModel,
-        }),
-      });
-      const taskData = await taskRes.json();
+      // Determine backgrounds to process
+      const bgIds = mode === "preset"
+        ? selectedBgIds
+        : [undefined]; // AI or custom — one task
 
-      if (taskData.code === 40003) {
-        toast.error("积分不足，请先充值");
-        setSubmitting(false);
-        return;
+      const createdIds: string[] = [];
+      for (const bgId of bgIds) {
+        const taskRes = await fetch("/api/background-replace", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fileKeys,
+            backgroundMode: mode,
+            backgroundId: mode === "preset" ? bgId : undefined,
+            customBgKey: mode === "custom" ? customBgKey : undefined,
+            aiPrompt: mode === "ai" ? aiPrompt : undefined,
+            customPrompt: customPrompt.trim() || undefined,
+            aiModel,
+          }),
+        });
+        const taskData = await taskRes.json();
+
+        if (taskData.code === 40003) {
+          toast.error("积分不足，请先充值");
+          setSubmitting(false);
+          return;
+        }
+        if (taskData.code !== 0) {
+          toast.error(taskData.message || "创建失败");
+          setSubmitting(false);
+          return;
+        }
+        createdIds.push(taskData.data.taskId);
       }
 
-      if (taskData.code !== 0) {
-        toast.error(taskData.message || "创建失败");
-        setSubmitting(false);
-        return;
-      }
-
-      toast.success(`任务已创建，消耗 ${files.length} 积分`);
-      router.push(`/background-replace/${taskData.data.taskId}`);
+      const totalCredits = files.length * createdIds.length;
+      toast.success(`已创建 ${createdIds.length} 个任务，消耗 ${totalCredits} 积分`);
+      router.push(`/background-replace/${createdIds[0]}`);
     } catch {
       toast.error("网络错误，请重试");
       setSubmitting(false);
@@ -208,8 +223,8 @@ export default function NewBgReplacePage() {
           <BgSelector
             mode={mode}
             onModeChange={setMode}
-            selectedBgId={selectedBgId}
-            onSelectBg={setSelectedBgId}
+            selectedBgIds={selectedBgIds}
+            onToggleBg={toggleBg}
             aiPrompt={aiPrompt}
             onAiPromptChange={setAiPrompt}
             customBgFile={customBgFile}
@@ -275,9 +290,15 @@ export default function NewBgReplacePage() {
             <div className="flex justify-between py-2.5 border-b border-white/[0.05]">
               <span className="text-sm text-foreground/35">背景方式</span>
               <span className="text-sm font-medium">
-                {mode === "ai" ? "AI 智能生成" : mode === "preset" ? "预设模板" : "自定义上传"}
+                {mode === "ai" ? "AI 智能生成" : mode === "preset" ? `预设模板 ×${selectedBgIds.length}` : "自定义上传"}
               </span>
             </div>
+            {mode === "preset" && selectedBgIds.length > 1 && (
+              <div className="flex justify-between py-2.5 border-b border-white/[0.05]">
+                <span className="text-sm text-foreground/35">任务数量</span>
+                <span className="text-sm font-medium text-purple-400">{selectedBgIds.length} 个任务</span>
+              </div>
+            )}
             {mode === "ai" && aiPrompt && (
               <div className="flex justify-between py-2.5 border-b border-white/[0.05]">
                 <span className="text-sm text-foreground/35">场景描述</span>
@@ -345,7 +366,7 @@ export default function NewBgReplacePage() {
             ) : (
               <Sparkles className="w-4 h-4 mr-1.5" />
             )}
-            提交任务（{files.length} 积分）
+            提交任务（{files.length * (mode === "preset" ? Math.max(1, selectedBgIds.length) : 1)} 积分）
           </Button>
         )}
       </div>

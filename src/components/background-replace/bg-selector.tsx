@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Wand2, LayoutGrid, Upload, Loader2, Sparkles } from "lucide-react";
+import { Wand2, LayoutGrid, Upload, Loader2, Sparkles, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -16,8 +16,8 @@ interface BackgroundTemplate {
 interface BgSelectorProps {
   mode: BgMode;
   onModeChange: (mode: BgMode) => void;
-  selectedBgId: string | null;
-  onSelectBg: (id: string | null) => void;
+  selectedBgIds: string[];
+  onToggleBg: (id: string) => void;
   aiPrompt: string;
   onAiPromptChange: (prompt: string) => void;
   customBgFile: File | null;
@@ -26,7 +26,7 @@ interface BgSelectorProps {
 }
 
 export function BgSelector({
-  mode, onModeChange, selectedBgId, onSelectBg,
+  mode, onModeChange, selectedBgIds, onToggleBg,
   aiPrompt, onAiPromptChange, customBgFile, onCustomBgChange,
   recommendedIds,
 }: BgSelectorProps) {
@@ -96,33 +96,41 @@ export function BgSelector({
           <p className="text-sm text-white/40 text-center py-8">暂无预设背景模板</p>
         ) : (
           <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-            {templates.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => onSelectBg(selectedBgId === t.id ? null : t.id)}
-                className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                  selectedBgId === t.id
-                    ? "border-purple-400 ring-2 ring-purple-400/30"
-                    : "border-white/[0.08] hover:border-white/[0.2]"
-                }`}
-              >
-                {t.thumbnailUrl ? (
-                  <img src={t.thumbnailUrl} alt={t.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-white/[0.04] flex items-center justify-center">
-                    <LayoutGrid className="w-6 h-6 text-white/20" />
-                  </div>
-                )}
-                {recommendedIds?.includes(t.id) && (
-                  <span className="absolute top-1.5 right-1.5 flex items-center gap-0.5 text-[9px] bg-purple-500/80 text-white px-1.5 py-0.5 rounded-full backdrop-blur-sm">
-                    <Sparkles className="w-2.5 h-2.5" /> 推荐
+            {templates.map((t) => {
+              const isSelected = selectedBgIds.includes(t.id);
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => onToggleBg(t.id)}
+                  className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                    isSelected
+                      ? "border-purple-400 ring-2 ring-purple-400/30"
+                      : "border-white/[0.08] hover:border-white/[0.2]"
+                  }`}
+                >
+                  {t.thumbnailUrl ? (
+                    <img src={t.thumbnailUrl} alt={t.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-white/[0.04] flex items-center justify-center">
+                      <LayoutGrid className="w-6 h-6 text-white/20" />
+                    </div>
+                  )}
+                  {isSelected && (
+                    <span className="absolute top-1.5 left-1.5 w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center">
+                      <Check className="w-3 h-3 text-white" />
+                    </span>
+                  )}
+                  {!isSelected && recommendedIds?.includes(t.id) && (
+                    <span className="absolute top-1.5 right-1.5 flex items-center gap-0.5 text-[9px] bg-purple-500/80 text-white px-1.5 py-0.5 rounded-full backdrop-blur-sm">
+                      <Sparkles className="w-2.5 h-2.5" /> 推荐
+                    </span>
+                  )}
+                  <span className="absolute bottom-1 left-1 text-[10px] bg-black/60 text-white/80 px-1.5 py-0.5 rounded">
+                    {t.name}
                   </span>
-                )}
-                <span className="absolute bottom-1 left-1 text-[10px] bg-black/60 text-white/80 px-1.5 py-0.5 rounded">
-                  {t.name}
-                </span>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         )
       )}
