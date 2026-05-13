@@ -31,7 +31,7 @@ export default function RegisterPage() {
 
       // Auto login after register
       const result = await signIn("credentials", { email, password, redirect: false });
-      if (result?.ok) { router.push("/trends"); }
+      if (result?.ok) { router.push("/dashboard"); }
       else { setError("注册成功但自动登录失败，请前往登录页"); }
     } catch { setError("网络错误"); }
     finally { setLoading(false); }

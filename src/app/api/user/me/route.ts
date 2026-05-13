@@ -16,7 +16,14 @@ export const GET = withAuth(async (_req: any, _ctx: any, user: { id: string }) =
     _count: true,
   });
 
-  return success({ user: u, stats });
+  // Total spent (negative amounts in credit_transactions)
+  const spentAgg = await prisma.creditTransaction.aggregate({
+    where: { userId: user.id, amount: { lt: 0 } },
+    _sum: { amount: true },
+  });
+  const totalSpent = Math.abs(spentAgg._sum.amount || 0);
+
+  return success({ user: { ...u, totalSpent }, stats });
 });
 
 export const PATCH = withAuth(async (req: NextRequest, _ctx: any, user: { id: string }) => {

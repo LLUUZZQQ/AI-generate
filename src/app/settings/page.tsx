@@ -147,6 +147,17 @@ export default function SettingsPage() {
           <div className="pt-2 border-t border-white/[0.05]">
             <span className="text-sm text-white/30">当前积分 </span>
             <span className="text-lg font-bold text-white/80">{credits.toLocaleString()}</span>
+            <span className="text-xs text-white/20 ml-2">总消费 ￥{((user.totalSpent || 0) / 10).toFixed(0)}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-white/30">消费等级</span>
+            {(() => {
+              const spent = (user.totalSpent || 0) / 10;
+              if (spent >= 500) return <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">💎 钻石会员</span>;
+              if (spent >= 200) return <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300">🥇 金牌会员</span>;
+              if (spent >= 50) return <span className="text-xs px-2 py-0.5 rounded-full bg-slate-400/20 text-slate-300">🥈 银牌会员</span>;
+              return <span className="text-xs px-2 py-0.5 rounded-full bg-amber-700/20 text-amber-400">🥉 铜牌会员</span>;
+            })()}
           </div>
         </div>
       )}

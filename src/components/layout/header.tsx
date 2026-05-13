@@ -64,14 +64,13 @@ export function Header() {
         <nav className="hidden md:flex items-center gap-1">
           {session ? (
             <>
-              <ProfileDropdown />
               <Link href="/settings?tab=billing"><Button size="sm" className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/20 text-purple-300 hover:from-purple-500/30 hover:to-pink-500/30 text-xs h-7 rounded-full px-3"><Coins className="w-3 h-3 mr-1" />充值</Button></Link>
               <Link href="/"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">首页</Button></Link>
               <Link href="/background-replace"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">背景替换</Button></Link>
               <Link href="/dashboard"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">我的</Button></Link>
               {isAdmin && <Link href="/admin"><Button variant="ghost" size="sm" className="text-white/25 hover:text-purple-400 text-[11px]">管理</Button></Link>}
               <ThemeToggle />
-              <Button variant="outline" size="sm" className="border-white/10 hover:bg-white/5 ml-2" onClick={() => signOut()}>退出</Button>
+              <ProfileDropdown />
             </>
           ) : (
             <>
@@ -100,7 +99,7 @@ export function Header() {
               <Link href="/settings" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">⚙️ 设置 · 充值</Link>
               {isAdmin && <Link href="/admin" onClick={() => setOpen(false)} className="block py-2.5 text-xs text-white/40 hover:text-purple-400">🛡 管理</Link>}
               <div className="py-2"><ThemeToggle /></div>
-              <Button variant="outline" size="sm" className="w-full border-white/10" onClick={() => signOut()}>退出</Button>
+              <Link href="/settings?tab=billing" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">💰 充值</Link>
             </>
           ) : (
             <div className="flex gap-2">

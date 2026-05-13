@@ -15,6 +15,20 @@ export function AdminPanel({ stats: initial }: { stats: Stats }) {
   const [loading, setLoading] = useState(false);
   const [editUser, setEditUser] = useState<any>(null);
   const [dateRange, setDateRange] = useState({ from: "", to: "" });
+  const [stats, setStats] = useState<Stats>(initial);
+
+  // Refetch stats when dates change
+  useEffect(() => {
+    const fetchStats = async () => {
+      const params = dateRange.from && dateRange.to
+        ? `?from=${dateRange.from}&to=${dateRange.to}`
+        : "";
+      const res = await fetch(`/api/admin/stats${params}`);
+      const d = await res.json();
+      if (d.code === 0) setStats(d.data);
+    };
+    fetchStats();
+  }, [dateRange.from, dateRange.to]);
 
   const searchUsers = useCallback(async (q: string) => {
     setLoading(true);
@@ -78,10 +92,10 @@ export function AdminPanel({ stats: initial }: { stats: Stats }) {
           {/* Stats cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { label: "总用户", value: initial.totalUsers, icon: Users },
-              { label: "总任务", value: initial.totalBGTasks, icon: Image },
-              { label: "处理结果", value: initial.totalBgResults, icon: BarChart3 },
-              { label: "消耗积分", value: initial.totalCreditsConsumed, icon: Coins },
+              { label: "总用户", value: stats.totalUsers, icon: Users },
+              { label: "总任务", value: stats.totalBGTasks, icon: Image },
+              { label: "处理结果", value: stats.totalBgResults, icon: BarChart3 },
+              { label: "消耗积分", value: stats.totalCreditsConsumed, icon: Coins },
             ].map(s => (
               <div key={s.label} className="glass p-4">
                 <s.icon className="w-4 h-4 text-white/20 mb-2" />
@@ -104,14 +118,14 @@ export function AdminPanel({ stats: initial }: { stats: Stats }) {
               </div>
             </div>
             <div className="flex items-end gap-2 h-32">
-              {initial.bgTasksByDay.map((d: any) => (
+              {stats.bgTasksByDay.map((d: any) => (
                 <div key={d.day} className="flex-1 flex flex-col items-center gap-1">
                   <span className="text-xs font-medium text-white/70">{d.count}</span>
-                  <div className="w-full bg-purple-500/30 rounded-t" style={{ height: `${Math.max(4, (d.count / Math.max(...initial.bgTasksByDay.map((x: any) => x.count || 0), 1)) * 100)}%` }} />
+                  <div className="w-full bg-purple-500/30 rounded-t" style={{ height: `${Math.max(4, (d.count / Math.max(...stats.bgTasksByDay.map((x: any) => x.count || 0), 1)) * 100)}%` }} />
                   <span className="text-[9px] text-white/20">{typeof d.day === "string" ? d.day.substring(5) : d.day}</span>
                 </div>
               ))}
-              {initial.bgTasksByDay.length === 0 && <span className="text-white/20 text-sm">暂无数据</span>}
+              {stats.bgTasksByDay.length === 0 && <span className="text-white/20 text-sm">暂无数据</span>}
             </div>
           </div>
 
@@ -119,7 +133,7 @@ export function AdminPanel({ stats: initial }: { stats: Stats }) {
           <div className="glass p-5">
             <h3 className="text-sm font-medium text-white/50 mb-3">最新用户</h3>
             <div className="space-y-2">
-              {initial.recentUsers.map((u: any) => (
+              {stats.recentUsers.map((u: any) => (
                 <div key={u.id} className="flex items-center justify-between py-2 border-b border-white/[0.04]">
                   <div>
                     <span className="text-sm text-white/70">{u.name || "未设置"}</span>
