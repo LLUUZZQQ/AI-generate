@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ProfileDropdown } from "@/components/user/profile-dropdown";
+import { NotificationBell } from "@/components/user/notification-bell";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Coins } from "lucide-react";
 
@@ -69,6 +70,7 @@ export function Header() {
               <Link href="/background-replace"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">背景替换</Button></Link>
               <Link href="/dashboard"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">我的</Button></Link>
               {isAdmin && <Link href="/admin"><Button variant="ghost" size="sm" className="text-white/25 hover:text-purple-400 text-[11px]">管理</Button></Link>}
+              <NotificationBell />
               <ThemeToggle />
               <ProfileDropdown />
             </>

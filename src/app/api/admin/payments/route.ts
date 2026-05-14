@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { withAuth } from "@/lib/auth-guard";
 import { success, error } from "@/lib/response";
 import { prisma } from "@/lib/db";
+import { createNotification } from "@/lib/notify";
 
 export const GET = withAuth(async (_req: NextRequest, _ctx: any, user: { id: string }) => {
   const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
@@ -44,6 +45,20 @@ export const PATCH = withAuth(async (req: NextRequest, _ctx: any, user: { id: st
         type: "purchase",
         description: `微信扫码充值 ¥${amount} → ${credits} 积分${bonus > 0 ? `（首充赠送 ${bonus} 积分）` : ""}`,
       },
+    });
+
+    await createNotification({
+      userId,
+      type: "success",
+      message: `充值已到账！${credits} 积分${bonus > 0 ? `（含首充赠送 ${bonus} 积分）` : ""}已加入你的账户`,
+      link: "/settings",
+    });
+  } else if (status === "denied") {
+    await createNotification({
+      userId,
+      type: "warning",
+      message: "充值审核未通过，请联系客服",
+      link: "/settings?tab=billing",
     });
   }
 

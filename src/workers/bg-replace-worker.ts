@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { prisma } from "@/lib/db";
+import { createNotification } from "@/lib/notify";
 import { downloadFromS3, uploadToS3 } from "@/lib/s3";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
@@ -315,10 +316,22 @@ async function processTask(taskId: string) {
   const allDone = updatedResults.every((r) => r.status === "done" || r.status === "failed");
   if (allDone) {
     const allFailed = updatedResults.every((r) => r.status === "failed");
+    const doneStatus = allFailed ? "failed" : "done";
     await prisma.bgReplaceTask.update({
       where: { id: taskId },
-      data: { status: allFailed ? "failed" : "done" },
+      data: { status: doneStatus },
     });
+
+    // Send notification
+    const doneCount = updatedResults.filter(r => r.status === "done").length;
+    try {
+      await createNotification({
+        userId: task.userId,
+        type: allFailed ? "error" : "success",
+        message: allFailed ? `背景替换任务处理失败` : `背景替换完成！${doneCount} 张照片已处理`,
+        link: `/background-replace/${taskId}`,
+      });
+    } catch { /* non-critical */ }
 
     if (allFailed) {
       await prisma.user.update({
