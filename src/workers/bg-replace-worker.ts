@@ -361,15 +361,16 @@ async function processTask(taskId: string) {
         bg = await createSolidBackground("#f5f5f0");
       }
 
-      // Try Replicate-based blending first, fall back to traditional pipeline
-      let composited: Buffer | null = null;
-      composited = await aiBlendBackground(original, bg, task.customPrompt ?? undefined, task.aiModel ?? undefined);
+      // AI blending — no fallback, fail explicitly
+      const composited = await aiBlendBackground(original, bg, task.customPrompt ?? undefined, task.aiModel ?? undefined);
 
       if (!composited) {
-        console.log("[bg-worker] GPT-5.4 blend unavailable — using traditional pipeline");
-        const subjectBuffer = await removeBackground(original);
-        const result = await compositeImages(subjectBuffer, bg);
-        composited = result.composited;
+        console.error(`[bg-worker] AI blend FAILED for result ${result.id}`);
+        await prisma.bgReplaceResult.update({
+          where: { id: result.id },
+          data: { status: "failed", errorMessage: `AI 融合失败 (模型: ${task.aiModel || "gemini"})，请尝试换模型` },
+        });
+        continue;
       }
 
       let resultKey: string;
