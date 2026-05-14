@@ -41,8 +41,8 @@ export async function POST(req: NextRequest) {
   });
 
   return success({
-    qrcode: order.code_url,
-    orderNo: order.out_trade_no,
+    qrcode: order.qr,
+    orderNo: order.aoid,
     amount: plan.price,
     credits: plan.credits,
   });

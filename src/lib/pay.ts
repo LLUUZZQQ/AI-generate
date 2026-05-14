@@ -1,73 +1,76 @@
 import crypto from "crypto";
 
-// PayJS API — individual developer friendly, supports Alipay + WeChat
-// Register at https://payjs.cn, get mchid + key
+// XorPay — individual developer friendly, supports WeChat + Alipay
+// Register at https://xorpay.com → get aid + app_secret
 
 interface PayOrder {
-  out_trade_no: string;
-  total_fee: string;  // cents
-  body: string;
-  code_url: string;   // QR code URL
+  aoid: string;
+  qr: string;        // weixin://wxpay/... URI — encode as QR image
+  order_id: string;
+}
+
+function xorSign(fields: string[], secret: string): string {
+  return crypto.createHash("md5").update(fields.join("") + secret, "utf8").digest("hex").toLowerCase();
 }
 
 export async function createPayOrder(planCredits: number, planPrice: number): Promise<PayOrder | null> {
-  const mchid = process.env.PAYJS_MCHID;
-  const key = process.env.PAYJS_KEY;
+  const aid = process.env.XORPAY_AID;
+  const secret = process.env.XORPAY_SECRET;
 
-  if (!mchid || !key) {
-    console.error("[pay] PAYJS_MCHID or PAYJS_KEY not set");
+  if (!aid || !secret) {
+    console.error("[pay] XORPAY_AID or XORPAY_SECRET not set");
     return null;
   }
 
+  const orderId = `fc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const price = planPrice.toFixed(2);
+  const name = `FrameCraft - ${planCredits} 积分`;
+  const notifyUrl = `${process.env.NEXT_PUBLIC_URL || "http://localhost:3000"}/api/pay/xorpay-webhook`;
+
   const params: Record<string, string> = {
-    mchid,
-    total_fee: String(planPrice * 100), // to cents
-    out_trade_no: `fc${Date.now()}${Math.random().toString(36).slice(2, 8)}`,
-    body: `FrameCraft - ${planCredits} 积分`,
-    notify_url: `${process.env.NEXT_PUBLIC_URL || "http://localhost:3000"}/api/pay/payjs-webhook`,
+    name,
+    pay_type: "native",
+    price,
+    order_id: orderId,
+    notify_url: notifyUrl,
+    more: String(planCredits), // pass credits in callback
   };
 
-  // Build sign: sort keys, concat values with &, append &key=, MD5 uppercase
-  const signStr = Object.keys(params).sort().map(k => `${k}=${params[k]}`).join("&") + `&key=${key}`;
-  params.sign = crypto.createHash("md5").update(signStr).digest("hex").toUpperCase();
+  // Sign: name + pay_type + price + order_id + notify_url + secret
+  const sign = xorSign([name, "native", price, orderId, notifyUrl], secret);
+  params.sign = sign;
 
   try {
-    const formBody = new URLSearchParams(params).toString();
-    const res = await fetch("https://payjs.cn/api/native", {
+    const body = new URLSearchParams(params).toString();
+    const res = await fetch(`https://xorpay.com/api/pay/${aid}`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: formBody,
+      body,
       signal: AbortSignal.timeout(15000),
     });
 
     const data = await res.json() as any;
-    if (data.return_code !== 1) {
-      console.error("[pay] PayJS error:", data.return_msg, data);
+    if (data.status !== "ok") {
+      console.error("[pay] XorPay error:", data.status, data);
       return null;
     }
 
     return {
-      out_trade_no: data.out_trade_no,
-      total_fee: data.total_fee,
-      body: params.body,
-      code_url: data.code_url,
+      aoid: data.aoid,
+      qr: data.info.qr,
+      order_id: orderId,
     };
   } catch (e: any) {
-    console.error("[pay] PayJS request failed:", e.message);
+    console.error("[pay] XorPay request failed:", e.message);
     return null;
   }
 }
 
-export function verifyPayJSSign(params: Record<string, string>): boolean {
-  const key = process.env.PAYJS_KEY;
-  if (!key) return false;
-
-  const sign = params.sign;
-  const entries = Object.entries(params)
-    .filter(([k]) => k !== "sign")
-    .sort(([a], [b]) => a.localeCompare(b));
-
-  const signStr = entries.map(([k, v]) => `${k}=${v}`).join("&") + `&key=${key}`;
-  const expected = crypto.createHash("md5").update(signStr).digest("hex").toUpperCase();
-  return sign === expected;
+export function verifyXorPaySign(params: Record<string, string>, secret: string): boolean {
+  // Callback sign: aoid + order_id + pay_price + pay_time + secret
+  const sign = xorSign(
+    [params.aoid || "", params.order_id || "", params.pay_price || "", params.pay_time || ""],
+    secret
+  );
+  return sign === (params.sign || "").toLowerCase();
 }

@@ -154,7 +154,9 @@
       "PowerShell(npx tsx scripts/make-admin.ts l13328903829@163.com)",
       "PowerShell(npx tsx scripts/add-banned.ts)",
       "PowerShell(npx tsx scripts/add-verification-table.ts)",
-      "WebFetch(domain:stripe.com)"
+      "WebFetch(domain:stripe.com)",
+      "WebFetch(domain:payjs.cn)",
+      "WebFetch(domain:xorpay.com)"
     ]
   }
 }
