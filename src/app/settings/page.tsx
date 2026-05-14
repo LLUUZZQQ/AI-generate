@@ -15,6 +15,38 @@ const plans = [
   { amount: 2000, credits: 2000, price: 160, name: "专业包", desc: "处理 2000 张" },
 ];
 
+function PaymentHistory() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["my-payments"],
+    queryFn: async () => { const r = await fetch("/api/pay/submit"); return r.json(); },
+    refetchInterval: 15000,
+  });
+  const payments = data?.data?.payments ?? [];
+
+  if (isLoading) return <Skeleton className="h-16 w-full rounded-xl" />;
+  if (payments.length === 0) return <p className="text-xs text-white/15 py-3">暂无充值记录</p>;
+
+  return (
+    <div className="space-y-2">
+      {payments.map((p: any, i: number) => (
+        <div key={i} className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+          <div>
+            <span className="text-sm text-white/60">¥{p.amount} → {p.credits} 积分</span>
+            <span className="text-[10px] text-white/20 ml-2">{p.created_at ? new Date(p.created_at).toLocaleString("zh-CN") : ""}</span>
+          </div>
+          <span className={`text-xs px-2 py-0.5 rounded-full ${
+            p.status === "approved" ? "bg-green-500/10 text-green-400" :
+            p.status === "denied" ? "bg-red-500/10 text-red-400" :
+            "bg-yellow-500/10 text-yellow-400"
+          }`}>
+            {p.status === "approved" ? "已到账" : p.status === "denied" ? "未通过" : "审核中"}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
@@ -212,7 +244,10 @@ export default function SettingsPage() {
         ))}
       </div>
 
-      <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">积分流水</h3>
+      <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">我的充值记录</h3>
+      <PaymentHistory />
+
+      <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4 mt-10">积分流水</h3>
       <div className="glass rounded-xl p-4">
         <TransactionList />
       </div>

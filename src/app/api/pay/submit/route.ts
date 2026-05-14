@@ -3,6 +3,18 @@ import { auth } from "@/lib/auth";
 import { error, success } from "@/lib/response";
 import { prisma } from "@/lib/db";
 
+export async function GET(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) return error(40100, "请先登录", 401);
+
+  const payments = await prisma.$queryRawUnsafe(
+    `SELECT amount, credits, status, created_at FROM payment_submissions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 10`,
+    session.user.id
+  ) as any[];
+
+  return success({ payments });
+}
+
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return error(40100, "请先登录", 401);
