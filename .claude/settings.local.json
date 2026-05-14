@@ -162,7 +162,8 @@
       "WebFetch(domain:pay.yifuton.com)",
       "PowerShell(npx tsx scripts/add-payment-submissions.ts)",
       "Bash(grep *)",
-      "PowerShell(npx tsx scripts/add-notifications.ts)"
+      "PowerShell(npx tsx scripts/add-notifications.ts)",
+      "PowerShell(vercel env *)"
     ]
   }
 }
