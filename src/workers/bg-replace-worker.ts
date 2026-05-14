@@ -18,18 +18,15 @@ async function nanobananaBlend(
 
   const prompt = customPrompt || `Take the product from the first reference image and seamlessly place it into the second reference image's scene. The result must look like a single real photograph — indistinguishable from reality. Preserve the product exactly (color, texture, proportions, details). Match lighting, shadows, perspective, and depth of field to the background. Natural phone photo quality. No text or watermark.`;
 
-  const endpoint = isPro
-    ? `${NANOBANANA_BASE}/generate-pro`
-    : `${NANOBANANA_BASE}/generate-2`;
+  const endpoint = `${NANOBANANA_BASE}/generate`;
 
   console.log(`[bg-worker] NanoBanana: productUrl=${productUrl.substring(0, 50)}... bgUrl=${bgUrl.substring(0, 50)}...`);
 
   const reqBody: any = {
     prompt,
+    type: "IMAGETOIAMGE",
     imageUrls: [productUrl, bgUrl],
-    aspectRatio: "auto",
-    resolution: "1K",
-    outputFormat: "png",
+    numImages: 1,
   };
 
   console.log(`[bg-worker] NanoBanana: POST ${endpoint} (${isPro ? "pro" : "2"})`);
