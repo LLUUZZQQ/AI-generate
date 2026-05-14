@@ -264,13 +264,21 @@ export default function SettingsPage() {
       </div>
       <p className="text-[10px] text-white/15 text-center mb-10">💡 积分可用于背景替换，1 积分 = 1 张图</p>
 
-      <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">我的充值记录</h3>
-      <PaymentHistory />
+      <details className="group" open>
+        <summary className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4 cursor-pointer select-none hover:text-white/60 transition-colors flex items-center gap-1.5">
+          <span className="text-[10px] group-open:rotate-90 transition-transform">▶</span> 我的充值记录
+        </summary>
+        <PaymentHistory />
+      </details>
 
-      <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4 mt-10">积分流水</h3>
+      <details className="group mt-6" open>
+        <summary className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4 cursor-pointer select-none hover:text-white/60 transition-colors flex items-center gap-1.5">
+          <span className="text-[10px] group-open:rotate-90 transition-transform">▶</span> 积分流水
+        </summary>
       <div className="glass rounded-xl p-4">
         <TransactionList />
       </div>
+      </details>
 
       </>)}
 
@@ -386,6 +394,7 @@ export default function SettingsPage() {
               <Button variant="outline" size="sm" className="border-border rounded-xl w-full" onClick={() => { setQrFallback(null); setSelectedPlan(null); }}>
                 暂不支付，关闭
               </Button>
+              <p className="text-[10px] text-white/20 text-center pt-1">如长时间未到账，请联系微信：UU_L777777</p>
             </DialogFooter>
           </DialogContent>
         </Dialog>
