@@ -5,9 +5,9 @@ import { error, success } from "@/lib/response";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 const PRICE_MAP: Record<number, { amount: number; credits: number; name: string }> = {
-  50: { amount: 1500, credits: 50, name: "基础包" },
-  120: { amount: 3000, credits: 120, name: "进阶包" },
-  300: { amount: 6000, credits: 300, name: "专业包" },
+  100: { amount: 1000, credits: 100, name: "入门包 - 100 积分" },
+  500: { amount: 4500, credits: 500, name: "进阶包 - 500 积分" },
+  2000: { amount: 16000, credits: 2000, name: "专业包 - 2000 积分" },
 };
 
 export async function POST(req: Request) {

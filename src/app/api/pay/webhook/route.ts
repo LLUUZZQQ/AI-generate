@@ -26,12 +26,13 @@ export async function POST(req: Request) {
         data: { credits: { increment: credits } },
       });
 
+      const amountYuan = (planAmount / 100).toFixed(0);
       await prisma.creditTransaction.create({
         data: {
           userId,
           amount: credits,
           type: "purchase",
-          description: `Stripe 充值 ¥${planAmount > 0 ? (planAmount === 1500 ? "15" : planAmount === 3000 ? "30" : "60") : "?"} → ${credits} 积分`,
+          description: `Stripe 充值 ¥${amountYuan} → ${credits} 积分`,
         },
       });
     }
