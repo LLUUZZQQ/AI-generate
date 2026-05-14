@@ -368,7 +368,7 @@ async function processTask(taskId: string) {
         console.error(`[bg-worker] AI blend FAILED for result ${result.id}`);
         await prisma.bgReplaceResult.update({
           where: { id: result.id },
-          data: { status: "failed", errorMessage: `AI 融合失败 (模型: ${task.aiModel || "gemini"})，请尝试换模型` },
+          data: { status: "failed", error: `AI 融合失败 (模型: ${task.aiModel || "gemini"})，请尝试换模型` },
         });
         continue;
       }
