@@ -107,11 +107,10 @@ async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer, custo
       return nanobananaBlend(originalBuffer, bgBuffer, customPrompt, model);
     }
 
-    // EvoLink (OpenAI-compatible)
-    const apiKey = process.env.GEMINI_API_KEY!;
-    const apiBaseUrl = "https://api.evolink.ai/v1/chat/completions";
-    // Strip provider prefix (google/xxx → xxx, openai/xxx → xxx)
-    const apiModel = model.replace(/^(google|openai)\//, "");
+    // OpenRouter (Gemini/GPT/Recraft)
+    const apiKey = process.env.OPENAI_API_KEY!;
+    const apiBaseUrl = "https://openrouter.ai/api/v1/chat/completions";
+    const apiModel = model;
 
     const defaultPrompt = `You are a photorealistic image compositor. Take the product from the FIRST image and place it into the SECOND image's scene. The result must be INDISTINGUISHABLE from a real photograph.
 
@@ -175,13 +174,15 @@ CRITICAL RULES:
     }
     const body = JSON.stringify(bodyObj);
 
-    console.log(`[bg-worker] calling EvoLink with model ${apiModel}...`);
+    console.log(`[bg-worker] calling OpenRouter with model ${apiModel}...`);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 90000);
 
     const fetchHeaders: Record<string, string> = {
       "Authorization": `Bearer ${apiKey}`,
       "Content-Type": "application/json",
+      "HTTP-Referer": process.env.NEXT_PUBLIC_URL || "http://localhost:3000",
+      "X-Title": "FrameCraft",
     };
 
     let resp: Response;

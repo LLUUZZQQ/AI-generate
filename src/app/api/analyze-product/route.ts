@@ -40,10 +40,10 @@ export const POST = withAuth(async (req: NextRequest) => {
   const { fileKey } = parsed.data;
 
   try {
-    // Call EvoLink vision model
-    const apiKey = process.env.GEMINI_API_KEY!;
+    // Call OpenRouter vision model
+    const apiKey = process.env.OPENAI_API_KEY!;
     const reqBody = JSON.stringify({
-      model: "gpt-4.1-mini",
+      model: "openai/gpt-4.1-mini",
       messages: [
         {
           role: "user",
@@ -68,11 +68,13 @@ export const POST = withAuth(async (req: NextRequest) => {
       max_tokens: 30,
     });
 
-    const resp = await fetch("https://api.evolink.ai/v1/chat/completions", {
+    const resp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
+        "HTTP-Referer": process.env.NEXT_PUBLIC_URL || "http://localhost:3000",
+        "X-Title": "FrameCraft",
       },
       body: reqBody,
       signal: AbortSignal.timeout(10000),
