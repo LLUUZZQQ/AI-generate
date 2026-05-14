@@ -10,9 +10,9 @@ import { TransactionList } from "@/components/user/transaction-list";
 import { User, Mail, Clock, Shield, Lock, Eye, EyeOff, Coins } from "lucide-react";
 
 const plans = [
-  { amount: 100, credits: 100, price: 10, name: "入门包", desc: "处理 100 张" },
-  { amount: 500, credits: 500, price: 45, name: "进阶包", desc: "处理 500 张", rec: true },
-  { amount: 2000, credits: 2000, price: 160, name: "专业包", desc: "处理 2000 张" },
+  { amount: 100, credits: 100, price: 10, name: "入门体验", desc: "¥0.10/张", savings: "" },
+  { amount: 500, credits: 500, price: 45, name: "高效创作", desc: "¥0.09/张", savings: "省 ¥5", rec: true, badge: "🔥 最受欢迎" },
+  { amount: 2000, credits: 2000, price: 160, name: "专业生产", desc: "¥0.08/张", savings: "省 ¥40", badge: "💎 最划算" },
 ];
 
 function PaymentHistory() {
@@ -233,16 +233,30 @@ export default function SettingsPage() {
       {tab === "billing" && (<>
       {/* Recharge */}
       <h3 className="text-xs font-semibold text-foreground/25 uppercase tracking-wider mb-4">充值套餐</h3>
-      <div className="grid grid-cols-3 gap-3 mb-10">
+      <div className="grid grid-cols-3 gap-3 mb-4">
         {plans.map((plan) => (
-          <button key={plan.amount} onClick={() => setSelectedPlan(plan)} className={`glass p-5 text-left ${plan.rec ? "relative overflow-hidden" : ""}`}>
-            {plan.rec && <div className="absolute top-0 right-0 text-[9px] px-2 py-0.5 rounded-bl-2xl bg-purple-500/15 text-purple-300">推荐</div>}
-            <p className="text-sm font-semibold mb-2">{plan.name}</p>
-            <p className="text-2xl font-bold mb-1">{plan.credits}<span className="text-xs font-normal text-white/30 ml-0.5">积分</span></p>
-            <p className="text-[10px] text-foreground/15">{plan.desc} · ¥{plan.price}</p>
+          <button key={plan.amount} onClick={() => setSelectedPlan(plan)}
+            className={`glass p-4 text-left relative transition-all hover:scale-[1.02] ${
+              selectedPlan?.amount === plan.amount ? "ring-1 ring-purple-400/50 bg-purple-500/5" : ""
+            }`}>
+            {plan.badge && (
+              <div className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] px-2.5 py-0.5 rounded-full bg-purple-500 text-white whitespace-nowrap shadow-lg shadow-purple-500/25">
+                {plan.badge}
+              </div>
+            )}
+            <p className="text-xs font-semibold mb-2 mt-0.5">{plan.name}</p>
+            <p className="text-2xl font-bold mb-0.5">
+              <span className="text-[13px] align-top mr-0.5">¥</span>{plan.price}
+            </p>
+            <p className="text-[10px] text-foreground/25">{plan.credits} 积分</p>
+            <p className="text-[10px] text-white/40 mt-1.5">{plan.desc}</p>
+            {plan.savings && (
+              <p className="text-[10px] text-green-400/70 mt-0.5">{plan.savings}</p>
+            )}
           </button>
         ))}
       </div>
+      <p className="text-[10px] text-white/15 text-center mb-10">💡 积分可用于背景替换，1 积分 = 1 张图</p>
 
       <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">我的充值记录</h3>
       <PaymentHistory />
@@ -260,7 +274,7 @@ export default function SettingsPage() {
             <DialogHeader>
               <DialogTitle className="text-foreground">确认充值</DialogTitle>
               <DialogDescription className="text-foreground/30">
-                {selectedPlan.name} — {selectedPlan.credits} 积分 / ¥{selectedPlan.price}
+                {selectedPlan.name} · {selectedPlan.credits} 积分 · ¥{selectedPlan.price}{selectedPlan.savings ? `（${selectedPlan.savings}）` : ""}
               </DialogDescription>
             </DialogHeader>
             <div className="text-sm text-foreground/25 space-y-1 py-2">
