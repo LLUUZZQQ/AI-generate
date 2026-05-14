@@ -10,7 +10,7 @@ const POLL_INTERVAL = 3000; // 3 seconds
 
 /* ── NanoBanana async task-based API ──────────────────────────── */
 async function nanobananaBlend(
-  originalBuffer: Buffer, bgBuffer: Buffer, customPrompt?: string, aiModel?: string,
+  productUrl: string, bgUrl: string, customPrompt?: string, aiModel?: string,
 ): Promise<Buffer | null> {
   const NANOBANANA_KEY = process.env.NANOBANANA_API_KEY!;
   const NANOBANANA_BASE = "https://api.nanobananaapi.ai/api/v1/nanobanana";
@@ -22,12 +22,11 @@ async function nanobananaBlend(
     ? `${NANOBANANA_BASE}/generate-pro`
     : `${NANOBANANA_BASE}/generate-2`;
 
+  console.log(`[bg-worker] NanoBanana: productUrl=${productUrl.substring(0, 50)}... bgUrl=${bgUrl.substring(0, 50)}...`);
+
   const reqBody: any = {
     prompt,
-    imageUrls: [
-      `data:image/png;base64,${originalBuffer.toString("base64")}`,
-      `data:image/png;base64,${bgBuffer.toString("base64")}`,
-    ],
+    imageUrls: [productUrl, bgUrl],
     aspectRatio: "auto",
     resolution: "1K",
     outputFormat: "png",
@@ -83,7 +82,11 @@ async function nanobananaBlend(
 }
 
 /* ── Main AI blend dispatcher ────────────────────────────────── */
-async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer, customPrompt?: string, aiModel?: string): Promise<Buffer | null> {
+async function aiBlendBackground(
+  originalBuffer: Buffer, bgBuffer: Buffer,
+  customPrompt?: string, aiModel?: string,
+  originalKey?: string, bgKey?: string,
+): Promise<Buffer | null> {
   try {
     const sharp = (await import("sharp")).default;
 
@@ -102,9 +105,14 @@ async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer, custo
     const isRecraft = model.includes("recraft");
     const isNanobanana = model.includes("nanobanana") || model.includes("nano-banana");
 
-    // NanoBanana → async task API
+    // NanoBanana → async task API (needs real URLs, not base64)
     if (isNanobanana) {
-      return nanobananaBlend(originalBuffer, bgBuffer, customPrompt, model);
+      if (originalKey && bgKey) {
+        const { getS3Url } = await import("@/lib/s3");
+        return nanobananaBlend(getS3Url(originalKey), getS3Url(bgKey), customPrompt, model);
+      }
+      console.error("[bg-worker] NanoBanana: missing S3 keys");
+      return null;
     }
 
     // OpenRouter (Gemini/GPT/Recraft)
@@ -362,7 +370,7 @@ async function processTask(taskId: string) {
       }
 
       // AI blending — no fallback, fail explicitly
-      const composited = await aiBlendBackground(original, bg, task.customPrompt ?? undefined, task.aiModel ?? undefined);
+      const composited = await aiBlendBackground(original, bg, task.customPrompt ?? undefined, task.aiModel ?? undefined, result.originalKey, task.customBgKey ?? undefined);
 
       if (!composited) {
         console.error(`[bg-worker] AI blend FAILED for result ${result.id}`);
