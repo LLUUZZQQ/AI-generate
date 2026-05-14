@@ -29,6 +29,8 @@ export default function SettingsPage() {
   );
   const [selectedPlan, setSelectedPlan] = useState<typeof plans[0] | null>(null);
   const [paying, setPaying] = useState(false);
+  const [qrCode, setQrCode] = useState<string | null>(null);
+  const [qrFallback, setQrFallback] = useState<any>(null);
 
   // Profile edit state
   const [editName, setEditName] = useState("");
@@ -79,17 +81,22 @@ export default function SettingsPage() {
     if (!selectedPlan) return;
     setPaying(true);
     try {
-      const res = await fetch("/api/pay/checkout", {
+      const res = await fetch("/api/pay/alipay-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ planAmount: selectedPlan.amount }),
       });
       const json = await res.json();
-      if (json.code !== 0 || !json.data.url) {
-        toast.error(json.message ?? "创建支付失败");
+      if (json.code !== 0) { toast.error(json.message ?? "创建支付失败"); return; }
+      if (json.data?.qrcode) {
+        setQrCode(json.data.qrcode);
         return;
       }
-      window.location.href = json.data.url;
+      if (json.data?.fallback) {
+        setQrFallback(json.data);
+        return;
+      }
+      toast.error("支付配置异常");
     } catch { toast.error("网络错误"); }
     finally { setPaying(false); }
   };
@@ -212,26 +219,75 @@ export default function SettingsPage() {
 
       </>)}
 
-      <Dialog open={!!selectedPlan} onOpenChange={(open) => !open && setSelectedPlan(null)}>
-        <DialogContent className="glass border-border !bg-background/95">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">确认充值</DialogTitle>
-            <DialogDescription className="text-foreground/30">
-              {selectedPlan && <>{selectedPlan.name} — {selectedPlan.credits} 积分 / ¥{selectedPlan.price}</>}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="text-sm text-foreground/25 space-y-1 py-2">
-            <p>支付方式：Stripe</p>
-            <p>充值后积分即时到账，可用于背景替换</p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" size="sm" className="border-border rounded-xl" onClick={() => setSelectedPlan(null)} disabled={paying}>取消</Button>
-            <Button size="sm" className="bg-gradient-to-r from-purple-500 to-pink-500 border-0 rounded-xl" onClick={handleRecharge} disabled={paying}>
-              {paying ? "支付处理中..." : `确认支付 ¥${selectedPlan?.price ?? 0}`}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {selectedPlan && !qrCode && !qrFallback && (
+        <Dialog open onOpenChange={() => setSelectedPlan(null)}>
+          <DialogContent className="glass border-border !bg-background/95">
+            <DialogHeader>
+              <DialogTitle className="text-foreground">确认充值</DialogTitle>
+              <DialogDescription className="text-foreground/30">
+                {selectedPlan.name} — {selectedPlan.credits} 积分 / ¥{selectedPlan.price}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="text-sm text-foreground/25 space-y-1 py-2">
+              <p>支付方式：微信 / 支付宝</p>
+              <p>支付后积分自动到账</p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" size="sm" className="border-border rounded-xl" onClick={() => setSelectedPlan(null)} disabled={paying}>取消</Button>
+              <Button size="sm" className="bg-gradient-to-r from-purple-500 to-pink-500 border-0 rounded-xl" onClick={handleRecharge} disabled={paying}>
+                {paying ? "创建订单..." : `确认支付 ¥${selectedPlan.price}`}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* QR Code Payment Dialog */}
+      {qrCode && selectedPlan && (
+        <Dialog open onOpenChange={() => { setQrCode(null); setSelectedPlan(null); }}>
+          <DialogContent className="glass border-border !bg-background/95 text-center">
+            <DialogHeader>
+              <DialogTitle className="text-foreground">扫码支付</DialogTitle>
+              <DialogDescription className="text-foreground/30">
+                {selectedPlan.name} — ¥{selectedPlan.price} / {selectedPlan.credits} 积分
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-center py-2">
+              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrCode)}`}
+                alt="支付二维码" className="rounded-xl border border-white/10" />
+            </div>
+            <p className="text-xs text-foreground/25">微信 / 支付宝 扫码支付</p>
+            <DialogFooter>
+              <Button variant="outline" size="sm" className="border-border rounded-xl w-full" onClick={() => { setQrCode(null); setSelectedPlan(null); }}>
+                已支付，关闭
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Fallback: manual transfer */}
+      {qrFallback && (
+        <Dialog open onOpenChange={() => { setQrFallback(null); setSelectedPlan(null); }}>
+          <DialogContent className="glass border-border !bg-background/95 text-center">
+            <DialogHeader>
+              <DialogTitle className="text-foreground">联系客服充值</DialogTitle>
+              <DialogDescription className="text-foreground/30">
+                {qrFallback.amount}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="text-sm text-white/50 space-y-2 py-2">
+              <p>微信：{qrFallback.wechat}</p>
+              <p className="text-xs text-white/25">支付后联系客服，人工加积分</p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" size="sm" className="border-border rounded-xl w-full" onClick={() => { setQrFallback(null); setSelectedPlan(null); }}>
+                关闭
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
