@@ -18,32 +18,25 @@ export async function POST(req: NextRequest) {
   const plan = PRICE_MAP[planAmount];
   if (!plan) return error(40001, "无效充值档位");
 
+  // Try payment gateway first, fall back to manual WeChat QR
   const order = await createPayOrder(plan.credits, plan.price);
 
-  if (!order) {
-    // Fallback: provide manual transfer info
+  if (order) {
     return success({
-      fallback: true,
-      message: "支付系统配置中，请联系客服充值",
-      wechat: "UU_L777777",
-      amount: `¥${plan.price} — ${plan.credits} 积分`,
+      qrcode: order.qr,
+      orderNo: order.aoid,
+      amount: plan.price,
+      credits: plan.credits,
     });
   }
 
-  // Store pending order
-  await prisma.creditTransaction.create({
-    data: {
-      userId: session.user.id,
-      amount: 0, // will be updated by webhook
-      type: "purchase_pending",
-      description: `待支付: ${plan.credits} 积分 ¥${plan.price}`,
-    },
-  });
-
+  // No gateway configured — show WeChat QR + manual confirm
   return success({
-    qrcode: order.qr,
-    orderNo: order.aoid,
+    manual: true,
+    qrimg: "/wxpay-qr.jpg",
     amount: plan.price,
     credits: plan.credits,
+    wechat: "UU_L777777",
+    note: `请转账 ¥${plan.price} 并备注：${session.user.id?.slice(-6) || "用户名"}`,
   });
 }

@@ -92,7 +92,7 @@ export default function SettingsPage() {
         setQrCode(json.data.qrcode);
         return;
       }
-      if (json.data?.fallback) {
+      if (json.data?.manual) {
         setQrFallback(json.data);
         return;
       }
@@ -266,23 +266,30 @@ export default function SettingsPage() {
         </Dialog>
       )}
 
-      {/* Fallback: manual transfer */}
+      {/* Fallback: WeChat QR */}
       {qrFallback && (
         <Dialog open onOpenChange={() => { setQrFallback(null); setSelectedPlan(null); }}>
-          <DialogContent className="glass border-border !bg-background/95 text-center">
+          <DialogContent className="glass border-border !bg-background/95 text-center max-w-xs">
             <DialogHeader>
-              <DialogTitle className="text-foreground">联系客服充值</DialogTitle>
+              <DialogTitle className="text-foreground">微信扫码支付</DialogTitle>
               <DialogDescription className="text-foreground/30">
-                {qrFallback.amount}
+                ¥{selectedPlan?.price} — {selectedPlan?.credits} 积分
               </DialogDescription>
             </DialogHeader>
-            <div className="text-sm text-white/50 space-y-2 py-2">
-              <p>微信：{qrFallback.wechat}</p>
-              <p className="text-xs text-white/25">支付后联系客服，人工加积分</p>
+            <div className="flex flex-col items-center gap-3 py-2">
+              <img src={qrFallback.qrimg} alt="微信收款码" className="w-48 h-48 rounded-xl border border-white/10" />
+              <div className="text-xs text-white/40 space-y-1">
+                <p>1. 截图或长按保存收款码</p>
+                <p>2. 打开微信扫一扫 → 相册选择</p>
+                <p>3. 转账 <span className="text-purple-400 font-semibold">¥{selectedPlan?.price}</span></p>
+                <p className="text-[10px] text-white/20 mt-1">{qrFallback.note}</p>
+                <p className="text-xs text-purple-400/60 mt-2">微信：{qrFallback.wechat}</p>
+                <p className="text-[10px] text-white/20">支付后联系客服，手动加积分</p>
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" size="sm" className="border-border rounded-xl w-full" onClick={() => { setQrFallback(null); setSelectedPlan(null); }}>
-                关闭
+                已支付，关闭
               </Button>
             </DialogFooter>
           </DialogContent>
