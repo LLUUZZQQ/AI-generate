@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
   if (return_code !== "1") {
     console.log("[payjs-webhook] Payment not successful:", return_code);
-    return Response.text("success"); // Acknowledge to stop retries
+    return new Response("success"); // Acknowledge to stop retries
   }
 
   // Parse body format: "FrameCraft - 500 积分"
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 
   if (credits <= 0) {
     console.error("[payjs-webhook] Could not parse credits from body:", params.body);
-    return Response.text("success");
+    return new Response("success");
   }
 
   // Find the pending transaction to get userId
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
   if (!transaction) {
     console.error("[payjs-webhook] No pending transaction found for", credits, "credits");
-    return Response.text("success");
+    return new Response("success");
   }
 
   const userId = transaction.userId;
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
   const existing = await prisma.creditTransaction.findFirst({
     where: { type: "purchase", description: { contains: transaction_id } },
   });
-  if (existing) return Response.text("success");
+  if (existing) return new Response("success");
 
   await prisma.user.update({
     where: { id: userId },
@@ -68,5 +68,5 @@ export async function POST(req: NextRequest) {
   });
 
   console.log(`[payjs-webhook] ✅ ${credits} credits added to user ${userId}`);
-  return Response.text("success");
+  return new Response("success");
 }
