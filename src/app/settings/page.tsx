@@ -266,26 +266,54 @@ export default function SettingsPage() {
         </Dialog>
       )}
 
-      {/* Fallback: WeChat QR */}
+      {/* Manual WeChat QR Dialog */}
       {qrFallback && (
         <Dialog open onOpenChange={() => { setQrFallback(null); setSelectedPlan(null); }}>
-          <DialogContent className="glass border-border !bg-background/95 text-center max-w-xs">
+          <DialogContent className="glass border-border !bg-background/95 max-w-sm">
             <DialogHeader>
               <DialogTitle className="text-foreground">微信扫码支付</DialogTitle>
               <DialogDescription className="text-foreground/30">
-                ¥{selectedPlan?.price} — {selectedPlan?.credits} 积分
+                {selectedPlan?.name} · {selectedPlan?.credits} 积分
               </DialogDescription>
             </DialogHeader>
-            <div className="flex flex-col items-center gap-3 py-2">
-              <img src={qrFallback.qrimg} alt="微信收款码" className="w-48 h-48 rounded-xl border border-white/10" />
-              <div className="text-xs text-white/40 space-y-1">
-                <p>1. 截图保存收款码，或长按识别</p>
-                <p>2. 打开微信扫一扫 → 相册选择</p>
-                <p>3. 转账 <span className="text-purple-400 font-semibold">¥{selectedPlan?.price}</span></p>
+
+            <div className="flex flex-col items-center gap-4">
+              {/* QR Code */}
+              <div className="relative">
+                <img src={qrFallback.qrimg} alt="微信收款码" className="w-52 h-52 rounded-xl border border-white/10" />
+                <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">
+                  ¥{selectedPlan?.price}
+                </span>
+              </div>
+
+              {/* Steps */}
+              <div className="w-full space-y-2.5 bg-white/[0.02] rounded-xl p-4 border border-white/[0.05]">
+                <div className="flex items-start gap-2.5">
+                  <span className="shrink-0 w-5 h-5 rounded-full bg-purple-500/15 text-[10px] flex items-center justify-center text-purple-400 font-medium">1</span>
+                  <div>
+                    <p className="text-xs text-white/60 font-medium">扫码或保存收款码</p>
+                    <p className="text-[10px] text-white/25 mt-0.5">打开微信扫一扫，或截图保存后从相册识别</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <span className="shrink-0 w-5 h-5 rounded-full bg-purple-500/15 text-[10px] flex items-center justify-center text-purple-400 font-medium">2</span>
+                  <div>
+                    <p className="text-xs text-white/60 font-medium">转账 <span className="text-purple-400 font-semibold">¥{selectedPlan?.price}</span></p>
+                    <p className="text-[10px] text-white/25 mt-0.5">请添加备注便于核对</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <span className="shrink-0 w-5 h-5 rounded-full bg-purple-500/15 text-[10px] flex items-center justify-center text-purple-400 font-medium">3</span>
+                  <div>
+                    <p className="text-xs text-white/60 font-medium">通知管理员审核</p>
+                    <p className="text-[10px] text-white/25 mt-0.5">支付后点击下方按钮提交，管理员确认后积分自动到账</p>
+                  </div>
+                </div>
               </div>
             </div>
-            <DialogFooter className="flex-col gap-2">
-              <Button size="sm" className="bg-gradient-to-r from-purple-500 to-pink-500 border-0 rounded-xl w-full"
+
+            <DialogFooter className="flex-col gap-2 sm:flex-col">
+              <Button size="sm" className="bg-gradient-to-r from-purple-500 to-pink-500 border-0 rounded-xl w-full h-10"
                 onClick={async () => {
                   if (!selectedPlan) return;
                   const res = await fetch("/api/pay/submit", {
@@ -298,10 +326,10 @@ export default function SettingsPage() {
                   else toast.error(data.message);
                   setQrFallback(null); setSelectedPlan(null);
                 }}>
-                我已支付，通知管理员
+                我已支付，通知管理员审核
               </Button>
               <Button variant="outline" size="sm" className="border-border rounded-xl w-full" onClick={() => { setQrFallback(null); setSelectedPlan(null); }}>
-                关闭
+                暂不支付，关闭
               </Button>
             </DialogFooter>
           </DialogContent>

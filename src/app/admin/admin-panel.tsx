@@ -9,15 +9,88 @@ interface Stats {
 }
 
 function PaymentsTab() {
-  const [payments, setPayments] = useState<any[]>([]); const [loading, setLoading] = useState(true);
+  const [payments, setPayments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<"pending" | "all">("pending");
+
   const fetchPayments = async () => { setLoading(true); try { const r = await fetch("/api/admin/payments"); const d = await r.json(); if (d.code === 0) setPayments(d.data.payments); } catch {} setLoading(false); };
   useEffect(() => { fetchPayments(); }, []);
+
   const handleAction = async (id: string, status: string, userId: string, credits: number, amount: number) => {
     if (status === "approved" && !window.confirm(`给用户加 ${credits} 积分？`)) return;
     await fetch("/api/admin/payments", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status, userId, credits, amount }) });
     fetchPayments(); toast.success(status === "approved" ? "已通过" : "已拒绝");
   };
-  return (<div className="glass p-4"><div className="flex justify-between mb-3"><span className="text-sm text-white/40">{payments.filter((p:any)=>p.status==="pending").length} 条待审核</span><button onClick={fetchPayments} className="text-xs text-white/30 hover:text-white/60">刷新</button></div>{loading ? <Loader2 className="w-5 h-5 text-white/30 animate-spin mx-auto" /> : payments.length === 0 ? <p className="text-sm text-white/20 text-center py-4">暂无</p> : <table className="w-full text-sm"><thead><tr className="border-b border-white/[0.06] text-white/30 text-xs"><th className="text-left py-2 px-2">用户</th><th className="text-left py-2 px-2">金额</th><th className="text-left py-2 px-2">积分</th><th className="text-left py-2 px-2">时间</th><th className="text-left py-2 px-2">状态</th><th className="text-right py-2 px-2">操作</th></tr></thead><tbody>{payments.map((p:any)=>(<tr key={p.id} className="border-b border-white/[0.03]"><td className="py-2 px-2 text-white/50 text-xs">{p.email||p.user_id?.slice(-8)}</td><td className="py-2 px-2 text-white/60">¥{p.amount}</td><td className="py-2 px-2 text-white/60">{p.credits}</td><td className="py-2 px-2 text-white/25 text-[10px]">{p.created_at?new Date(p.created_at).toLocaleString("zh-CN"):"-"}</td><td className="py-2 px-2"><span className={`text-[10px] px-1.5 py-0.5 rounded-full ${p.status==="approved"?"bg-green-500/15 text-green-400":p.status==="denied"?"bg-red-500/15 text-red-400":"bg-yellow-500/15 text-yellow-400"}`}>{p.status==="approved"?"已通过":p.status==="denied"?"已拒绝":"待审核"}</span></td><td className="py-2 px-2 text-right">{p.status==="pending"&&<div className="flex gap-1.5 justify-end"><button onClick={()=>handleAction(p.id,"approved",p.user_id,p.credits,p.amount)} className="text-xs text-green-400">通过</button><button onClick={()=>handleAction(p.id,"denied",p.user_id,p.credits,p.amount)} className="text-xs text-red-400">拒绝</button></div>}</td></tr>))}</tbody></table>}</div>);
+
+  const filtered = filter === "pending" ? payments.filter((p: any) => p.status === "pending") : payments;
+  const pendingCount = payments.filter((p: any) => p.status === "pending").length;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex gap-2">
+          <button onClick={() => setFilter("pending")} className={`text-xs px-3 py-1.5 rounded-lg transition-colors ${filter === "pending" ? "bg-yellow-500/15 text-yellow-400" : "text-white/30 hover:text-white/50"}`}>
+            待审核 {pendingCount > 0 && `(${pendingCount})`}
+          </button>
+          <button onClick={() => setFilter("all")} className={`text-xs px-3 py-1.5 rounded-lg transition-colors ${filter === "all" ? "bg-purple-500/15 text-purple-300" : "text-white/30 hover:text-white/50"}`}>
+            全部
+          </button>
+        </div>
+        <button onClick={fetchPayments} className="text-xs text-white/30 hover:text-white/60">刷新</button>
+      </div>
+
+      {loading ? <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 text-white/30 animate-spin" /></div>
+      : filtered.length === 0 ? <p className="text-sm text-white/20 text-center py-8 glass rounded-xl">暂无充值记录</p>
+      : (
+        <div className="glass overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-white/[0.06] text-white/30 text-xs">
+                <th className="text-left py-3 px-4">用户</th>
+                <th className="text-left py-3 px-4">金额</th>
+                <th className="text-left py-3 px-4">积分</th>
+                <th className="text-left py-3 px-4">提交时间</th>
+                <th className="text-left py-3 px-4">状态</th>
+                <th className="text-right py-3 px-4">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((p: any) => (
+                <tr key={p.id} className="border-b border-white/[0.03] hover:bg-white/[0.02]">
+                  <td className="py-3 px-4">
+                    <div className="text-sm text-white/60">{p.email || "—"}</div>
+                    <div className="text-[10px] text-white/20">{p.user_id?.slice(-8)}</div>
+                  </td>
+                  <td className="py-3 px-4 text-white/60 font-medium">¥{p.amount}</td>
+                  <td className="py-3 px-4 text-white/60">{p.credits}</td>
+                  <td className="py-3 px-4 text-white/25 text-xs">{p.created_at ? new Date(p.created_at).toLocaleString("zh-CN") : "-"}</td>
+                  <td className="py-3 px-4">
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      p.status === "approved" ? "bg-green-500/15 text-green-400" :
+                      p.status === "denied" ? "bg-red-500/15 text-red-400" :
+                      "bg-yellow-500/15 text-yellow-400"
+                    }`}>
+                      {p.status === "approved" ? "已通过" : p.status === "denied" ? "已拒绝" : "待审核"}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-right">
+                    {p.status === "pending" ? (
+                      <div className="flex items-center gap-2 justify-end">
+                        <button onClick={() => handleAction(p.id, "approved", p.user_id, p.credits, p.amount)} className="text-xs px-2 py-1 rounded bg-green-500/10 text-green-400 hover:bg-green-500/20">通过</button>
+                        <button onClick={() => handleAction(p.id, "denied", p.user_id, p.credits, p.amount)} className="text-xs px-2 py-1 rounded bg-red-500/10 text-red-400 hover:bg-red-500/20">拒绝</button>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-white/15">{p.status === "approved" ? "已处理" : "已处理"}</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function AdminPanel({ stats: initial }: { stats: Stats }) {
