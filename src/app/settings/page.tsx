@@ -279,17 +279,29 @@ export default function SettingsPage() {
             <div className="flex flex-col items-center gap-3 py-2">
               <img src={qrFallback.qrimg} alt="微信收款码" className="w-48 h-48 rounded-xl border border-white/10" />
               <div className="text-xs text-white/40 space-y-1">
-                <p>1. 截图或长按保存收款码</p>
+                <p>1. 截图保存收款码，或长按识别</p>
                 <p>2. 打开微信扫一扫 → 相册选择</p>
                 <p>3. 转账 <span className="text-purple-400 font-semibold">¥{selectedPlan?.price}</span></p>
-                <p className="text-[10px] text-white/20 mt-1">{qrFallback.note}</p>
-                <p className="text-xs text-purple-400/60 mt-2">微信：{qrFallback.wechat}</p>
-                <p className="text-[10px] text-white/20">支付后联系客服，手动加积分</p>
               </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="flex-col gap-2">
+              <Button size="sm" className="bg-gradient-to-r from-purple-500 to-pink-500 border-0 rounded-xl w-full"
+                onClick={async () => {
+                  if (!selectedPlan) return;
+                  const res = await fetch("/api/pay/submit", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ amount: selectedPlan.price, credits: selectedPlan.credits }),
+                  });
+                  const data = await res.json();
+                  if (data.code === 0) toast.success("已提交，管理员审核后将到账");
+                  else toast.error(data.message);
+                  setQrFallback(null); setSelectedPlan(null);
+                }}>
+                我已支付，通知管理员
+              </Button>
               <Button variant="outline" size="sm" className="border-border rounded-xl w-full" onClick={() => { setQrFallback(null); setSelectedPlan(null); }}>
-                已支付，关闭
+                关闭
               </Button>
             </DialogFooter>
           </DialogContent>

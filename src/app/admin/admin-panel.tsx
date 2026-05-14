@@ -8,8 +8,20 @@ interface Stats {
   totalCreditsConsumed: number; recentUsers: any[]; bgTasksByDay: any[];
 }
 
+function PaymentsTab() {
+  const [payments, setPayments] = useState<any[]>([]); const [loading, setLoading] = useState(true);
+  const fetchPayments = async () => { setLoading(true); try { const r = await fetch("/api/admin/payments"); const d = await r.json(); if (d.code === 0) setPayments(d.data.payments); } catch {} setLoading(false); };
+  useEffect(() => { fetchPayments(); }, []);
+  const handleAction = async (id: string, status: string, userId: string, credits: number, amount: number) => {
+    if (status === "approved" && !window.confirm(`给用户加 ${credits} 积分？`)) return;
+    await fetch("/api/admin/payments", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status, userId, credits, amount }) });
+    fetchPayments(); toast.success(status === "approved" ? "已通过" : "已拒绝");
+  };
+  return (<div className="glass p-4"><div className="flex justify-between mb-3"><span className="text-sm text-white/40">{payments.filter((p:any)=>p.status==="pending").length} 条待审核</span><button onClick={fetchPayments} className="text-xs text-white/30 hover:text-white/60">刷新</button></div>{loading ? <Loader2 className="w-5 h-5 text-white/30 animate-spin mx-auto" /> : payments.length === 0 ? <p className="text-sm text-white/20 text-center py-4">暂无</p> : <table className="w-full text-sm"><thead><tr className="border-b border-white/[0.06] text-white/30 text-xs"><th className="text-left py-2 px-2">用户</th><th className="text-left py-2 px-2">金额</th><th className="text-left py-2 px-2">积分</th><th className="text-left py-2 px-2">时间</th><th className="text-left py-2 px-2">状态</th><th className="text-right py-2 px-2">操作</th></tr></thead><tbody>{payments.map((p:any)=>(<tr key={p.id} className="border-b border-white/[0.03]"><td className="py-2 px-2 text-white/50 text-xs">{p.email||p.user_id?.slice(-8)}</td><td className="py-2 px-2 text-white/60">¥{p.amount}</td><td className="py-2 px-2 text-white/60">{p.credits}</td><td className="py-2 px-2 text-white/25 text-[10px]">{p.created_at?new Date(p.created_at).toLocaleString("zh-CN"):"-"}</td><td className="py-2 px-2"><span className={`text-[10px] px-1.5 py-0.5 rounded-full ${p.status==="approved"?"bg-green-500/15 text-green-400":p.status==="denied"?"bg-red-500/15 text-red-400":"bg-yellow-500/15 text-yellow-400"}`}>{p.status==="approved"?"已通过":p.status==="denied"?"已拒绝":"待审核"}</span></td><td className="py-2 px-2 text-right">{p.status==="pending"&&<div className="flex gap-1.5 justify-end"><button onClick={()=>handleAction(p.id,"approved",p.user_id,p.credits,p.amount)} className="text-xs text-green-400">通过</button><button onClick={()=>handleAction(p.id,"denied",p.user_id,p.credits,p.amount)} className="text-xs text-red-400">拒绝</button></div>}</td></tr>))}</tbody></table>}</div>);
+}
+
 export function AdminPanel({ stats: initial }: { stats: Stats }) {
-  const [tab, setTab] = useState<"overview" | "users">("overview");
+  const [tab, setTab] = useState<"overview" | "users" | "payments">("overview");
   const [users, setUsers] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
@@ -77,7 +89,7 @@ export function AdminPanel({ stats: initial }: { stats: Stats }) {
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
-        {[{ k: "overview", icon: BarChart3, label: "数据概览" }, { k: "users", icon: Users, label: "用户管理" }].map(t => (
+        {[{ k: "overview", icon: BarChart3, label: "数据概览" }, { k: "users", icon: Users, label: "用户管理" }, { k: "payments", icon: Coins, label: "充值审核" }].map(t => (
           <button key={t.k} onClick={() => setTab(t.k as any)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all ${
               tab === t.k ? "bg-purple-500/15 border border-purple-400/30 text-purple-300" : "bg-white/[0.03] border border-white/[0.06] text-white/50 hover:text-white/70"
@@ -261,6 +273,8 @@ export function AdminPanel({ stats: initial }: { stats: Stats }) {
           )}
         </div>
       )}
+
+      {tab === "payments" && <PaymentsTab />}
     </div>
   );
 }

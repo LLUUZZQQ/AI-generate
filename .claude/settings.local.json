@@ -159,7 +159,9 @@
       "WebFetch(domain:xorpay.com)",
       "WebFetch(domain:www.lemonsqueezy.com)",
       "WebFetch(domain:docs.lemonsqueezy.com)",
-      "WebFetch(domain:pay.yifuton.com)"
+      "WebFetch(domain:pay.yifuton.com)",
+      "PowerShell(npx tsx scripts/add-payment-submissions.ts)",
+      "Bash(grep *)"
     ]
   }
 }
