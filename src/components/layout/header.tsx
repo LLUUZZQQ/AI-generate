@@ -31,7 +31,7 @@ export function Header() {
 
   return (
     <header className="sticky top-3 z-50 transition-all duration-500 ease-smooth">
-      <div className={`flex items-center justify-between px-5 max-w-4xl mx-auto transition-all duration-500 ease-smooth rounded-2xl border ${
+      <div className={`flex items-center justify-between px-5 max-w-7xl mx-auto transition-all duration-500 ease-smooth rounded-2xl border ${
         scrolled
           ? "h-11 bg-background/80 border-white/[0.08] backdrop-blur-2xl shadow-[0_8px_32px_-12px_rgba(0,0,0,0.5)]"
           : "h-12 bg-background/50 border-white/[0.04] backdrop-blur-xl shadow-[0_4px_20px_-8px_rgba(0,0,0,0.3)]"
