@@ -152,7 +152,8 @@
       "PowerShell(git *)",
       "PowerShell(npx tsx scripts/generate-template-scenes.ts 2>&1)",
       "PowerShell(npx tsx scripts/make-admin.ts l13328903829@163.com)",
-      "PowerShell(npx tsx scripts/add-banned.ts)"
+      "PowerShell(npx tsx scripts/add-banned.ts)",
+      "PowerShell(npx tsx scripts/add-verification-table.ts)"
     ]
   }
 }

@@ -96,6 +96,8 @@ export default function LoginPage() {
         </form>
         <p className="text-center text-xs text-foreground/15 mt-5">
           还没有账号？<Link href="/register" className="text-purple-400 hover:text-purple-300 transition-colors">注册</Link>
+          <span className="mx-2 text-white/10">|</span>
+          <Link href="/forgot-password" className="text-white/25 hover:text-white/50 transition-colors">忘记密码</Link>
         </p>
       </div>
     </div>

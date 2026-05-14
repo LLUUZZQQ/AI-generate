@@ -199,3 +199,16 @@ model BgReplaceResult {
   @@index([taskId], map: "idx_bg_replace_results_task")
   @@map("bg_replace_results")
 }
+
+model VerificationCode {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  type      String   @default("register") // register | reset_password
+  used      Boolean  @default(false)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([email, type], map: "idx_verification_codes_email_type")
+  @@map("verification_codes")
+}
