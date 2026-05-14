@@ -63,7 +63,7 @@ export default function LandingPage() {
 
       {/* ======== TRUST / SOCIAL PROOF ======== */}
       <ScrollReveal>
-      <section className="max-w-4xl mx-auto px-6 py-8">
+      <section className="max-w-5xl mx-auto px-6 py-8">
         <p className="text-[10px] text-foreground/12 text-center mb-7 tracking-widest uppercase">
           为产品摄影师而生
         </p>
@@ -84,7 +84,7 @@ export default function LandingPage() {
 
       {/* ======== FEATURES ======== */}
       <ScrollReveal>
-      <section className="max-w-4xl mx-auto px-6 py-12 md:py-20">
+      <section className="max-w-6xl mx-auto px-6 py-12 md:py-20">
         <p className="text-[11px] text-purple-400 font-semibold tracking-widest uppercase mb-3 text-center">Capabilities</p>
         <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-12 text-center">
           不只是去背景，是<span className="gradient-text">完整的场景重塑</span>
@@ -154,7 +154,7 @@ export default function LandingPage() {
       {/* ======== HOW IT WORKS — sticky steps ======== */}
 
       <ScrollReveal>
-      <section className="max-w-5xl mx-auto px-6 py-16 md:py-24">
+      <section className="max-w-6xl mx-auto px-6 py-16 md:py-24">
         <p className="text-[11px] text-purple-400 font-semibold tracking-widest uppercase mb-3 text-center">How It Works</p>
         <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-16 text-center">
           三步完成，<span className="gradient-text">几分钟即可上手</span>
@@ -183,7 +183,7 @@ export default function LandingPage() {
       {/* ======== USE CASES — Bento ======== */}
 
       <ScrollReveal>
-      <section className="max-w-4xl mx-auto px-6 py-12 md:py-20">
+      <section className="max-w-6xl mx-auto px-6 py-12 md:py-20">
         <p className="text-[11px] text-purple-400 font-semibold tracking-widest uppercase mb-3 text-center">Use Cases</p>
         <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-12 text-center">
           为 <span className="gradient-text">专业卖家</span> 设计
@@ -222,7 +222,7 @@ export default function LandingPage() {
       {/* ======== BEFORE / AFTER ======== */}
 
       <ScrollReveal>
-      <section className="max-w-4xl mx-auto px-6 py-12 md:py-20">
+      <section className="max-w-5xl mx-auto px-6 py-12 md:py-20">
         <p className="text-[11px] text-purple-400 font-semibold tracking-widest uppercase mb-3 text-center">Gallery</p>
         <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-10 text-center">
           <span className="gradient-text">处理前后</span> 对比
@@ -246,7 +246,7 @@ export default function LandingPage() {
       {/* ======== METRICS + CLOSING — above sticky stack ======== */}
       <div className="relative z-50 bg-background">
       <ScrollReveal>
-      <section className="max-w-3xl mx-auto px-6 py-10">
+      <section className="max-w-5xl mx-auto px-6 py-10">
         <div className="glass p-8 grid grid-cols-3 gap-6 text-center">
           {[
             { value: "¥1", label: "试用起步" },
@@ -264,7 +264,7 @@ export default function LandingPage() {
 
       {/* ======== CLOSING ======== */}
       <ScrollReveal>
-      <section className="max-w-3xl mx-auto px-6 py-20 md:py-28 text-center">
+      <section className="max-w-4xl mx-auto px-6 py-20 md:py-28 text-center">
         <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-4">
           准备好<span className="gradient-text">升级产品视觉</span>了吗？
         </h2>
