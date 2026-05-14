@@ -91,6 +91,7 @@ export default function NewBgReplacePage() {
         const formData = new FormData();
         formData.append("file", file);
         const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
+        if (!uploadRes.ok) { toast.error("上传失败，请重试"); setSubmitting(false); return; }
         const uploadData = await uploadRes.json();
         if (uploadData.code !== 0) {
           toast.error(`上传失败: ${uploadData.message}`);
@@ -105,6 +106,7 @@ export default function NewBgReplacePage() {
         const formData = new FormData();
         formData.append("file", customBgFile);
         const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
+        if (!uploadRes.ok) { toast.error("背景上传失败，请重试"); setSubmitting(false); return; }
         const uploadData = await uploadRes.json();
         if (uploadData.code !== 0) {
           toast.error(`背景上传失败: ${uploadData.message}`);
@@ -147,6 +149,7 @@ export default function NewBgReplacePage() {
             aiModel,
           }),
         });
+        if (!taskRes.ok) { toast.error("创建任务失败，请重试"); setSubmitting(false); return; }
         const taskData = await taskRes.json();
 
         if (taskData.code === 40003) {
