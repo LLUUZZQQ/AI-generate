@@ -23,10 +23,14 @@ async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer, custo
     console.log("[bg-worker] GPT-5.4 Image 2 blend: product", origMeta.width + "x" + origMeta.height,
       "bg", bgMeta.width + "x" + bgMeta.height);
 
-    const apiKey = process.env.OPENAI_API_KEY!;
-
     const model = aiModel || "google/gemini-3.1-flash-image-preview";
     const isRecraft = model.includes("recraft");
+
+    // All models → EvoLink.AI
+    const apiKey = process.env.GEMINI_API_KEY!;
+    const apiBaseUrl = "https://api.evolink.ai/v1/chat/completions";
+    // Strip provider prefix (google/xxx → xxx, openai/xxx → xxx)
+    const apiModel = model.replace(/^(google|openai)\//, "");
 
     const defaultPrompt = `You are a photorealistic image compositor. Take the product from the FIRST image and place it into the SECOND image's scene. The result must be INDISTINGUISHABLE from a real photograph.
 
@@ -77,9 +81,9 @@ CRITICAL RULES:
       ];
     }
 
-    // Call OpenRouter with OpenRouter key
+    // Call EvoLink AI platform
     const bodyObj: any = {
-      model,
+      model: apiModel,
       messages: requestMessages,
     };
     if (isRecraft) {
@@ -90,20 +94,20 @@ CRITICAL RULES:
     }
     const body = JSON.stringify(bodyObj);
 
-    console.log("[bg-worker] GPT-5.4: calling OpenRouter...");
+    console.log(`[bg-worker] calling EvoLink with model ${apiModel}...`);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 90000);
 
+    const fetchHeaders: Record<string, string> = {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    };
+
     let resp: Response;
     try {
-      resp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      resp = await fetch(apiBaseUrl, {
         method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": process.env.NEXT_PUBLIC_URL || "http://localhost:3000",
-          "X-Title": "FrameCraft",
-        },
+        headers: fetchHeaders,
         body,
         signal: controller.signal,
       });

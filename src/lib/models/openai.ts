@@ -6,12 +6,8 @@ export class OpenAIAdapter implements ModelAdapter {
 
   constructor(_config: unknown) {
     this.client = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY!,
-      baseURL: "https://openrouter.ai/api/v1",
-      defaultHeaders: {
-        "HTTP-Referer": process.env.NEXT_PUBLIC_URL || "http://localhost:3000",
-        "X-Title": "FrameCraft",
-      },
+      apiKey: process.env.GEMINI_API_KEY!,
+      baseURL: "https://api.evolink.ai/v1",
     });
   }
 
