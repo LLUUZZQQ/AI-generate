@@ -125,6 +125,19 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Zero-credit welcome banner */}
+      {user && user.credits === 0 && (
+        <div className="glass p-5 mb-8 flex items-center justify-between border-purple-400/20">
+          <div>
+            <p className="text-sm font-medium text-white/70 mb-1">👋 欢迎使用 FrameCraft</p>
+            <p className="text-xs text-white/35">充值任意套餐即可开始使用 · 首充额外赠送 10% 积分</p>
+          </div>
+          <Link href="/settings?tab=billing" className="shrink-0 text-xs px-4 py-2 rounded-lg bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 border border-purple-400/20 transition-colors">
+            去充值 →
+          </Link>
+        </div>
+      )}
+
       {/* ======== STATS GRID ======== */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
         <StatCard icon={Coins} label="积分余额" value={user?.credits ?? 0} color="#b57bee" sub={<Link href="/settings" className="hover:text-purple-400 transition-colors">充值 →</Link>} />

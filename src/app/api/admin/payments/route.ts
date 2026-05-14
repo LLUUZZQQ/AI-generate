@@ -29,13 +29,20 @@ export const PATCH = withAuth(async (req: NextRequest, _ctx: any, user: { id: st
 
   // If approved, add credits and record transaction
   if (status === "approved" && userId && credits) {
-    await prisma.user.update({ where: { id: userId }, data: { credits: { increment: credits } } });
+    // 10% first recharge bonus
+    const purchaseCount = await prisma.creditTransaction.count({ where: { userId, type: "purchase" } });
+    let bonus = 0;
+    if (purchaseCount === 0 && credits >= 100) {
+      bonus = Math.floor(credits * 0.1);
+    }
+
+    await prisma.user.update({ where: { id: userId }, data: { credits: { increment: credits + bonus } } });
     await prisma.creditTransaction.create({
       data: {
         userId,
         amount: credits,
         type: "purchase",
-        description: `微信扫码充值 ¥${amount} → ${credits} 积分`,
+        description: `微信扫码充值 ¥${amount} → ${credits} 积分${bonus > 0 ? `（首充赠送 ${bonus} 积分）` : ""}`,
       },
     });
   }

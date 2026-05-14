@@ -12,7 +12,7 @@ model User {
   name      String?
   password  String?
   avatar    String?
-  credits   Int      @default(20)
+  credits   Int      @default(0)
   role      String   @default("user")
   banned    Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")

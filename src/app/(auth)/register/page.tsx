@@ -70,7 +70,7 @@ export default function RegisterPage() {
           <h1 className="text-2xl font-semibold tracking-tight mb-1.5">
             <span className="gradient-text">Frame</span><span className="text-foreground/70">Craft</span>
           </h1>
-          <p className="text-xs text-foreground/25">注册即送 20 积分</p>
+          <p className="text-xs text-foreground/25">注册后充值即可使用</p>
         </div>
 
         {step === "form" ? (
@@ -120,7 +120,7 @@ export default function RegisterPage() {
             </div>
             {error && <p className="text-xs text-red-400">{error}</p>}
             <Button type="submit" className="w-full h-10 bg-gradient-to-r from-purple-500 to-pink-500 border-0" disabled={loading}>
-              {loading ? "注册中..." : "注册 · 领取 20 积分"}
+              {loading ? "注册中..." : "注册"}
             </Button>
           </form>
         )}

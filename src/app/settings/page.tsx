@@ -10,6 +10,7 @@ import { TransactionList } from "@/components/user/transaction-list";
 import { User, Mail, Clock, Shield, Lock, Eye, EyeOff, Coins } from "lucide-react";
 
 const plans = [
+  { amount: 1, credits: 1, price: 1, name: "试用体验", desc: "¥1.00/张", savings: "", trial: true },
   { amount: 100, credits: 100, price: 12, name: "入门体验", desc: "¥0.12/张", savings: "" },
   { amount: 500, credits: 500, price: 45, name: "高效创作", desc: "¥0.09/张", savings: "省 ¥15", rec: true, badge: "🔥 最受欢迎" },
   { amount: 2000, credits: 2000, price: 168, name: "专业生产", desc: "¥0.084/张", savings: "省 ¥72", badge: "💎 最划算" },
@@ -239,6 +240,11 @@ export default function SettingsPage() {
             className={`glass p-4 text-left relative transition-all hover:scale-[1.02] ${
               selectedPlan?.amount === plan.amount ? "ring-1 ring-purple-400/50 bg-purple-500/5" : ""
             }`}>
+            {plan.trial && (
+              <div className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] px-2.5 py-0.5 rounded-full bg-emerald-500 text-white whitespace-nowrap shadow-lg shadow-emerald-500/25">
+                🆕 新用户体验
+              </div>
+            )}
             {plan.badge && (
               <div className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] px-2.5 py-0.5 rounded-full bg-purple-500 text-white whitespace-nowrap shadow-lg shadow-purple-500/25">
                 {plan.badge}

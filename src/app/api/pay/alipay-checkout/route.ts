@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { createPayOrder } from "@/lib/pay";
 
 const PRICE_MAP: Record<number, { credits: number; price: number }> = {
+  1: { credits: 1, price: 1 },
   100: { credits: 100, price: 12 },
   500: { credits: 500, price: 45 },
   2000: { credits: 2000, price: 168 },

@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     await prisma.verificationCode.update({ where: { id: record.id }, data: { used: true } });
 
     const hashed = await bcrypt.hash(parsed.data.password, 10);
-    await prisma.user.create({ data: { name: parsed.data.name, email: parsed.data.email, password: hashed, credits: 20 } });
+    await prisma.user.create({ data: { name: parsed.data.name, email: parsed.data.email, password: hashed, credits: 0 } });
 
     ipCooldown.set(ip, Date.now());
     if (ipCooldown.size > 1000) {
