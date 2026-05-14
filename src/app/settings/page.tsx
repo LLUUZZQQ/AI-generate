@@ -10,9 +10,9 @@ import { TransactionList } from "@/components/user/transaction-list";
 import { User, Mail, Clock, Shield, Lock, Eye, EyeOff, Coins } from "lucide-react";
 
 const plans = [
-  { amount: 100, credits: 100, price: 10, name: "入门体验", desc: "¥0.10/张", savings: "" },
-  { amount: 500, credits: 500, price: 45, name: "高效创作", desc: "¥0.09/张", savings: "省 ¥5", rec: true, badge: "🔥 最受欢迎" },
-  { amount: 2000, credits: 2000, price: 160, name: "专业生产", desc: "¥0.08/张", savings: "省 ¥40", badge: "💎 最划算" },
+  { amount: 100, credits: 100, price: 12, name: "入门体验", desc: "¥0.12/张", savings: "" },
+  { amount: 500, credits: 500, price: 45, name: "高效创作", desc: "¥0.09/张", savings: "省 ¥15", rec: true, badge: "🔥 最受欢迎" },
+  { amount: 2000, credits: 2000, price: 168, name: "专业生产", desc: "¥0.084/张", savings: "省 ¥72", badge: "💎 最划算" },
 ];
 
 function PaymentHistory() {
