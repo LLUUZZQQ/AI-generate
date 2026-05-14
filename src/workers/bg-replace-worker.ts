@@ -8,6 +8,81 @@ import path from "path";
 const hasS3 = !!(process.env.S3_BUCKET && process.env.S3_ENDPOINT);
 const POLL_INTERVAL = 3000; // 3 seconds
 
+/* ── NanoBanana async task-based API ──────────────────────────── */
+async function nanobananaBlend(
+  originalBuffer: Buffer, bgBuffer: Buffer, customPrompt?: string, aiModel?: string,
+): Promise<Buffer | null> {
+  const NANOBANANA_KEY = process.env.NANOBANANA_API_KEY!;
+  const NANOBANANA_BASE = "https://api.nanobananaapi.ai/api/v1/nanobanana";
+  const isPro = aiModel?.includes("pro");
+
+  const prompt = customPrompt || `Take the product from the first reference image and seamlessly place it into the second reference image's scene. The result must look like a single real photograph — indistinguishable from reality. Preserve the product exactly (color, texture, proportions, details). Match lighting, shadows, perspective, and depth of field to the background. Natural phone photo quality. No text or watermark.`;
+
+  const endpoint = isPro
+    ? `${NANOBANANA_BASE}/generate-pro`
+    : `${NANOBANANA_BASE}/generate-2`;
+
+  const reqBody: any = {
+    prompt,
+    imageUrls: [
+      `data:image/png;base64,${originalBuffer.toString("base64")}`,
+      `data:image/png;base64,${bgBuffer.toString("base64")}`,
+    ],
+    aspectRatio: "auto",
+    resolution: "1K",
+    outputFormat: "png",
+  };
+
+  console.log(`[bg-worker] NanoBanana: POST ${endpoint} (${isPro ? "pro" : "2"})`);
+  let resp = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${NANOBANANA_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(reqBody),
+    signal: AbortSignal.timeout(30000),
+  });
+
+  const json = await resp.json() as any;
+  if (!resp.ok || json.code !== 200) {
+    console.error("[bg-worker] NanoBanana create failed:", JSON.stringify(json).substring(0, 300));
+    return null;
+  }
+
+  const taskId = json.data?.taskId;
+  if (!taskId) { console.error("[bg-worker] NanoBanana: no taskId"); return null; }
+  console.log(`[bg-worker] NanoBanana taskId: ${taskId}, polling...`);
+
+  // Poll for result (max 120s)
+  for (let i = 0; i < 40; i++) {
+    await new Promise(r => setTimeout(r, 3000));
+    const pollResp = await fetch(`${NANOBANANA_BASE}/record-info?taskId=${taskId}`, {
+      headers: { "Authorization": `Bearer ${NANOBANANA_KEY}` },
+      signal: AbortSignal.timeout(10000),
+    });
+    const pollJson = await pollResp.json() as any;
+    const flag = pollJson?.successFlag ?? pollJson?.data?.successFlag;
+
+    if (flag === 1) {
+      const resultUrl = pollJson?.response?.resultImageUrl || pollJson?.data?.response?.resultImageUrl;
+      if (!resultUrl) { console.error("[bg-worker] NanoBanana: no resultUrl"); return null; }
+      console.log(`[bg-worker] NanoBanana done, downloading: ${resultUrl.substring(0, 60)}`);
+      const dl = await fetch(resultUrl, { signal: AbortSignal.timeout(30000) });
+      if (!dl.ok) { console.error("[bg-worker] NanoBanana download failed:", dl.status); return null; }
+      return Buffer.from(await dl.arrayBuffer());
+    }
+    if (flag === 2 || flag === 3) {
+      console.error("[bg-worker] NanoBanana task failed:", pollJson?.errorMessage || pollJson?.data?.errorMessage);
+      return null;
+    }
+    // flag === 0: still generating
+  }
+  console.error("[bg-worker] NanoBanana timeout");
+  return null;
+}
+
+/* ── Main AI blend dispatcher ────────────────────────────────── */
 async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer, customPrompt?: string, aiModel?: string): Promise<Buffer | null> {
   try {
     const sharp = (await import("sharp")).default;
@@ -20,13 +95,19 @@ async function aiBlendBackground(originalBuffer: Buffer, bgBuffer: Buffer, custo
     const productMime = origMeta.format === "png" ? "image/png" : "image/jpeg";
     const bgMime = bgMeta.format === "png" ? "image/png" : "image/jpeg";
 
-    console.log("[bg-worker] GPT-5.4 Image 2 blend: product", origMeta.width + "x" + origMeta.height,
+    console.log("[bg-worker] AI blend: product", origMeta.width + "x" + origMeta.height,
       "bg", bgMeta.width + "x" + bgMeta.height);
 
     const model = aiModel || "google/gemini-3.1-flash-image-preview";
     const isRecraft = model.includes("recraft");
+    const isNanobanana = model.includes("nanobanana") || model.includes("nano-banana");
 
-    // All models → EvoLink.AI
+    // NanoBanana → async task API
+    if (isNanobanana) {
+      return nanobananaBlend(originalBuffer, bgBuffer, customPrompt, model);
+    }
+
+    // EvoLink (OpenAI-compatible)
     const apiKey = process.env.GEMINI_API_KEY!;
     const apiBaseUrl = "https://api.evolink.ai/v1/chat/completions";
     // Strip provider prefix (google/xxx → xxx, openai/xxx → xxx)
