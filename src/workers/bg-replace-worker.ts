@@ -8,136 +8,62 @@ import path from "path";
 const hasS3 = !!(process.env.S3_BUCKET && process.env.S3_ENDPOINT);
 const POLL_INTERVAL = 3000; // 3 seconds
 
-/* ── Step 1: sharp精确合成 — 去背景+缩放+定位+阴影 ──────────── */
-async function preComposite(productBuf: Buffer, bgBuf: Buffer): Promise<Buffer | null> {
-  try {
-    const sharp = (await import("sharp")).default;
-    const { HfInference } = await import("@huggingface/inference");
-    const hf = new HfInference(process.env.HF_TOKEN!);
-
-    // Remove background via HuggingFace RMBG-2.0
-    console.log("[bg-worker] preComposite: removing background...");
-    const blob = new Blob([new Uint8Array(productBuf)], { type: "image/png" });
-    const segResult = await hf.imageSegmentation({ model: "briaai/RMBG-2.0", inputs: blob });
-    let subjectNoBg: Buffer;
-    if (Array.isArray(segResult) && segResult[0]?.mask) {
-      const maskBuf = Buffer.from(segResult[0].mask, "base64");
-      const orig = sharp(productBuf);
-      const { width, height } = await orig.metadata();
-      const mask = sharp(maskBuf).resize(width!, height!).greyscale();
-      subjectNoBg = await orig.ensureAlpha()
-        .composite([{ input: await mask.toBuffer(), blend: "dest-in" }])
-        .png().toBuffer();
-    } else {
-      console.error("[bg-worker] preComposite: RMBG-2.0 unexpected result");
-      return null;
-    }
-
-    const subMeta = await sharp(subjectNoBg).metadata();
-    const bgMeta = await sharp(bgBuf).metadata();
-    const subW = subMeta.width!, subH = subMeta.height!;
-    const bgW = bgMeta.width!, bgH = bgMeta.height!;
-
-    // Scale product to fit naturally: ~40% width for horizontal, ~50% for vertical
-    const isVertical = subH > subW * 1.2;
-    const targetFraction = isVertical ? 0.50 : 0.40;
-    const scale = Math.min((bgW * targetFraction) / subW, (bgH * 0.7) / subH, 1.0);
-    const prodW = Math.round(subW * scale);
-    const prodH = Math.round(subH * scale);
-    const resizedSubject = await sharp(subjectNoBg).resize(prodW, prodH, { fit: "inside" }).png().toBuffer();
-
-    // Position: centered horizontally, bottom half of frame
-    const left = Math.round((bgW - prodW) / 2);
-    const top = Math.round(bgH * 0.55 - prodH / 2);
-
-    // SVG shadow system
-    const contactW = Math.round(prodW * 0.75);
-    const contactH = Math.round(prodH * 0.03);
-    const contactX = Math.round(left + (prodW - contactW) / 2);
-    const contactY = Math.round(top + prodH - contactH * 0.5);
-
-    const ambientW = Math.round(prodW * 0.85);
-    const ambientH = Math.round(prodH * 0.12);
-    const ambientX = Math.round(left + (prodW - ambientW) / 2);
-    const ambientY = Math.round(top + prodH - ambientH * 0.3);
-
-    const shadowSvg = Buffer.from(
-      `<svg width="${bgW}" height="${bgH}">
-        <defs>
-          <filter id="blurC"><feGaussianBlur stdDeviation="3"/></filter>
-          <filter id="blurA"><feGaussianBlur stdDeviation="14"/></filter>
-        </defs>
-        <ellipse cx="${Math.round(ambientX + ambientW / 2)}" cy="${Math.round(ambientY + ambientH / 2)}"
-          rx="${Math.round(ambientW / 2)}" ry="${Math.round(ambientH / 2)}"
-          fill="rgba(0,0,0,0.15)" filter="url(#blurA)"/>
-        <ellipse cx="${Math.round(contactX + contactW / 2)}" cy="${Math.round(contactY + contactH / 2)}"
-          rx="${Math.round(contactW / 2)}" ry="${Math.round(contactH / 2)}"
-          fill="rgba(0,0,0,0.30)" filter="url(#blurC)"/>
-      </svg>`,
-    );
-    const shadowBuf = await sharp(shadowSvg).png().toBuffer();
-
-    // Edge soften
-    const softenedSubject = await sharp(resizedSubject).ensureAlpha().blur(0.8).toBuffer();
-
-    // Composite: bg → shadow → product
-    const composite = await sharp(bgBuf)
-      .composite([
-        { input: shadowBuf, top: 0, left: 0 },
-        { input: softenedSubject, top, left },
-      ])
-      .jpeg({ quality: 95 })
-      .toBuffer();
-
-    console.log(`[bg-worker] preComposite: product ${subW}x${subH} → ${prodW}x${prodH} on ${bgW}x${bgH} bg`);
-    return composite;
-  } catch (e: any) {
-    console.error("[bg-worker] preComposite failed:", e.message?.substring(0, 200));
-    return null;
-  }
-}
-
-/* ── Step 2: AI摄影润色 — 单图输入，只做光影/边缘/氛围 ──────── */
-async function aiRefinePhoto(
-  compositeBuf: Buffer, customPrompt?: string, aiModel?: string,
+/* ── AI全流程 — 双图输入，AI 负责全部合成 ────────────────── */
+async function aiBlendBackground(
+  productBuf: Buffer, bgBuf: Buffer,
+  customPrompt?: string, aiModel?: string,
 ): Promise<Buffer | null> {
   try {
     const sharp = (await import("sharp")).default;
-    const cMeta = await sharp(compositeBuf).metadata();
-    const compositeB64 = compositeBuf.toString("base64");
+
+    const pMeta = await sharp(productBuf).metadata();
+    const bgMeta = await sharp(bgBuf).metadata();
+
+    const productB64 = productBuf.toString("base64");
+    const bgB64 = bgBuf.toString("base64");
+    const pMime = pMeta.format === "png" ? "image/png" : "image/jpeg";
+    const bgMime = bgMeta.format === "png" ? "image/png" : "image/jpeg";
+
+    console.log("[bg-worker] AI blend: product", pMeta.width + "x" + pMeta.height,
+      "bg", bgMeta.width + "x" + bgMeta.height);
 
     const model = aiModel || "google/gemini-3.1-flash-image-preview";
 
-    const refinementPrompt = customPrompt || `Refine this product photo into a single authentic photograph — as if the product was originally shot in this location.
+    const universalPrompt = customPrompt || `Task: Seamlessly composite the object from Image 1 into the scene of Image 2. Output a single, authentic photograph — as if a professional photographer shot the object on location in that exact scene.
 
-EDGE BLENDING: Soften transition between product and background. Zero visible cutout line.
-LIGHTING HARMONY: Match the product's lighting to the scene's light direction, color temperature, and intensity.
-SHADOW REFINEMENT: Refine shadows under the product — sharp contact shadow, soft cast shadow.
-COLOR UNITY: Harmonize color balance between product and scene.
-ATMOSPHERE: Add subtle ambient occlusion and depth haze where appropriate.
-DETAILS: Keep every product texture, material, color, logo, and label 100% unchanged and sharp.
-OUTPUT: Clean product photograph. No added text, watermark, or logo.`;
+Image 1 — OBJECT: The product or object to be placed into the scene. Keep every detail exactly as it appears — colors, textures, materials, stitching, logos, labels, packaging, accessories. Do not alter, discard, or add anything.
+
+Image 2 — SCENE: The target environment with its lighting, surfaces, depth, and atmosphere. The object should look like it naturally belongs here.
+
+INTEGRATION RULES:
+1. PERSPECTIVE: The object's scale, angle, and depth must align with the floor plane and perspective of the scene. Place the object on a natural surface (floor, ground, table, desk) within the scene.
+2. LIGHTING: Re-light the object to match the scene's light source direction, color temperature, and intensity. The object must share the same lighting conditions as the scene.
+3. SHADOWS: Generate a sharp contact shadow directly beneath the object where it meets the surface. Generate a soft cast shadow consistent with the scene's light direction and shadow softness.
+4. EDGES: The transition between object and background must be seamless — no visible cutout line, no halo. The object should appear to have always been in the scene.
+5. ATMOSPHERE: Apply matching ambient occlusion, depth haze, and color grading so the object shares the scene's atmosphere.
+6. DETAILS: Every texture, material, label, and logo on the object must remain razor-sharp and 100% true to the original. No blur, no noise, no alteration.
+7. OUTPUT: A single photorealistic image. No added text, watermark, or logo.`;
 
     const apiKey = process.env.OPENAI_API_KEY!;
-    const apiBaseUrl = "https://openrouter.ai/api/v1/chat/completions";
-    const apiModel = model;
+    const baseUrl = "https://openrouter.ai/api/v1/chat/completions";
 
     const requestMessages = [
       { role: "user", content: [
-        { type: "text", text: refinementPrompt },
-        { type: "image_url", image_url: { url: `data:image/jpeg;base64,${compositeB64}` } },
+        { type: "text", text: universalPrompt },
+        { type: "image_url", image_url: { url: `data:${pMime};base64,${productB64}` } },
+        { type: "image_url", image_url: { url: `data:${bgMime};base64,${bgB64}` } },
       ]},
     ];
 
-    const body = JSON.stringify({ model: apiModel, messages: requestMessages, max_tokens: 4096 });
+    const body = JSON.stringify({ model, messages: requestMessages, max_tokens: 4096 });
 
-    console.log(`[bg-worker] AI refine: calling OpenRouter with ${apiModel}...`);
+    console.log(`[bg-worker] calling OpenRouter with ${model}...`);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 90000);
 
     let resp: Response;
     try {
-      resp = await fetch(apiBaseUrl, {
+      resp = await fetch(baseUrl, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${apiKey}`,
@@ -154,13 +80,13 @@ OUTPUT: Clean product photograph. No added text, watermark, or logo.`;
 
     if (!resp.ok) {
       const errText = await resp.text();
-      console.error("[bg-worker] AI refine: HTTP", resp.status, errText.substring(0, 200));
+      console.error("[bg-worker] HTTP", resp.status, errText.substring(0, 200));
       return null;
     }
 
     const data = await resp.json() as any;
     const message = data?.choices?.[0]?.message;
-    if (!message) { console.error("[bg-worker] AI refine: no message"); return null; }
+    if (!message) { console.error("[bg-worker] no message"); return null; }
 
     const content = message.content;
     let resultBuf: Buffer | null = null;
@@ -170,19 +96,19 @@ OUTPUT: Clean product photograph. No added text, watermark, or logo.`;
         const b64 = content.includes("base64,") ? content.split("base64,")[1] : content;
         resultBuf = Buffer.from(b64, "base64");
       } else {
-        console.error("[bg-worker] AI refine: text-only response:", content.substring(0, 200));
+        console.error("[bg-worker] text-only response:", content.substring(0, 200));
       }
     }
 
     if (!resultBuf && content) {
       for (const part of content as any[]) {
         if (part.type === "image_url" && part.image_url?.url) {
-          const imgUrl: string = part.image_url.url;
-          if (imgUrl.startsWith("data:")) {
-            resultBuf = Buffer.from(imgUrl.includes("base64,") ? imgUrl.split("base64,")[1] : imgUrl, "base64");
+          const u: string = part.image_url.url;
+          if (u.startsWith("data:")) {
+            resultBuf = Buffer.from(u.includes("base64,") ? u.split("base64,")[1] : u, "base64");
           } else {
-            const imgRes = await fetch(imgUrl);
-            if (imgRes.ok) resultBuf = Buffer.from(await imgRes.arrayBuffer());
+            const r = await fetch(u);
+            if (r.ok) resultBuf = Buffer.from(await r.arrayBuffer());
           }
           break;
         }
@@ -190,34 +116,34 @@ OUTPUT: Clean product photograph. No added text, watermark, or logo.`;
     }
 
     if (!resultBuf) {
-      const msgAny = message as any;
-      if (msgAny.images?.[0]?.image_url?.url) {
-        const imgUrl = msgAny.images[0].image_url.url;
-        if (imgUrl.startsWith("data:")) {
-          resultBuf = Buffer.from(imgUrl.includes("base64,") ? imgUrl.split("base64,")[1] : imgUrl, "base64");
+      const m = message as any;
+      if (m.images?.[0]?.image_url?.url) {
+        const u = m.images[0].image_url.url;
+        if (u.startsWith("data:")) {
+          resultBuf = Buffer.from(u.includes("base64,") ? u.split("base64,")[1] : u, "base64");
         } else {
-          const imgRes = await fetch(imgUrl);
-          if (imgRes.ok) resultBuf = Buffer.from(await imgRes.arrayBuffer());
+          const r = await fetch(u);
+          if (r.ok) resultBuf = Buffer.from(await r.arrayBuffer());
         }
       }
     }
 
-    if (!resultBuf) { console.error("[bg-worker] AI refine: could not extract image"); return null; }
+    if (!resultBuf) { console.error("[bg-worker] could not extract image"); return null; }
 
     // Restore background dimensions
-    if (cMeta.width && cMeta.height) {
+    if (bgMeta.width && bgMeta.height) {
       const aiMeta = await sharp(resultBuf).metadata();
-      if (aiMeta.width !== cMeta.width || aiMeta.height !== cMeta.height) {
+      if (aiMeta.width !== bgMeta.width || aiMeta.height !== bgMeta.height) {
         resultBuf = await sharp(resultBuf)
-          .resize(cMeta.width, cMeta.height, { fit: "inside", withoutEnlargement: true })
+          .resize(bgMeta.width, bgMeta.height, { fit: "inside", withoutEnlargement: true })
           .png().toBuffer();
       }
     }
 
-    console.log("[bg-worker] AI refine: done, size:", resultBuf.length);
+    console.log("[bg-worker] done, size:", resultBuf.length);
     return resultBuf;
   } catch (e: any) {
-    console.error("[bg-worker] AI refine failed:", e.message?.substring(0, 200));
+    console.error("[bg-worker] AI blend failed:", e.message?.substring(0, 200));
     return null;
   }
 }
@@ -301,19 +227,8 @@ async function processTask(taskId: string) {
         bg = await createSolidBackground("#f5f5f0");
       }
 
-      // Step 1: sharp精确合成 (大小/位置/阴影)
-      const composite = await preComposite(original, bg);
-      if (!composite) {
-        console.error(`[bg-worker] preComposite FAILED for result ${result.id}`);
-        await prisma.bgReplaceResult.update({
-          where: { id: result.id },
-          data: { status: "failed", error: "去背景或合成失败" },
-        });
-        continue;
-      }
-
-      // Step 2: AI摄影润色 (光影/边缘/氛围)
-      const composited = await aiRefinePhoto(composite, task.customPrompt ?? undefined, task.aiModel ?? undefined);
+      // AI全流程 — 双图输入，AI负责去背景+合成+光影
+      const composited = await aiBlendBackground(original, bg, task.customPrompt ?? undefined, task.aiModel ?? undefined);
 
       if (!composited) {
         console.error(`[bg-worker] AI blend FAILED for result ${result.id}`);
