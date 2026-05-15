@@ -2,14 +2,20 @@
 name: ai-saas-fullstack
 description: >
   Build complete AI-powered SaaS applications from scratch. Covers: AI image processing
-  pipelines (multi-model fusion, background replacement), full-stack Next.js architecture
-  (Vercel + Railway + Supabase), premium dark-themed UI (glass morphism, bento grid, Framer
-  Motion), admin panel with user management, credit system, onboarding tours, and smart
-  presets. Use when user says "build me an AI website", "AI SaaS platform", "AI image
-  processing tool", "background replacement service", "AI fusion pipeline", or wants to
-  create any web app involving AI image/text/video processing with a production-grade
-  architecture. Also trigger when the user asks for admin dashboards, user management
-  panels, credit/billing systems, or dark-themed landing pages with glass design.
+  pipelines (multi-model fusion, background replacement, style transfer), full-stack Next.js
+  architecture (Vercel + Railway + Supabase + Cloudflare R2), AI platform evaluation and
+  switching (OpenRouter, EvoLink, NanoBanana), prompt engineering patterns (evolution from
+  rules to photographic language, style transfer, intensity pitfalls), premium dark-themed
+  UI (glass morphism, before/after slider, share cards, gallery, batch upload), feature
+  development workflow (MVP → polish → cleanup), sync vs async AI patterns, deployment
+  reality (Vercel auto-deploy unreliability, multi-platform env vars), database ad-hoc
+  migrations, admin panel, credit system, payment integration (WeChat QR manual flow for
+  Chinese market), and silent failure debugging. Use when user says "build me an AI
+  website", "AI SaaS", "AI image processing", "add AI feature to my site", "background
+  replacement", "style transfer", "AI platform evaluation", "prompt engineering for
+  images", "how to improve AI output quality", or wants to create any production AI
+  application. Also trigger for AI API troubleshooting, feature optimization cycles,
+  and deployment debugging.
 ---
 
 # AI SaaS Fullstack
@@ -307,3 +313,199 @@ Available on OpenRouter for image editing (text+image in → image out):
 
 Recraft models (`recraft/recraft-v4`, `recraft/recraft-v4-pro`) need special handling
 (see AI Pipeline section) and may not be fully supported through OpenRouter.
+
+## AI Platform Selection
+
+When choosing an AI API platform, test systematically before committing:
+
+### Evaluation Checklist
+For each candidate platform, verify:
+1. Does it output images? (Many "OpenAI-compatible" proxies are text-only)
+2. What models are actually available? (Proxy may advertise but not support)
+3. Test with the simplest possible prompt first — "Generate a red circle"
+4. Test with your actual use case prompt
+5. Check error messages carefully — "prompt rejected" ≠ "API broken"
+
+### Platform Outcomes
+
+| Platform | Image Output? | Cost Model | Verdict |
+|----------|--------------|------------|---------|
+| **OpenRouter** | Yes (multimodal) | Per-token | Best for image generation |
+| **EvoLink.AI** | No (text-only) | Monthly | Cannot do image tasks |
+| **NanoBanana API** | Yes (async task) | Per-request | Works but Gemini safety filters block commercial products |
+
+### Key Lessons
+- **Async task APIs** (POST → taskId → poll → download): require completely different code than OpenAI-compatible chat APIs. The polling loop needs per-iteration error handling, timeout limits, and URL encoding for taskId.
+- **Image URLs vs base64**: Some platforms accept only real HTTP URLs (not data URIs). In that case, upload images to S3 first and pass the public URL through your own domain proxy (`/api/s3/[key]`), never expose S3 endpoint directly.
+- **Safety filters**: Google Gemini has strict content filtering. Commercial product images may be rejected even if the prompt is innocuous. This is not a code bug — it's a platform limitation.
+- **Test fast, fail fast, move on**: We spent 6+ iterations debugging NanoBanana before confirming the root cause was Gemini's safety filter, not our code. Limit platform evaluation to 3 attempts before deciding.
+
+### Platform Switching Pattern
+When switching platforms, change exactly 3 things:
+1. `baseUrl` — the API endpoint
+2. `apiKey` — the auth credential
+3. Model name prefix (e.g., strip `google/` for some proxies)
+
+Keep the rest of the code identical. This makes rollback trivial.
+
+## Prompt Engineering
+
+### The Evolution That Worked
+
+**❌ Don't: Over-specify quality requirements**
+Rule lists with "add noise", "smartphone quality", "NOT overly sharp" will degrade output.
+
+**❌ Don't: Use "composite" or "place" in the prompt**
+These words tell the AI to do pixel-level compositing, which it cannot do precisely. Use "photograph" language instead.
+
+**✅ Do: Use photographic language**
+Frame as "generating a photograph where the product is in this scene" rather than "compositing product onto background."
+
+**✅ Do: Keep prompts concise**
+Gemini Flash works best with 3-6 bullet points. GPT-5.4 can handle 8-10 structured rules. Overly long prompts (16+ bullet points per style) degrade quality.
+
+### Style Transfer Pattern (Pet Portrait)
+For AI style transfer features, each style needs exactly one sentence:
+```text
+Transform this pet into a [STYLE]. [2-3 visual keywords]. Keep the face and features recognizable.
+```
+
+The magic phrase is: **"Keep the [subject]'s [features] recognizable and faithful to the original."** Without it, the AI loses the subject's identity.
+
+### Intensity WARNING
+Extra modifiers like "Apply subtle treatment" or "Full artistic transformation" bleed across styles. One modifier contaminated all 16 styles toward "oil painting." **Do not append intensity modifiers to style prompts.** Let each style prompt stand alone.
+
+### Prompt Architecture Decision
+There are only two viable architectures:
+
+| Approach | When to Use | Tradeoff |
+|----------|------------|----------|
+| **Dual-image** (product + background → AI → result) | AI model is strong enough to handle everything | AI controls size/position (unreliable) |
+| **Single-image refinement** (sharp pre-composite → AI → polished) | Need precise control over size/placement | Requires extra pre-processing step, needs background removal |
+
+Neither is universally better. Test both on your specific use case.
+
+## Feature Development Workflow
+
+### Adding a New AI Feature (Pet Portrait Case Study)
+
+**Phase 1: Minimal Viable (30 min)**
+- One API route calling AI directly (synchronous, not worker)
+- One page with upload + style selector + result display
+- Hardcode 6 styles, use existing /api/upload
+- Test immediately on production
+
+**Phase 2: Polish (2 hours)**
+- Expand to 16 styles with preview cards
+- Add multi-image generation (1-4 parallel requests)
+- Before/after comparison slider
+- Download + share card generation (Canvas API)
+- Favorites (localStorage) + history (DB table)
+
+**Phase 3: Cleanup (30 min)**
+- Remove underperforming models (Flux — looked worse than Gemini)
+- Remove harmful options (intensity — caused style bleed)
+- Fix silent failures (history table not existing on production DB → add error logging)
+
+### Sync vs Async for AI Features
+- **Synchronous API** (Vercel serverless): best for single-image generation, quick turnaround (<60s). User waits but gets immediate result.
+- **Async Worker** (Railway): best for batch processing, multi-step pipelines, long-running tasks. User polls or gets notification on completion.
+
+Pet portrait uses synchronous. Background replacement uses async worker. Choose based on expected processing time.
+
+## Deployment Reality
+
+### Vercel Auto-Deploy May Not Work
+GitHub push → Vercel auto-deploy is unreliable. Always verify with `vercel list` after pushing. If the latest deployment age > push time, manually trigger:
+```bash
+npx vercel --prod
+```
+This was the root cause of multiple "I don't see the changes" issues.
+
+### Environment Variables Must Be Set on BOTH Platforms
+- Vercel: for all API routes running as serverless functions
+- Railway: for the worker running as a long-lived process
+- Missing `NEXT_PUBLIC_URL` on Railway → URLs constructed as `http://localhost:3000` in production
+
+### Verifying Deployment
+After any deployment, confirm the change made it:
+1. Check `vercel list` — latest should be <2 min old
+2. Hard refresh browser (Ctrl+Shift+R)
+3. If still old, check browser DevTools → Network → disable cache
+4. Curl the page to verify server-side content
+
+## Database Ad-Hoc Migrations
+
+When Prisma schema doesn't have a table you need:
+
+1. Create via direct script using the production connection:
+```bash
+npx tsx -e "
+const { PrismaClient } = require('@prisma/client');
+const p = new PrismaClient();
+await p.\$executeRawUnsafe(\`CREATE TABLE IF NOT EXISTS my_table (...)\`);
+await p.\$disconnect();
+"
+```
+
+2. **IMPORTANT**: Local `.env` must point to production DB for this to work. Verify with `echo $DATABASE_URL` first.
+
+3. Always add error logging around raw SQL — silent catch blocks hide table-not-exist errors.
+
+4. Add the table to `.env.example` notes so future developers know it exists.
+
+## New Frontend Patterns
+
+### Batch Upload UI
+```tsx
+const [files, setFiles] = useState<File[]>([]);
+// Multi-select input → append to array
+// Horizontal scrollable thumbnail row with remove buttons
+// "Add more" button while under max limit
+```
+
+### Before/After Comparison Slider
+CSS-only implementation: two stacked images, clip-path controlled by mouse/touch position:
+```tsx
+<div onMouseMove={e => setPos((e.clientX - rect.left) / rect.width * 100)}>
+  <img src={after} /> {/* full width — shown on right side */}
+  <div style={{ width: `${pos}%`, overflow: 'hidden' }}>
+    <img src={before} style={{ minWidth: `${100/(pos/100)}%` }} /> {/* shown on left */}
+  </div>
+  <div style={{ left: `${pos}%` }} /> {/* draggable divider line */}
+</div>
+```
+
+### Share Card Generation (Canvas API)
+Generate branded share images client-side — no server needed:
+```typescript
+const canvas = document.createElement('canvas');
+canvas.width = 1200; canvas.height = 1600;
+const ctx = canvas.getContext('2d')!;
+// Draw background, image, title, brand watermark
+// Export: canvas.toBlob() → ClipboardItem → navigator.clipboard.write()
+```
+
+### Progress Tracking for Parallel Generation
+```tsx
+const [progress, setProgress] = useState({ current: 0, total: 0 });
+// Upload phase: setProgress({ current: i + 1, total: files.length })
+// Generate phase: show indeterminate spinner
+// Use a progress bar: <div style={{ width: `${(current/total)*100}%` }} />
+```
+
+### Gallery Modal Pattern
+Full-screen overlay with grid of all historical results:
+- Filter tabs (All / Favorites)
+- Hover overlay with action buttons (download, favorite, share)
+- Click outside to close
+- Load images lazily
+
+### Silent Failure Pattern
+Never do this:
+```typescript
+try { await db.query(); } catch {} // 👎 hides all errors
+```
+Always do this:
+```typescript
+try { await db.query(); } catch (e) { console.error("context:", e.message); } // 👍
