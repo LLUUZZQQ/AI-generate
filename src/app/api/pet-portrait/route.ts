@@ -41,7 +41,6 @@ const createSchema = z.object({
   fileKeys: z.array(z.string()).min(1).max(5),
   style: z.string().min(1),
   numImages: z.number().min(1).max(4).default(2),
-  intensity: z.enum(["light", "medium", "strong"]).default("medium"),
   model: z.string().default("google/gemini-3.1-flash-image-preview"),
   hd: z.boolean().default(false),
   customStyle: z.string().optional(),
@@ -56,7 +55,7 @@ export const POST = withAuth(async (req: NextRequest, _ctx: any, user: { id: str
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) return error(40001, "参数错误");
 
-  const { fileKeys, style, numImages, intensity, model, hd, customStyle } = parsed.data;
+  const { fileKeys, style, numImages, model, hd, customStyle } = parsed.data;
   const totalImages = fileKeys.length * numImages;
   const totalCost = totalImages * (COST_PER + (hd ? HD_COST : 0));
 
@@ -66,13 +65,7 @@ export const POST = withAuth(async (req: NextRequest, _ctx: any, user: { id: str
   }
 
   try {
-    const basePrompt = customStyle || STYLES[style] || STYLES["royal"];
-    const intensityMod: Record<string, string> = {
-      light: " Apply a very subtle style treatment. Keep most of the original photo character.",
-      medium: "",
-      strong: " Apply maximum style intensity. Full artistic transformation.",
-    };
-    const fullPrompt = (basePrompt + (intensityMod[intensity] || "")).trim();
+    const fullPrompt = customStyle || STYLES[style] || STYLES["royal"];
 
     const apiKey = process.env.OPENAI_API_KEY!;
 
@@ -174,7 +167,9 @@ export const POST = withAuth(async (req: NextRequest, _ctx: any, user: { id: str
         `INSERT INTO pet_portraits (user_id, original_key, style, model, results, created_at) VALUES ($1, $2, $3, $4, $5, NOW())`,
         user.id, fileKeys.join(","), style, model, JSON.stringify(allResults.flat()),
       );
-    } catch {}
+    } catch (e: any) {
+      console.error("[pet-portrait] save history error:", e.message?.substring(0, 200));
+    }
 
     return success({
       results: allResults,

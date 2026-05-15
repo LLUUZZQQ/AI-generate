@@ -30,12 +30,6 @@ const MODELS = [
   { id: "openai/gpt-5.4-image-2", label: "GPT-5.4 Image 2", sub: "高质量细节" },
 ];
 
-const INTENSITIES = [
-  { id: "light", label: "轻度", desc: "保留原图特色" },
-  { id: "medium", label: "中度", desc: "平衡风格与原图" },
-  { id: "strong", label: "重度", desc: "完全风格化" },
-];
-
 function StylePreview({ s, onClick, active }: { s: typeof STYLES[0]; onClick: () => void; active: boolean }) {
   return (
     <button onClick={onClick}
@@ -79,7 +73,6 @@ export default function PetPortraitPage() {
   const [style, setStyle] = useState("royal");
   const [model, setModel] = useState("google/gemini-3.1-flash-image-preview");
   const [numImages, setNumImages] = useState(2);
-  const [intensity, setIntensity] = useState("medium");
   const [hd, setHd] = useState(false);
   const [customStyle, setCustomStyle] = useState("");
   const [loading, setLoading] = useState(false);
@@ -160,7 +153,7 @@ export default function PetPortraitPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fileKeys, style, model, numImages, intensity, hd,
+          fileKeys, style, model, numImages, hd,
           customStyle: customStyle.trim() || undefined,
         }),
       });
@@ -525,17 +518,6 @@ export default function PetPortraitPage() {
                     className={`w-8 h-7 rounded-lg text-xs transition-all ${
                       numImages === n ? "bg-purple-500/15 border border-purple-400/20 text-purple-300" : "bg-white/[0.03] border border-white/[0.05] text-white/40 hover:text-white/60"
                     }`}>{n}</button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="text-[10px] text-white/25 mb-1.5">风格强度</p>
-              <div className="flex gap-1">
-                {INTENSITIES.map(i => (
-                  <button key={i.id} onClick={() => setIntensity(i.id)}
-                    className={`flex-1 text-center py-1 rounded-lg text-[10px] transition-all ${
-                      intensity === i.id ? "bg-purple-500/15 border border-purple-400/20 text-purple-300" : "bg-white/[0.03] border border-white/[0.05] text-white/40 hover:text-white/60"
-                    }`}>{i.label}</button>
                 ))}
               </div>
             </div>
