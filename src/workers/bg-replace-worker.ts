@@ -64,7 +64,7 @@ RULES:
 
     const requestMessages = [
       { role: "user", content: [
-        { type: "text", text: universalPrompt },
+        { type: "text", text: prompt },
         { type: "image_url", image_url: { url: `data:${pMime};base64,${productB64}` } },
         { type: "image_url", image_url: { url: `data:${bgMime};base64,${bgB64}` } },
       ]},
