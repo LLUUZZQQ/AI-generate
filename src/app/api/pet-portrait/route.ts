@@ -137,7 +137,7 @@ export const POST = withAuth(async (req: NextRequest, _ctx: any, user: { id: str
 
     // Upload result to S3
     const resultKey = `pet-portrait/${user.id}_${Date.now()}.png`;
-    const resultUrl = await uploadToS3(resultKey, resultBuf, "image/png");
+    await uploadToS3(resultKey, resultBuf, "image/png");
 
     // Deduct credits
     await prisma.user.update({
@@ -145,7 +145,8 @@ export const POST = withAuth(async (req: NextRequest, _ctx: any, user: { id: str
       data: { credits: { decrement: PET_PORTRAIT_COST } },
     });
 
-    return success({ url: resultUrl, style: STYLE_LABELS[style] });
+    const baseUrl = process.env.NEXT_PUBLIC_URL || "https://ai-generate-two.vercel.app";
+    return success({ url: `${baseUrl}/api/s3/${resultKey}`, style: STYLE_LABELS[style] });
   } catch (e: any) {
     console.error("[pet-portrait] error:", e.message?.substring(0, 200));
     return error(50000, "处理失败，请重试");
