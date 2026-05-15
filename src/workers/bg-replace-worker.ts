@@ -29,71 +29,57 @@ async function aiBlendBackground(
 
     const model = aiModel || "google/gemini-3.1-flash-image-preview";
     const isRecraft = model.includes("recraft");
-    // OpenRouter (Gemini/GPT/Recraft)
+    const isGemini = model.includes("gemini");
+
+    // Gemini prompt — direct, visual language
+    const geminiPrompt = `Take the product from the first image and place it into the second image's scene. Output a single photorealistic image where the product is naturally integrated into the background.
+
+Key requirements:
+- Keep the product's exact colors, textures, materials, and fine details (stitching, logos, labels) — do not alter or degrade them
+- The product must fill roughly the same portion of the frame as it does in the original product photo — do not make it smaller
+- Match the background's lighting direction, color temperature, and shadow softness
+- Add realistic contact shadows where the product meets the surface
+- Match perspective and depth of field to the background
+- HIGH SHARPNESS AND DETAIL — preserve every texture, no blur, no noise, no soft focus
+- No text, watermark, or logo`;
+
+    // GPT prompt — structured, detailed
+    const gptPrompt = `You are a professional product photo compositor. Take the product from the FIRST image and seamlessly blend it into the SECOND image's scene. Output a single image indistinguishable from a professionally shot product photograph.
+
+CRITICAL RULES:
+1. PRESERVE: Keep the product 100% intact — all colors, textures, materials, stitching, logos, labels, and fine surface details must remain razor-sharp and identical to the original.
+2. SIZE: The product must occupy the SAME relative area in the frame as the original product photo. If the product fills 60% of the original frame, it must fill 60% of the output. Do NOT shrink the product.
+3. GROUNDING: Place the product on a real surface. Generate precise contact shadows at the product's base.
+4. LIGHTING: Match the background's key light direction, color temperature, and intensity on the product.
+5. SHADOWS: Generate soft cast shadows consistent with the scene's lighting.
+6. PERSPECTIVE: Match the camera angle and perspective exactly.
+7. DEPTH OF FIELD: Match focus/blur to the background.
+8. CLARITY: Maximum sharpness and detail retention. NO blur, NO noise, NO grain, NO soft focus. Every product detail must be crisp.
+9. OUTPUT: A clean product photograph with the product naturally in the scene.
+10. NO text, watermark, or logo.`;
+
+    const prompt = customPrompt
+      ? `${isGemini ? geminiPrompt : gptPrompt}\n\nADDITIONAL USER INSTRUCTIONS: ${customPrompt}`
+      : isGemini ? geminiPrompt : gptPrompt;
+
+    // OpenRouter
     const apiKey = process.env.OPENAI_API_KEY!;
     const apiBaseUrl = "https://openrouter.ai/api/v1/chat/completions";
     const apiModel = model;
 
-    const defaultPrompt = `You are a photorealistic image compositor. Take the product from the FIRST image and place it into the SECOND image's scene. The result must be INDISTINGUISHABLE from a real photograph.
+    const requestMessages = [
+      { role: "user", content: [
+        { type: "text", text: prompt },
+        { type: "image_url", image_url: { url: `data:${productMime};base64,${productB64}` } },
+        { type: "image_url", image_url: { url: `data:${bgMime};base64,${bgB64}` } },
+      ]},
+    ];
 
-CRITICAL RULES:
-1. PRESERVE everything in the product image — product, packaging, boxes, bags, accessories. Do NOT discard anything.
-2. PROPORTION: Do NOT scale, stretch, or resize the product. Keep its exact original size and proportions. The product must look the same size as in the original photo.
-3. GROUNDING: Place the product on a real surface in the scene (floor, table, ground, grass, desk, stairs). The product must physically touch the surface. Generate accurate contact shadows where the product meets the surface.
-4. LIGHTING: Analyze the background's light source direction, color temperature, and intensity. Match the product's lighting exactly. If the background has warm afternoon sunlight, the product must have warm afternoon sunlight on it.
-5. SHADOWS: Generate realistic, soft shadows that match the background light direction. Shadow softness must match the background's shadow softness. Contact shadows should be sharp, cast shadows softer.
-6. PERSPECTIVE: Match the camera angle and perspective of the background exactly. If the background is shot from above, view the product from above. If eye-level, keep eye-level.
-7. DEPTH OF FIELD: Match the background's focus. If the background has shallow depth of field (blurry far away), match that blur on the product edges if they would be at the same depth.
-8. COLOR & TEXTURE: Keep product colors 100% identical. Do NOT shift hues, saturation, or white balance on the product itself. The product's material texture must remain unchanged.
-9. NOISE: Add subtle sensor noise/grain matching the background to unify the image. Real phone photos have noise.
-10. QUALITY: Ordinary smartphone photo quality — NOT studio, NOT CGI, NOT HDR, NOT overly sharp. Slight imperfection makes it real.
-11. NO text, watermark, or logo.`;
-
-    const recraftPrompt = `Refine this product photo composite. Blend the product naturally into the background scene. Keep product colors and proportions exactly as-is. Make it look like a single real photograph — natural lighting, realistic shadows, amateur phone photo quality. No text or watermark.`;
-    const prompt = customPrompt
-      ? `${isRecraft ? recraftPrompt : defaultPrompt}\n\nADDITIONAL USER INSTRUCTIONS: ${customPrompt}`
-      : isRecraft ? recraftPrompt : defaultPrompt;
-
-    // Recraft needs a single composite image, not two separate images
-    let requestMessages;
-    if (isRecraft) {
-      // Pre-composite: paste product onto background for Recraft to refine
-      const productMeta = await sharp(originalBuffer).metadata();
-      const bgMeta = await sharp(bgBuffer).metadata();
-      const targetW = Math.round(bgMeta.width! * 0.55);
-      const scale = targetW / productMeta.width!;
-      const targetH = Math.round(productMeta.height! * scale);
-      const resizedProduct = await sharp(originalBuffer).resize(targetW, targetH, { fit: "inside" }).png().toBuffer();
-      const left = Math.round((bgMeta.width! - targetW) / 2);
-      const top = Math.round(bgMeta.height! * 0.5 - targetH / 2);
-      const composite = await sharp(bgBuffer).composite([{ input: resizedProduct, left, top }]).jpeg({ quality: 92 }).toBuffer();
-      requestMessages = [
-        { role: "user", content: [
-          { type: "text", text: prompt },
-          { type: "image_url", image_url: { url: `data:image/jpeg;base64,${composite.toString("base64")}` } },
-        ]},
-      ];
-    } else {
-      requestMessages = [
-        { role: "user", content: [
-          { type: "text", text: prompt },
-          { type: "image_url", image_url: { url: `data:${productMime};base64,${productB64}` } },
-          { type: "image_url", image_url: { url: `data:${bgMime};base64,${bgB64}` } },
-        ]},
-      ];
-    }
-
-    // Call OpenRouter API
     const bodyObj: any = {
       model: apiModel,
       messages: requestMessages,
+      max_tokens: 4096,
     };
-    if (isRecraft) {
-      bodyObj.modalities = ["image"];
-      bodyObj.image_config = { strength: 0.55 };
-    } else {
-      bodyObj.max_tokens = 4096;
-    }
     const body = JSON.stringify(bodyObj);
 
     console.log(`[bg-worker] calling OpenRouter with model ${apiModel}...`);
@@ -190,7 +176,7 @@ CRITICAL RULES:
         console.log("[bg-worker] GPT-5.4: resizing", aiMeta.width + "x" + aiMeta.height,
           "→", origMeta.width + "x" + origMeta.height);
         resultBuf = await sharp(resultBuf)
-          .resize(origMeta.width, origMeta.height, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+          .resize(origMeta.width, origMeta.height, { fit: "cover", position: "center" })
           .png()
           .toBuffer();
       }
