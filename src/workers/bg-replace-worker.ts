@@ -8,26 +8,25 @@ import path from "path";
 const hasS3 = !!(process.env.S3_BUCKET && process.env.S3_ENDPOINT);
 const POLL_INTERVAL = 3000; // 3 seconds
 
-/* ── NanoBanana async task-based API ──────────────────────────── */
+/* ── NanoBanana async task-based API (single-image refinement) ── */
 async function nanobananaBlend(
-  productUrl: string, bgUrl: string, customPrompt?: string, aiModel?: string,
+  compositeUrl: string, customPrompt?: string, aiModel?: string,
 ): Promise<Buffer | null> {
   const NANOBANANA_KEY = process.env.NANOBANANA_API_KEY!;
   const NANOBANANA_BASE = "https://api.nanobananaapi.ai/api/v1/nanobanana";
-  const isPro = aiModel?.includes("pro");
 
-  const prompt = customPrompt || "Product photo";
+  const prompt = customPrompt || "Make this product photo look like a real photograph. Blend the product naturally into the background. Match lighting, shadows and colors. No text or watermark.";
 
   const endpoint = `${NANOBANANA_BASE}/generate`;
 
-  console.log(`[bg-worker] NanoBanana: productUrl=${productUrl.substring(0, 50)}... bgUrl=${bgUrl.substring(0, 50)}...`);
+  console.log(`[bg-worker] NanoBanana: compositeUrl=${compositeUrl.substring(0, 60)}...`);
 
   const callbackUrl = `${process.env.NEXT_PUBLIC_URL || "https://ai-generate-two.vercel.app"}/api/notifications`;
   const reqBody: any = {
     prompt,
     type: "IMAGETOIAMGE",
     callBackUrl: callbackUrl,
-    imageUrls: [productUrl, bgUrl],
+    imageUrls: [compositeUrl],
     numImages: 1,
   };
 
@@ -361,29 +360,26 @@ async function processTask(taskId: string) {
       let composited: Buffer | null = null;
 
       if (isNanobanana) {
-        // NanoBanana needs public URLs — construct from S3 keys
+        // NanoBanana: pre-composite with sharp, then single-image refinement
+        const sharp = (await import("sharp")).default;
+        const origMeta = await sharp(original).metadata();
+        const bgMeta = await sharp(bg).metadata();
+        const scale = Math.min(
+          (bgMeta.width! * 0.7) / origMeta.width!,
+          (bgMeta.height! * 0.8) / origMeta.height!,
+          1,
+        );
+        const prodW = Math.round(origMeta.width! * scale);
+        const prodH = Math.round(origMeta.height! * scale);
+        const resized = await sharp(original).resize(prodW, prodH, { fit: "inside" }).png().toBuffer();
+        const left = Math.round((bgMeta.width! - prodW) / 2);
+        const top = Math.round(bgMeta.height! * 0.5 - prodH / 2);
+        const composite = await sharp(bg).composite([{ input: resized, left, top }]).jpeg({ quality: 92 }).toBuffer();
+        const compKey = `tmp/nb_${taskId}_${result.id}.jpg`;
+        await uploadToS3(compKey, composite, "image/jpeg");
         const baseUrl = process.env.NEXT_PUBLIC_URL || "https://ai-generate-two.vercel.app";
         if (!process.env.NEXT_PUBLIC_URL) console.warn("[bg-worker] NEXT_PUBLIC_URL not set, using", baseUrl);
-        const productUrl = result.originalKey.startsWith("http")
-          ? result.originalKey
-          : `${baseUrl}/api/s3/${result.originalKey}`;
-        let bgUrl: string;
-        if (task.backgroundMode === "custom" && task.customBgKey) {
-          bgUrl = task.customBgKey.startsWith("http")
-            ? task.customBgKey
-            : `${baseUrl}/api/s3/${task.customBgKey}`;
-        } else if (task.backgroundMode === "preset" && backgroundBuffer) {
-          // Upload generated bg to S3 for public URL
-          const bgKey = `tmp/bg_${taskId}_${result.id}.png`;
-          await uploadToS3(bgKey, bg, "image/png");
-          bgUrl = `${baseUrl}/api/s3/${bgKey}`;
-        } else {
-          // AI mode — upload generated bg to S3
-          const bgKey = `tmp/bg_${taskId}_${result.id}.png`;
-          await uploadToS3(bgKey, bg, "image/png");
-          bgUrl = `${baseUrl}/api/s3/${bgKey}`;
-        }
-        composited = await nanobananaBlend(productUrl, bgUrl, task.customPrompt ?? undefined, model);
+        composited = await nanobananaBlend(`${baseUrl}/api/s3/${compKey}`, task.customPrompt ?? undefined, model);
       } else {
         composited = await aiBlendBackground(original, bg, task.customPrompt ?? undefined, model);
       }
