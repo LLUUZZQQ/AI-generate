@@ -31,32 +31,27 @@ async function aiBlendBackground(
     const isRecraft = model.includes("recraft");
     const isGemini = model.includes("gemini");
 
-    // Gemini prompt — direct, visual language
-    const geminiPrompt = `Take the product from the first image and place it into the second image's scene. Output a single photorealistic image where the product is naturally integrated into the background.
+    // Gemini prompt — natural photorealism
+    const geminiPrompt = `Composite the product from the first image into the second image's scene. Make it look like a single real photograph shot on location — as if a photographer placed the product in that scene and took the photo.
 
-Key requirements:
-- Keep the product's exact colors, textures, materials, and fine details (stitching, logos, labels) — do not alter or degrade them
-- The product must fill roughly the same portion of the frame as it does in the original product photo — do not make it smaller
-- Match the background's lighting direction, color temperature, and shadow softness
-- Add realistic contact shadows where the product meets the surface
-- Match perspective and depth of field to the background
-- HIGH SHARPNESS AND DETAIL — preserve every texture, no blur, no noise, no soft focus
+- Keep every detail of the product exactly as-is: colors, textures, stitching, materials, logos
+- The product should sit naturally on a surface in the scene with realistic contact shadow
+- Match the scene's lighting: direction, color temperature, intensity, and shadow softness
+- Match the camera perspective and depth of field of the background
+- The result should look like an authentic product photograph, sharp and detailed
 - No text, watermark, or logo`;
 
-    // GPT prompt — structured, detailed
-    const gptPrompt = `You are a professional product photo compositor. Take the product from the FIRST image and seamlessly blend it into the SECOND image's scene. Output a single image indistinguishable from a professionally shot product photograph.
+    // GPT prompt — photographic realism
+    const gptPrompt = `Composite the product from the first image into the second image. Output must look like a single authentic photograph taken by a professional product photographer on location.
 
-CRITICAL RULES:
-1. PRESERVE: Keep the product 100% intact — all colors, textures, materials, stitching, logos, labels, and fine surface details must remain razor-sharp and identical to the original.
-2. SIZE: The product must occupy the SAME relative area in the frame as the original product photo. If the product fills 60% of the original frame, it must fill 60% of the output. Do NOT shrink the product.
-3. GROUNDING: Place the product on a real surface. Generate precise contact shadows at the product's base.
-4. LIGHTING: Match the background's key light direction, color temperature, and intensity on the product.
-5. SHADOWS: Generate soft cast shadows consistent with the scene's lighting.
-6. PERSPECTIVE: Match the camera angle and perspective exactly.
-7. DEPTH OF FIELD: Match focus/blur to the background.
-8. CLARITY: Maximum sharpness and detail retention. NO blur, NO noise, NO grain, NO soft focus. Every product detail must be crisp.
-9. OUTPUT: A clean product photograph with the product naturally in the scene.
-10. NO text, watermark, or logo.`;
+1. PRODUCT INTEGRITY: Preserve the product exactly — colors, textures, materials, stitching, logos, labels. Every fine detail must remain sharp and unchanged.
+2. NATURAL PLACEMENT: The product should rest naturally on a surface in the scene. Generate realistic contact shadows where the product meets the ground.
+3. LIGHTING MATCH: Analyze the scene's light direction, color temperature, and intensity. Relight the product to match perfectly. If the scene has warm sunlight, the product must have warm sunlight.
+4. SHADOW INTEGRATION: Generate soft cast shadows that match the direction and softness of shadows already in the scene.
+5. PERSPECTIVE MATCH: Match the camera angle and lens perspective of the background exactly.
+6. DEPTH OF FIELD: If the background has shallow focus, apply matching blur to product edges at the same depth plane.
+7. SHARPNESS: Output must be crisp and detailed — no artificial blur, noise, or grain.
+8. CLEAN OUTPUT: No text, watermark, or logo.`;
 
     const prompt = customPrompt
       ? `${isGemini ? geminiPrompt : gptPrompt}\n\nADDITIONAL USER INSTRUCTIONS: ${customPrompt}`
@@ -169,14 +164,15 @@ CRITICAL RULES:
       return null;
     }
 
-    // Restore original dimensions — AI output may be scaled
-    if (origMeta.width && origMeta.height) {
+    // Match background dimensions so product fits naturally in scene
+    const bgMeta = await sharp(bgBuffer).metadata();
+    if (bgMeta.width && bgMeta.height) {
       const aiMeta = await sharp(resultBuf).metadata();
-      if (aiMeta.width !== origMeta.width || aiMeta.height !== origMeta.height) {
-        console.log("[bg-worker] GPT-5.4: resizing", aiMeta.width + "x" + aiMeta.height,
-          "→", origMeta.width + "x" + origMeta.height);
+      if (aiMeta.width !== bgMeta.width || aiMeta.height !== bgMeta.height) {
+        console.log("[bg-worker] resizing", aiMeta.width + "x" + aiMeta.height,
+          "→", bgMeta.width + "x" + bgMeta.height);
         resultBuf = await sharp(resultBuf)
-          .resize(origMeta.width, origMeta.height, { fit: "cover", position: "center" })
+          .resize(bgMeta.width, bgMeta.height, { fit: "inside", withoutEnlargement: true })
           .png()
           .toBuffer();
       }
