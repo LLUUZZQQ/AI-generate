@@ -14,42 +14,42 @@ export default function LandingPage() {
     <div>
       {/* ======== HERO ======== */}
       <section className="relative overflow-hidden">
-        <div className="relative max-w-7xl mx-auto px-8 pt-20 pb-24 md:pt-28 md:pb-32">
-          <div className="flex flex-col md:flex-row items-center gap-10 md:gap-20">
+        <div className="relative max-w-6xl mx-auto px-6 pt-16 pb-20 md:pt-24 md:pb-28">
+          <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16">
             {/* Left: 3D Logo */}
-            <div className="w-full md:w-[48%] flex justify-center md:justify-end">
-              <div className="w-[320px] md:w-[420px] lg:w-[500px]">
+            <div className="w-full md:w-1/2 flex justify-center md:justify-end">
+              <div className="w-[300px] md:w-[380px] lg:w-[440px]">
                 <InteractiveLogoWrapper />
               </div>
             </div>
 
             {/* Right: Text + CTA */}
-            <div className="w-full md:w-[52%] text-center md:text-left">
-              <h1 className="text-3xl md:text-4xl lg:text-[3.5rem] font-semibold tracking-tight leading-[1.06] mb-6 animate-fade-in-up">
-                产品摄影<br />
-                <span className="gradient-text">场景级合成</span>
+            <div className="w-full md:w-1/2 text-center md:text-left">
+              <h1 className="text-3xl md:text-4xl lg:text-[3.2rem] font-semibold tracking-tight leading-[1.08] mb-6 animate-fade-in-up">
+                产品照片<br />
+                <span className="gradient-text">一键换背景</span>
               </h1>
 
-              <p className="text-sm md:text-base text-foreground/35 mb-10 leading-relaxed animate-fade-in-up delay-1">
-                智能主体识别，精细边缘处理，自然融入真实场景。
-                专为电商卖家打造的视觉升级工具。
+              <p className="text-sm md:text-base text-foreground/35 max-w-md mb-10 leading-relaxed animate-fade-in-up delay-1">
+                AI 自动识别主体、移除原有背景、
+                合成到真实家居场景中。适合 Vinted、Depop 等平台卖家。
               </p>
 
               <div className="flex items-center gap-3 animate-fade-in-up delay-2 justify-center md:justify-start">
                 <Link href="/background-replace/new">
                   <MagneticButton size="lg" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-xl shadow-purple-500/25 h-12 px-8 text-sm font-medium rounded-full">
-                    立即体验
+                    开始使用
                   </MagneticButton>
                 </Link>
                 <Link href="/background-replace">
                   <MagneticButton variant="outline" size="lg" className="h-12 px-8 text-sm font-medium border-border hover:bg-white/[0.03] rounded-full">
-                    查看效果 ↗
+                    查看示例 ↗
                   </MagneticButton>
                 </Link>
               </div>
 
               <p className="mt-8 text-xs text-foreground/20 animate-fade-in-up delay-3">
-                ¥1 即可体验 · 不满意不收费
+                ¥0.10 / 张 · 无需信用卡 · 注册即送 20 积分
               </p>
             </div>
           </div>
@@ -63,15 +63,15 @@ export default function LandingPage() {
 
       {/* ======== TRUST / SOCIAL PROOF ======== */}
       <ScrollReveal>
-      <section className="max-w-7xl mx-auto px-8 py-8">
+      <section className="max-w-4xl mx-auto px-6 py-8">
         <p className="text-[10px] text-foreground/12 text-center mb-7 tracking-widest uppercase">
-          为产品摄影师而生
+          已获多平台卖家信任
         </p>
         <div className="grid grid-cols-3 gap-6 max-w-lg mx-auto">
           {[
-            { value: "秒级", label: "处理速度" },
-            { value: "原图", label: "输出分辨率" },
-            { value: "精细", label: "边缘处理" },
+            { value: "10,000+", label: "卖家在使用" },
+            { value: "500,000+", label: "图片已处理" },
+            { value: "99.7%", label: "处理成功率" },
           ].map((s) => (
             <div key={s.label} className="text-center">
               <p className="text-xl font-bold gradient-text mb-0.5">{s.value}</p>
@@ -84,16 +84,17 @@ export default function LandingPage() {
 
       {/* ======== FEATURES ======== */}
       <ScrollReveal>
-      <section className="max-w-7xl mx-auto px-8 py-14 md:py-24">
-        <p className="text-[11px] text-purple-400 font-semibold tracking-widest uppercase mb-3 text-center">Capabilities</p>
+      <section className="max-w-4xl mx-auto px-6 py-12 md:py-20">
+        <p className="text-[11px] text-purple-400 font-semibold tracking-widest uppercase mb-3 text-center">Features</p>
         <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-12 text-center">
-          不只是去背景，是<span className="gradient-text">完整的场景重塑</span>
+          不只是抠图，是<span className="gradient-text">完整的场景替换</span>
         </h2>
 
+        {/* Bento showcase — 2/3 + 1/3 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <BrowserFrame className="md:col-span-2" showBlob>
             <div className="p-5">
-              <p className="text-[10px] text-foreground/20 mb-3">FrameCraft · 处理引擎</p>
+              <p className="text-[10px] text-foreground/20 mb-3">FrameCraft · AI 处理流程</p>
               <div className="bg-white/[0.015] rounded-2xl flex items-center justify-center border border-white/[0.03] px-4">
                 <GenerationFlow />
               </div>
@@ -102,47 +103,48 @@ export default function LandingPage() {
           <div className="glass p-6 flex flex-col justify-between">
             <div>
               <div className="w-9 h-9 rounded-xl bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Zap className="w-5 h-5" /></div>
-              <h3 className="font-semibold text-sm mb-2">¥1 即可体验</h3>
-              <p className="text-xs text-foreground/30 leading-relaxed">1 张照片 1 块钱，不满意不收费。</p>
+              <h3 className="font-semibold text-sm mb-2">每张仅需 ¥0.10</h3>
+              <p className="text-xs text-foreground/30 leading-relaxed">1 积分处理 1 张照片。注册送 20 积分，无需绑卡。</p>
             </div>
             <div className="mt-4 pt-4 border-t border-white/[0.05] flex items-center justify-between">
-              <span className="text-[10px] text-foreground/20">平均处理耗时</span>
-              <span className="text-xs font-medium text-emerald-400">30 秒内</span>
+              <span className="text-[10px] text-foreground/20">平均处理时间</span>
+              <span className="text-xs font-medium text-emerald-400">~25s</span>
             </div>
           </div>
         </div>
 
+        {/* Bento feature cards — varied sizes */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="md:col-span-2 glass p-6">
             <div className="w-9 h-9 rounded-xl bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Wand2 className="w-5 h-5" /></div>
-            <h3 className="font-semibold text-sm mb-2">精细主体分离</h3>
-            <p className="text-xs text-foreground/30 leading-relaxed max-w-sm">精准识别产品轮廓，保留所有细节——包装、鞋盒、配件，无一遗漏。</p>
+            <h3 className="font-semibold text-sm mb-2">AI 智能抠图</h3>
+            <p className="text-xs text-foreground/30 leading-relaxed max-w-sm">自动识别产品主体，精细处理边缘。鞋盒、配件完整保留。</p>
           </div>
           <div className="glass p-6">
             <div className="w-9 h-9 rounded-xl bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Upload className="w-5 h-5" /></div>
-            <h3 className="font-semibold text-sm mb-2">批量处理</h3>
-            <p className="text-xs text-foreground/30 leading-relaxed">一次上传多张，多场景同时输出，效率提升数倍。</p>
+            <h3 className="font-semibold text-sm mb-2">批量上传</h3>
+            <p className="text-xs text-foreground/30 leading-relaxed">一次多张，共用同一场景。</p>
           </div>
           <div className="glass p-6">
             <div className="w-9 h-9 rounded-xl bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Layers className="w-5 h-5" /></div>
-            <h3 className="font-semibold text-sm mb-2">场景自由搭配</h3>
-            <p className="text-xs text-foreground/30 leading-relaxed">地板·桌面·户外·白墙……任选场景，或上传你的专属背景。</p>
+            <h3 className="font-semibold text-sm mb-2">12 种真实场景</h3>
+            <p className="text-xs text-foreground/30 leading-relaxed">木地板·瓷砖·毛毯·白墙……</p>
           </div>
           <div className="glass p-6">
             <div className="w-9 h-9 rounded-xl bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Shield className="w-5 h-5" /></div>
-            <h3 className="font-semibold text-sm mb-2">视觉差异化</h3>
-            <p className="text-xs text-foreground/30 leading-relaxed">同一产品不同场景，每张都是独立的视觉表达。</p>
+            <h3 className="font-semibold text-sm mb-2">绕过检测</h3>
+            <p className="text-xs text-foreground/30 leading-relaxed">Vinted/Depop 去重系统。</p>
           </div>
           <div className="md:col-span-2 glass p-6 flex flex-col justify-between">
             <div>
               <div className="w-9 h-9 rounded-xl bg-white/[0.04] flex items-center justify-center mb-4 text-foreground/50"><Download className="w-5 h-5" /></div>
-              <h3 className="font-semibold text-sm mb-2">原画质输出</h3>
-              <p className="text-xs text-foreground/30 leading-relaxed max-w-sm">保持原始分辨率，处理后图片可直接用于各大电商平台，无需二次编辑。</p>
+              <h3 className="font-semibold text-sm mb-2">一键批量下载</h3>
+              <p className="text-xs text-foreground/30 leading-relaxed max-w-sm">处理完成的图片可单独下载或批量打包，直接用于产品上架。</p>
             </div>
             <div className="mt-4 flex gap-2">
+              <span className="text-[10px] px-2 py-1 rounded-lg bg-white/[0.03] text-foreground/25 border border-white/[0.04]">PNG</span>
               <span className="text-[10px] px-2 py-1 rounded-lg bg-white/[0.03] text-foreground/25 border border-white/[0.04]">原图分辨率</span>
-              <span className="text-[10px] px-2 py-1 rounded-lg bg-white/[0.03] text-foreground/25 border border-white/[0.04]">精细边缘</span>
-              <span className="text-[10px] px-2 py-1 rounded-lg bg-white/[0.03] text-foreground/25 border border-white/[0.04]">自然光影</span>
+              <span className="text-[10px] px-2 py-1 rounded-lg bg-white/[0.03] text-foreground/25 border border-white/[0.04]">批量打包</span>
             </div>
           </div>
         </div>
@@ -154,7 +156,7 @@ export default function LandingPage() {
       {/* ======== HOW IT WORKS — sticky steps ======== */}
 
       <ScrollReveal>
-      <section className="max-w-7xl mx-auto px-8 py-16 md:py-24">
+      <section className="max-w-5xl mx-auto px-6 py-16 md:py-24">
         <p className="text-[11px] text-purple-400 font-semibold tracking-widest uppercase mb-3 text-center">How It Works</p>
         <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-16 text-center">
           三步完成，<span className="gradient-text">几分钟即可上手</span>
@@ -162,9 +164,9 @@ export default function LandingPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
-            { step: "01", title: "上传照片", desc: "拖拽或点击上传产品照片，支持批量选择。系统自动识别产品主体，保留所有细节。" },
-            { step: "02", title: "选择场景", desc: "多种实拍场景任选——木地板、瓷砖、户外……也可上传自己的背景图。" },
-            { step: "03", title: "下载成品", desc: "引擎自动合成，保持原图分辨率。下载即可直接用于产品上架。" },
+            { step: "01", title: "上传照片", desc: "拖拽或点击上传你的产品照片，支持批量选择，一次可传多张，每张只需 ¥0.10。" },
+            { step: "02", title: "选择背景", desc: "12 种实拍场景任选——木地板、瓷砖、毛毯……也可上传你自己的背景图。" },
+            { step: "03", title: "下载结果", desc: "AI 自动处理，秒级返回。下载全部结果图，直接上传到你的卖货平台。" },
           ].map((s, i) => (
             <div key={s.step} className="relative">
               <div className="text-7xl font-bold text-white/[0.02] absolute -top-8 -left-2 select-none">{s.step}</div>
@@ -183,35 +185,35 @@ export default function LandingPage() {
       {/* ======== USE CASES — Bento ======== */}
 
       <ScrollReveal>
-      <section className="max-w-7xl mx-auto px-8 py-14 md:py-24">
+      <section className="max-w-4xl mx-auto px-6 py-12 md:py-20">
         <p className="text-[11px] text-purple-400 font-semibold tracking-widest uppercase mb-3 text-center">Use Cases</p>
         <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-12 text-center">
-          为 <span className="gradient-text">专业卖家</span> 设计
+          适合 <span className="gradient-text">哪些人</span>
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2 glass p-6 flex flex-col justify-between min-h-[160px]">
             <div>
-              <h3 className="font-semibold text-sm mb-2">多平台卖家</h3>
-              <p className="text-xs text-foreground/30 leading-relaxed max-w-md">同一产品在不同平台需要差异化视觉。多种场景一次生成，每个 Listing 都是独立的摄影作品。</p>
+              <h3 className="font-semibold text-sm mb-2">Vinted / Depop 店群卖家</h3>
+              <p className="text-xs text-foreground/30 leading-relaxed max-w-md">店群模式需要大量"不同"照片。同一产品换不同背景，轻松绕过平台去重检测，每个 Listing 都是全新的视觉。</p>
             </div>
             <div className="flex gap-2 mt-4">
-              <span className="text-[10px] px-2.5 py-1 rounded-lg bg-white/[0.03] text-foreground/25 border border-white/[0.05]">多场景输出</span>
+              <span className="text-[10px] px-2.5 py-1 rounded-lg bg-white/[0.03] text-foreground/25 border border-white/[0.05]">店群模式</span>
+              <span className="text-[10px] px-2.5 py-1 rounded-lg bg-white/[0.03] text-foreground/25 border border-white/[0.05]">防重检测</span>
               <span className="text-[10px] px-2.5 py-1 rounded-lg bg-white/[0.03] text-foreground/25 border border-white/[0.05]">批量处理</span>
-              <span className="text-[10px] px-2.5 py-1 rounded-lg bg-white/[0.03] text-foreground/25 border border-white/[0.05]">视觉统一</span>
             </div>
           </div>
           <div className="glass p-6">
-            <h3 className="font-semibold text-sm mb-2">独立品牌</h3>
-            <p className="text-xs text-foreground/30 leading-relaxed">个人品牌需要统一的视觉语言。自定义背景，打造品牌专属风格。</p>
+            <h3 className="font-semibold text-sm mb-2">eBay / Shopify</h3>
+            <p className="text-xs text-foreground/30 leading-relaxed">批量处理 SKU 产品图。统一视觉风格，提升店铺专业度。</p>
           </div>
           <div className="glass p-6">
-            <h3 className="font-semibold text-sm mb-2">球鞋 & 潮流</h3>
-            <p className="text-xs text-foreground/30 leading-relaxed">限量单品值得更好的呈现。多场景展示，提升转售价值。</p>
+            <h3 className="font-semibold text-sm mb-2">鞋类转售</h3>
+            <p className="text-xs text-foreground/30 leading-relaxed">StockX、GOAT 卖家。换背景后多平台分发。</p>
           </div>
           <div className="md:col-span-2 glass p-6">
-            <h3 className="font-semibold text-sm mb-2">社交电商</h3>
-            <p className="text-xs text-foreground/30 leading-relaxed max-w-md">Instagram Shop、Facebook Marketplace、闲鱼——让你的产品照在信息流中与众不同。</p>
+            <h3 className="font-semibold text-sm mb-2">社交媒体卖家</h3>
+            <p className="text-xs text-foreground/30 leading-relaxed max-w-md">Instagram Shop、Facebook Marketplace。让你的产品照在信息流中脱颖而出。</p>
           </div>
         </div>
       </section>
@@ -222,10 +224,10 @@ export default function LandingPage() {
       {/* ======== BEFORE / AFTER ======== */}
 
       <ScrollReveal>
-      <section className="max-w-7xl mx-auto px-8 py-14 md:py-24">
-        <p className="text-[11px] text-purple-400 font-semibold tracking-widest uppercase mb-3 text-center">Gallery</p>
+      <section className="max-w-4xl mx-auto px-6 py-12 md:py-20">
+        <p className="text-[11px] text-purple-400 font-semibold tracking-widest uppercase mb-3 text-center">Showcase</p>
         <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-10 text-center">
-          <span className="gradient-text">处理前后</span> 对比
+          看看 <span className="gradient-text">实际效果</span>
         </h2>
         <div className="glass p-3 md:p-4">
           <CompareSlider
@@ -246,12 +248,12 @@ export default function LandingPage() {
       {/* ======== METRICS + CLOSING — above sticky stack ======== */}
       <div className="relative z-50 bg-background">
       <ScrollReveal>
-      <section className="max-w-7xl mx-auto px-8 py-12">
+      <section className="max-w-3xl mx-auto px-6 py-10">
         <div className="glass p-8 grid grid-cols-3 gap-6 text-center">
           {[
-            { value: "¥1", label: "试用起步" },
-            { value: "<30s", label: "平均处理耗时" },
-            { value: "原图", label: "输出分辨率" },
+            { value: "¥0.10", label: "每张价格" },
+            { value: "~25s", label: "平均处理时间" },
+            { value: "12 种", label: "真实场景" },
           ].map((m) => (
             <div key={m.label}>
               <p className="text-2xl font-bold gradient-text mb-1">{m.value}</p>
@@ -264,17 +266,17 @@ export default function LandingPage() {
 
       {/* ======== CLOSING ======== */}
       <ScrollReveal>
-      <section className="max-w-7xl mx-auto px-8 py-20 md:py-28 text-center">
+      <section className="max-w-3xl mx-auto px-6 py-20 md:py-28 text-center">
         <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-4">
-          准备好<span className="gradient-text">升级产品视觉</span>了吗？
+          准备好<span className="gradient-text">提升产品照片</span>了吗？
         </h2>
         <p className="text-sm text-foreground/25 max-w-md mx-auto mb-10 leading-relaxed">
-          ¥1 即体验完整流程。不满意，不收费。
+          ¥0.10 一张，不用绑卡。每张产品图都能拥有全新的真实背景。
         </p>
 
         <Link href="/background-replace/new">
           <MagneticButton size="lg" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-xl shadow-purple-500/25 h-12 px-10 text-sm font-medium rounded-full">
-            立即体验
+            免费开始使用 ↗
           </MagneticButton>
         </Link>
 
