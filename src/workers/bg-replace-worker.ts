@@ -82,7 +82,6 @@ async function nanobananaBlend(
 async function aiBlendBackground(
   originalBuffer: Buffer, bgBuffer: Buffer,
   customPrompt?: string, aiModel?: string,
-  originalKey?: string, bgKey?: string,
 ): Promise<Buffer | null> {
   try {
     const sharp = (await import("sharp")).default;
@@ -100,18 +99,6 @@ async function aiBlendBackground(
 
     const model = aiModel || "google/gemini-3.1-flash-image-preview";
     const isRecraft = model.includes("recraft");
-    const isNanobanana = model.includes("nanobanana") || model.includes("nano-banana");
-
-    // NanoBanana → async task API (needs real URLs, not base64)
-    if (isNanobanana) {
-      if (originalKey && bgKey) {
-        const { getS3Url } = await import("@/lib/s3");
-        return nanobananaBlend(getS3Url(originalKey), getS3Url(bgKey), customPrompt, model);
-      }
-      console.error("[bg-worker] NanoBanana: missing S3 keys");
-      return null;
-    }
-
     // OpenRouter (Gemini/GPT/Recraft)
     const apiKey = process.env.OPENAI_API_KEY!;
     const apiBaseUrl = "https://openrouter.ai/api/v1/chat/completions";
@@ -367,7 +354,36 @@ async function processTask(taskId: string) {
       }
 
       // AI blending — no fallback, fail explicitly
-      const composited = await aiBlendBackground(original, bg, task.customPrompt ?? undefined, task.aiModel ?? undefined, result.originalKey, task.customBgKey ?? undefined);
+      const model = task.aiModel || "google/gemini-3.1-flash-image-preview";
+      const isNanobanana = model.includes("nanobanana") || model.includes("nano-banana");
+      let composited: Buffer | null = null;
+
+      if (isNanobanana) {
+        // NanoBanana needs public URLs — construct from S3 keys
+        const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
+        const productUrl = result.originalKey.startsWith("http")
+          ? result.originalKey
+          : `${baseUrl}/api/s3/${result.originalKey}`;
+        let bgUrl: string;
+        if (task.backgroundMode === "custom" && task.customBgKey) {
+          bgUrl = task.customBgKey.startsWith("http")
+            ? task.customBgKey
+            : `${baseUrl}/api/s3/${task.customBgKey}`;
+        } else if (task.backgroundMode === "preset" && backgroundBuffer) {
+          // Upload generated bg to S3 for public URL
+          const bgKey = `tmp/bg_${taskId}_${result.id}.png`;
+          await uploadToS3(bgKey, bg, "image/png");
+          bgUrl = `${baseUrl}/api/s3/${bgKey}`;
+        } else {
+          // AI mode — upload generated bg to S3
+          const bgKey = `tmp/bg_${taskId}_${result.id}.png`;
+          await uploadToS3(bgKey, bg, "image/png");
+          bgUrl = `${baseUrl}/api/s3/${bgKey}`;
+        }
+        composited = await nanobananaBlend(productUrl, bgUrl, task.customPrompt ?? undefined, model);
+      } else {
+        composited = await aiBlendBackground(original, bg, task.customPrompt ?? undefined, model);
+      }
 
       if (!composited) {
         console.error(`[bg-worker] AI blend FAILED for result ${result.id}`);
