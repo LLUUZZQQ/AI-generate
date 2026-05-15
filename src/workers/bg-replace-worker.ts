@@ -16,7 +16,7 @@ async function nanobananaBlend(
   const NANOBANANA_BASE = "https://api.nanobananaapi.ai/api/v1/nanobanana";
   const isPro = aiModel?.includes("pro");
 
-  const prompt = customPrompt || `Take the product from the first reference image and seamlessly place it into the second reference image's scene. The result must look like a single real photograph — indistinguishable from reality. Preserve the product exactly (color, texture, proportions, details). Match lighting, shadows, perspective, and depth of field to the background. Natural phone photo quality. No text or watermark.`;
+  const prompt = customPrompt || `Place the product from the first image into the second image scene. Make it look like a real photo. Keep the product unchanged.`;
 
   const endpoint = `${NANOBANANA_BASE}/generate`;
 
@@ -360,7 +360,8 @@ async function processTask(taskId: string) {
 
       if (isNanobanana) {
         // NanoBanana needs public URLs — construct from S3 keys
-        const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
+        const baseUrl = process.env.NEXT_PUBLIC_URL || "https://ai-generate-two.vercel.app";
+        if (!process.env.NEXT_PUBLIC_URL) console.warn("[bg-worker] NEXT_PUBLIC_URL not set, using", baseUrl);
         const productUrl = result.originalKey.startsWith("http")
           ? result.originalKey
           : `${baseUrl}/api/s3/${result.originalKey}`;
