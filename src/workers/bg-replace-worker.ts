@@ -16,15 +16,17 @@ async function nanobananaBlend(
   const NANOBANANA_BASE = "https://api.nanobananaapi.ai/api/v1/nanobanana";
   const isPro = aiModel?.includes("pro");
 
-  const prompt = customPrompt || `Place the product from the first image into the second image scene. Make it look like a real photo. Keep the product unchanged.`;
+  const prompt = customPrompt || "Product photo";
 
   const endpoint = `${NANOBANANA_BASE}/generate`;
 
   console.log(`[bg-worker] NanoBanana: productUrl=${productUrl.substring(0, 50)}... bgUrl=${bgUrl.substring(0, 50)}...`);
 
+  const callbackUrl = `${process.env.NEXT_PUBLIC_URL || "https://ai-generate-two.vercel.app"}/api/notifications`;
   const reqBody: any = {
     prompt,
     type: "IMAGETOIAMGE",
+    callBackUrl: callbackUrl,
     imageUrls: [productUrl, bgUrl],
     numImages: 1,
   };
