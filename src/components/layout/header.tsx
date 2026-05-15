@@ -68,6 +68,7 @@ export function Header() {
               <Link href="/settings?tab=billing"><Button size="sm" className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/20 text-purple-300 hover:from-purple-500/30 hover:to-pink-500/30 text-xs h-7 rounded-full px-3"><Coins className="w-3 h-3 mr-1" />充值</Button></Link>
               <Link href="/"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">首页</Button></Link>
               <Link href="/background-replace"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">背景替换</Button></Link>
+              <Link href="/pet-portrait"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">宠物写真</Button></Link>
               <Link href="/dashboard"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">我的</Button></Link>
               {isAdmin && <Link href="/admin"><Button variant="ghost" size="sm" className="text-white/25 hover:text-purple-400 text-[11px]">管理</Button></Link>}
               <NotificationBell />
@@ -97,6 +98,7 @@ export function Header() {
             <>
               <Link href="/" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">🏠 首页</Link>
               <Link href="/background-replace" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">📸 背景替换</Link>
+              <Link href="/pet-portrait" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">🐾 宠物写真</Link>
               <Link href="/dashboard" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">👤 我的</Link>
               <Link href="/settings" onClick={() => setOpen(false)} className="block py-2.5 text-sm text-white/70 hover:text-white">⚙️ 设置 · 充值</Link>
               {isAdmin && <Link href="/admin" onClick={() => setOpen(false)} className="block py-2.5 text-xs text-white/40 hover:text-purple-400">🛡 管理</Link>}
