@@ -39,7 +39,8 @@ const INTENSITIES = [
 ];
 
 const MODELS = [
-  { id: "google/gemini-3.1-flash-image-preview", label: "Gemini 3.1 Flash", sub: "推荐 · 效果最佳" },
+  { id: "google/gemini-3.1-flash-image-preview", label: "Gemini 3.1 Flash", sub: "快速 · 默认" },
+  { id: "openai/gpt-5.4-image-2", label: "GPT-5.4 Image 2", sub: "高质量细节" },
 ];
 
 export default function PetPortraitPage() {
