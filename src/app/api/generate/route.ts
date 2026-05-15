@@ -3,7 +3,6 @@ import { prisma } from "@/lib/db";
 import { withAuth } from "@/lib/auth-guard";
 import { success, error } from "@/lib/response";
 import { generateSchema } from "@/lib/validators";
-import { checkRateLimit } from "@/lib/rate-limit";
 import { imageQueue, videoQueue, swapQueue } from "@/lib/queue";
 
 export const POST = withAuth(async (req: NextRequest, _context: any, user: { id: string }) => {

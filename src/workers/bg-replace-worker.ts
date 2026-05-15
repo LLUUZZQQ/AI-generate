@@ -27,7 +27,7 @@ async function aiBlendBackground(
     console.log("[bg-worker] AI blend: product", pMeta.width + "x" + pMeta.height,
       "bg", bgMeta.width + "x" + bgMeta.height);
 
-    const model = aiModel || "google/gemini-3.1-flash-image-preview";
+    const model = aiModel || "openai/gpt-5.4-image-2";
     const isGemini = model.includes("gemini");
 
     // Gemini: concise, visual, result-oriented
