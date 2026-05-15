@@ -56,7 +56,6 @@ export default function PetPortraitPage() {
       const genData = await genRes.json();
       if (genData.code !== 0) { toast.error(genData.message || "生成失败"); setLoading(false); return; }
 
-      console.log("[pet-portrait] result URL:", genData.data?.url);
       setResult(genData.data.url);
       toast.success("生成成功！消耗 3 积分");
     } catch {
