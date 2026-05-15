@@ -39,8 +39,7 @@ const INTENSITIES = [
 ];
 
 const MODELS = [
-  { id: "google/gemini-3.1-flash-image-preview", label: "Gemini 3.1 Flash", sub: "快速通用" },
-  { id: "black-forest-labs/flux.2-pro", label: "Flux 2 Pro", sub: "细节最佳" },
+  { id: "google/gemini-3.1-flash-image-preview", label: "Gemini 3.1 Flash", sub: "推荐 · 效果最佳" },
 ];
 
 export default function PetPortraitPage() {
