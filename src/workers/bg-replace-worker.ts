@@ -8,77 +8,6 @@ import path from "path";
 const hasS3 = !!(process.env.S3_BUCKET && process.env.S3_ENDPOINT);
 const POLL_INTERVAL = 3000; // 3 seconds
 
-/* ── NanoBanana async task-based API (single-image refinement) ── */
-async function nanobananaBlend(
-  compositeUrl: string, customPrompt?: string, aiModel?: string,
-): Promise<Buffer | null> {
-  const NANOBANANA_KEY = process.env.NANOBANANA_API_KEY!;
-  const NANOBANANA_BASE = "https://api.nanobananaapi.ai/api/v1/nanobanana";
-
-  const prompt = customPrompt || "Make this product photo look like a real photograph. Blend the product naturally into the background. Match lighting, shadows and colors. No text or watermark.";
-
-  const endpoint = `${NANOBANANA_BASE}/generate`;
-
-  console.log(`[bg-worker] NanoBanana: compositeUrl=${compositeUrl.substring(0, 60)}...`);
-
-  const callbackUrl = `${process.env.NEXT_PUBLIC_URL || "https://ai-generate-two.vercel.app"}/api/notifications`;
-  const reqBody: any = {
-    prompt,
-    type: "IMAGETOIAMGE",
-    callBackUrl: callbackUrl,
-    imageUrls: [compositeUrl],
-    numImages: 1,
-  };
-
-  console.log(`[bg-worker] NanoBanana: POST ${endpoint}`);
-  let resp = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${NANOBANANA_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(reqBody),
-    signal: AbortSignal.timeout(30000),
-  });
-
-  const json = await resp.json() as any;
-  if (!resp.ok || json.code !== 200) {
-    console.error("[bg-worker] NanoBanana create failed:", JSON.stringify(json).substring(0, 300));
-    return null;
-  }
-
-  const taskId = json.data?.taskId;
-  if (!taskId) { console.error("[bg-worker] NanoBanana: no taskId"); return null; }
-  console.log(`[bg-worker] NanoBanana taskId: ${taskId}, polling...`);
-
-  // Poll for result (max 120s)
-  for (let i = 0; i < 40; i++) {
-    await new Promise(r => setTimeout(r, 3000));
-    const pollResp = await fetch(`${NANOBANANA_BASE}/record-info?taskId=${taskId}`, {
-      headers: { "Authorization": `Bearer ${NANOBANANA_KEY}` },
-      signal: AbortSignal.timeout(10000),
-    });
-    const pollJson = await pollResp.json() as any;
-    const flag = pollJson?.successFlag ?? pollJson?.data?.successFlag;
-
-    if (flag === 1) {
-      const resultUrl = pollJson?.response?.resultImageUrl || pollJson?.data?.response?.resultImageUrl;
-      if (!resultUrl) { console.error("[bg-worker] NanoBanana: no resultUrl"); return null; }
-      console.log(`[bg-worker] NanoBanana done, downloading: ${resultUrl.substring(0, 60)}`);
-      const dl = await fetch(resultUrl, { signal: AbortSignal.timeout(30000) });
-      if (!dl.ok) { console.error("[bg-worker] NanoBanana download failed:", dl.status); return null; }
-      return Buffer.from(await dl.arrayBuffer());
-    }
-    if (flag === 2 || flag === 3) {
-      console.error("[bg-worker] NanoBanana task failed:", pollJson?.errorMessage || pollJson?.data?.errorMessage);
-      return null;
-    }
-    // flag === 0: still generating
-  }
-  console.error("[bg-worker] NanoBanana timeout");
-  return null;
-}
-
 /* ── Main AI blend dispatcher ────────────────────────────────── */
 async function aiBlendBackground(
   originalBuffer: Buffer, bgBuffer: Buffer,
@@ -355,34 +284,7 @@ async function processTask(taskId: string) {
       }
 
       // AI blending — no fallback, fail explicitly
-      const model = task.aiModel || "google/gemini-3.1-flash-image-preview";
-      const isNanobanana = model.includes("nanobanana") || model.includes("nano-banana");
-      let composited: Buffer | null = null;
-
-      if (isNanobanana) {
-        // NanoBanana: pre-composite with sharp, then single-image refinement
-        const sharp = (await import("sharp")).default;
-        const origMeta = await sharp(original).metadata();
-        const bgMeta = await sharp(bg).metadata();
-        const scale = Math.min(
-          (bgMeta.width! * 0.7) / origMeta.width!,
-          (bgMeta.height! * 0.8) / origMeta.height!,
-          1,
-        );
-        const prodW = Math.round(origMeta.width! * scale);
-        const prodH = Math.round(origMeta.height! * scale);
-        const resized = await sharp(original).resize(prodW, prodH, { fit: "inside" }).png().toBuffer();
-        const left = Math.round((bgMeta.width! - prodW) / 2);
-        const top = Math.round(bgMeta.height! * 0.5 - prodH / 2);
-        const composite = await sharp(bg).composite([{ input: resized, left, top }]).jpeg({ quality: 92 }).toBuffer();
-        const compKey = `tmp/nb_${taskId}_${result.id}.jpg`;
-        await uploadToS3(compKey, composite, "image/jpeg");
-        const baseUrl = process.env.NEXT_PUBLIC_URL || "https://ai-generate-two.vercel.app";
-        if (!process.env.NEXT_PUBLIC_URL) console.warn("[bg-worker] NEXT_PUBLIC_URL not set, using", baseUrl);
-        composited = await nanobananaBlend(`${baseUrl}/api/s3/${compKey}`, task.customPrompt ?? undefined, model);
-      } else {
-        composited = await aiBlendBackground(original, bg, task.customPrompt ?? undefined, model);
-      }
+      const composited = await aiBlendBackground(original, bg, task.customPrompt ?? undefined, task.aiModel ?? undefined);
 
       if (!composited) {
         console.error(`[bg-worker] AI blend FAILED for result ${result.id}`);

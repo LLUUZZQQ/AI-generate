@@ -268,8 +268,6 @@ export default function NewBgReplacePage() {
                   {[
                     { value: "google/gemini-3.1-flash-image-preview", label: "Gemini 3.1 Flash", sub: "更快更便宜 · 默认" },
                     { value: "openai/gpt-5.4-image-2", label: "GPT-5.4 Image 2", sub: "最佳质量" },
-                    { value: "nanobanana/nano-banana-2", label: "NanoBanana 2", sub: "Gemini 3.1 Flash 驱动" },
-                    { value: "nanobanana/nano-banana-pro", label: "NanoBanana Pro", sub: "Gemini 3 Pro 驱动" },
                   ].map((m: any) => (
                     <button
                       key={m.value}
@@ -336,7 +334,7 @@ export default function NewBgReplacePage() {
             <div className="flex justify-between py-2.5 border-b border-white/[0.05]">
               <span className="text-sm text-foreground/35">融合模型</span>
               <span className="text-sm font-medium">
-                {aiModel.includes("nano-banana-pro") ? "NanoBanana Pro" : aiModel.includes("nano-banana") ? "NanoBanana 2" : aiModel.includes("gemini") ? "Gemini 3.1 Flash" : aiModel.includes("gpt") ? "GPT-5.4 Image 2" : "Recraft V4"}
+                {aiModel.includes("gemini") ? "Gemini 3.1 Flash" : "GPT-5.4 Image 2"}
               </span>
             </div>
             {customPrompt && (
