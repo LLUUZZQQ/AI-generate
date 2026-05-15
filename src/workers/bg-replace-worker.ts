@@ -165,7 +165,6 @@ async function aiBlendBackground(
     }
 
     // Match background dimensions so product fits naturally in scene
-    const bgMeta = await sharp(bgBuffer).metadata();
     if (bgMeta.width && bgMeta.height) {
       const aiMeta = await sharp(resultBuf).metadata();
       if (aiMeta.width !== bgMeta.width || aiMeta.height !== bgMeta.height) {
