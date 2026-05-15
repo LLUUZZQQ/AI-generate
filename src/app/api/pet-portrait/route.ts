@@ -10,41 +10,22 @@ const COST_PER = 3;
 const HD_COST = 5;
 
 const STYLES: Record<string, string> = {
-  // Top performers — detailed prompts
-  "royal": "Transform this pet into a majestic royal palace portrait. The pet wears an ornate jeweled collar or tiny crown. Deep velvet burgundy and gold background. Dramatic Rembrandt-style lighting from upper left. Rich oil painting texture. The pet's face, fur texture, eye color and expression must stay 100% true to the original. Imperial regal atmosphere.",
-
-  "oil-painting": "Transform this pet into a classical 18th-century oil painting. Visible brushstrokes, warm chiaroscuro lighting, dark atmospheric background like an Old Master painting. The pet's exact fur color, markings, face shape and expression preserved perfectly.",
-
-  "disney": "Transform this pet into a classic Walt Disney animation cel from the 1950s-60s. Hand-drawn 2D animation style. Soft watercolor background. The pet has large expressive Disney-style eyes while keeping its original fur color and markings. Magical, heartwarming feel. Clean cel shading.",
-
-  "anime": "Transform this pet into a Studio Ghibli film scene. Soft hand-painted watercolor background with gentle nature elements. The pet looks like a beloved Ghibli character — expressive, warm, slightly magical. Keep the pet's exact fur color, markings and face structure. Gentle afternoon lighting.",
-
-  // Strong style transfers
-  "vangogh": "Transform this pet into a Vincent van Gogh oil painting. Bold swirling visible brushstrokes throughout. Vibrant yellows, deep blues, and emerald greens dominate. Starry Night-style background swirls. Thick impasto paint texture. The pet's face and markings remain recognizable within the painting style.",
-
-  "pop-art": "Transform this pet into an Andy Warhol pop art screen print. Bold flat saturated colors — hot pink, electric yellow, bright cyan. Halftone dot pattern overlay. Clean graphic lines. Comic book Ben-Day dots. Vibrant high-contrast look. The pet's silhouette and features remain clear.",
-
-  "cyberpunk": "Transform this pet into a cyberpunk sci-fi character. Dark rainy futuristic city background with neon purple, cyan, and pink signs glowing. The pet wears subtle glowing cybernetic accessories or LED collar. Atmospheric volumetric lighting. The pet's face and fur stay recognizable.",
-
-  "neon": "Transform this pet into a glowing neon sign. Dark textured brick wall background. The pet is rendered as bright glowing neon tubes — pink, cyan, or warm amber. Electric glow halo around the tubes. Retro diner or bar sign aesthetic. Clean readable form.",
-
-  // Artistic
-  "watercolor": "Transform this pet into a delicate watercolor painting on textured cold-press paper. Soft flowing translucent color washes. Some colors bleeding slightly at edges. White space around the subject. Light and airy feel. The pet's essential features and colors preserved.",
-
-  "pencil": "Transform this pet into a masterful graphite pencil sketch. Fine detailed crosshatching and shading. Cream-toned textured paper background. Soft graphite smudges at edges. Hyper-detailed fur texture rendered in pencil strokes. The pet's likeness preserved exactly.",
-
-  "baroque": "Transform this pet into a dramatic Baroque-era chiaroscuro portrait. Intense spotlight lighting from one side, deep shadows on the other. Rich crimson and gold drapery background. Theatrical drama. The pet looks noble and powerful. Oil painting texture.",
-
-  "ukiyo-e": "Transform this pet into a Japanese ukiyo-e woodblock print. Flat color planes with subtle gradients. Bold dark outlines. Traditional Japanese patterns in the background — waves, cherry blossoms, or geometric. Warm washi paper texture. Edo period aesthetic.",
-
-  "stained-glass": "Transform this pet into a cathedral stained glass window. Bold black leading lines dividing the image into segments. Jewel-toned translucent colored glass — sapphire blue, ruby red, emerald green, amethyst purple. Warm golden light shining through from behind. Gothic arch framing.",
-
-  // Fun
-  "pixel": "Transform this pet into detailed pixel art. 16-bit retro video game sprite aesthetic. Limited color palette with dithering. Crisp square pixels. The pet looks like a character from a classic SNES RPG. Clean pixel edges. Dark or game-level background.",
-
-  "egyptian": "Transform this pet into an ancient Egyptian tomb wall painting. Flat side-profile pose if possible. Gold leaf highlights. Lapis lazuli blue, terracotta orange, and sandstone beige color palette. Hieroglyphic border elements. Weathered limestone texture. Regal pharaoh aesthetic.",
-
-  "astronaut": "Transform this pet into a cute astronaut in space. Realistic white spacesuit helmet around the pet's head with subtle reflections. The pet's face visible through the clear visor. Deep space background with colorful nebula, stars, and a distant planet. NASA-style lighting. Zero gravity float feel.",
+  "royal": "Transform this pet into a royal palace portrait. Velvet background, golden frame, regal bearing, jewel tones, majestic lighting. Keep the pet's face and features exactly as in the original photo.",
+  "oil-painting": "Transform this pet into a classical oil painting. Rich brushstrokes, dramatic Rembrandt lighting, dark noble background. Keep the pet's face and features recognizable and faithful to the original.",
+  "disney": "Transform this pet into a classic Disney animation cel. Vintage hand-drawn animation style, expressive eyes, soft magical colors. Keep the pet's face and features recognizable and faithful to the original.",
+  "anime": "Transform this pet into a Studio Ghibli anime illustration. Soft cel-shaded look, warm magical atmosphere, gentle color palette. Keep the pet's face and features recognizable and faithful to the original.",
+  "vangogh": "Transform this pet into a Van Gogh painting. Bold swirling brushstrokes, vibrant yellows and blues, thick impasto texture. Keep the pet's face and features recognizable and faithful to the original.",
+  "pop-art": "Transform this pet into an Andy Warhol pop art portrait. Bold saturated colors, halftone dots, comic book style, vibrant contrast. Keep the pet's face and features recognizable and faithful to the original.",
+  "cyberpunk": "Transform this pet into a cyberpunk character. Neon purple/cyan/pink lighting, futuristic city background, synthwave aesthetic. Keep the pet's face and features recognizable and faithful to the original.",
+  "neon": "Transform this pet into a neon sign. Glowing neon tubes against a dark brick wall, electric vibrant colors, retro sign aesthetic. Keep the pet's face and features recognizable and faithful to the original.",
+  "watercolor": "Transform this pet into a delicate watercolor painting. Soft flowing washes, light airy feel, subtle color blooms on white paper. Keep the pet's face and features recognizable and faithful to the original.",
+  "pencil": "Transform this pet into a detailed pencil sketch. Fine graphite lines, delicate shading, artistic crosshatching, white paper background. Keep the pet's face and features recognizable and faithful to the original.",
+  "baroque": "Transform this pet into a Baroque era portrait. Dramatic chiaroscuro, rich gold and crimson tones, ornate classical setting. Keep the pet's face and features recognizable and faithful to the original.",
+  "ukiyo-e": "Transform this pet into a Japanese ukiyo-e woodblock print. Flat color planes, bold outlines, traditional Japanese aesthetic, washi paper texture. Keep the pet's face and features recognizable and faithful to the original.",
+  "stained-glass": "Transform this pet into a stained glass window. Bold black leading lines, jewel-toned colored glass segments, cathedral light shining through. Keep the pet's face and features recognizable and faithful to the original.",
+  "pixel": "Transform this pet into pixel art. 16-bit game sprite style, limited color palette, crisp square pixels, retro gaming aesthetic. Keep the pet's face and features recognizable and faithful to the original.",
+  "egyptian": "Transform this pet into an ancient Egyptian wall painting. Gold and lapis lazuli colors, sandstone texture, hieroglyphic border. Keep the pet's face and features recognizable and faithful to the original.",
+  "astronaut": "Transform this pet into an astronaut. Realistic spacesuit helmet around the pet's head, stars and nebula in the visor, deep space background. Keep the pet's face and features recognizable and faithful to the original.",
 };
 
 const STYLE_LABELS: Record<string, string> = {
@@ -219,7 +200,8 @@ export const GET = withAuth(async (req: NextRequest, _ctx: any, user: { id: stri
       `SELECT COUNT(*)::int as c FROM pet_portraits WHERE user_id = $1`, user.id,
     ) as any[];
     return paginated(rows || [], count?.[0]?.c || 0, page, pageSize);
-  } catch {
+  } catch (e: any) {
+    console.error("[pet-portrait] history error:", e.message?.substring(0, 100));
     return paginated([], 0, page, pageSize);
   }
 });

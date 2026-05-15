@@ -7,22 +7,22 @@ import { Upload, Sparkles, Download, ArrowLeft, Coins, History, RefreshCw, Shuff
 import Link from "next/link";
 
 const STYLES = [
-  { id: "royal", label: "皇家肖像", icon: "👑", color: "from-amber-800 via-red-900 to-amber-900", preview: "奢华宫廷 · 贵族气质", prompt: "Majestic royal portrait, jeweled collar, dramatic lighting, velvet background" },
-  { id: "oil-painting", label: "古典油画", icon: "🎨", color: "from-yellow-800 via-amber-700 to-yellow-900", preview: "伦勃朗光影 · 古典笔触", prompt: "Classical oil painting, Old Master style, warm chiaroscuro" },
-  { id: "disney", label: "迪士尼", icon: "🏰", color: "from-blue-700 via-indigo-600 to-purple-700", preview: "手绘动画 · 童话魔法", prompt: "Disney animation cel, 1950s style, expressive eyes, magical" },
-  { id: "anime", label: "吉卜力", icon: "✨", color: "from-emerald-600 via-teal-500 to-cyan-600", preview: "治愈魔法 · 温暖细腻", prompt: "Studio Ghibli scene, soft watercolor bg, gentle lighting" },
-  { id: "vangogh", label: "梵高风格", icon: "🌻", color: "from-blue-800 via-yellow-600 to-blue-900", preview: "漩涡笔触 · 浓烈色彩", prompt: "Van Gogh painting, bold swirling brushstrokes, thick impasto" },
-  { id: "pop-art", label: "波普艺术", icon: "🎯", color: "from-pink-600 via-yellow-400 to-cyan-500", preview: "饱和色彩 · 漫画风格", prompt: "Warhol pop art print, bold saturation, halftone dots" },
-  { id: "cyberpunk", label: "赛博朋克", icon: "🤖", color: "from-purple-900 via-fuchsia-700 to-cyan-800", preview: "霓虹未来 · 科幻都市", prompt: "Cyberpunk, neon city, glowing accessories, rain, purple/cyan" },
-  { id: "neon", label: "霓虹灯牌", icon: "💡", color: "from-gray-900 via-pink-600 to-purple-700", preview: "发光灯管 · 复古招牌", prompt: "Neon sign on brick wall, glowing tubes, retro bar aesthetic" },
-  { id: "watercolor", label: "清新水彩", icon: "🖌️", color: "from-rose-300 via-sky-300 to-violet-300", preview: "柔和色彩 · 轻盈通透", prompt: "Delicate watercolor, flowing washes, textured paper, airy" },
-  { id: "pencil", label: "铅笔素描", icon: "✏️", color: "from-stone-400 via-stone-300 to-stone-500", preview: "细腻线条 · 艺术质感", prompt: "Graphite pencil sketch, fine crosshatching, textured paper" },
-  { id: "baroque", label: "巴洛克", icon: "🏛️", color: "from-red-900 via-amber-700 to-yellow-900", preview: "戏剧光影 · 华丽金红", prompt: "Baroque chiaroscuro, dramatic spotlight, crimson and gold" },
-  { id: "ukiyo-e", label: "浮世绘", icon: "🗾", color: "from-amber-50 via-red-200 to-amber-100", preview: "和风木版 · 传统美学", prompt: "Ukiyo-e woodblock print, flat colors, bold outlines, washi" },
-  { id: "stained-glass", label: "彩色玻璃", icon: "🌈", color: "from-blue-700 via-red-600 via-yellow-500 to-green-600", preview: "宝石色块 · 教堂光芒", prompt: "Stained glass window, jewel tones, black leading, Gothic arch" },
-  { id: "pixel", label: "像素游戏", icon: "👾", color: "from-green-800 via-lime-600 to-emerald-700", preview: "16-bit 复古 · 颗粒美学", prompt: "16-bit pixel art, SNES RPG sprite, limited palette, dithering" },
-  { id: "egyptian", label: "埃及法老", icon: "🔱", color: "from-yellow-700 via-amber-600 to-orange-800", preview: "黄金青金石 · 古老壁画", prompt: "Egyptian tomb painting, gold leaf, lapis blue, hieroglyphics" },
-  { id: "astronaut", label: "太空宇航员", icon: "🚀", color: "from-indigo-900 via-blue-800 to-violet-900", preview: "太空头盔 · 深空星云", prompt: "Cute astronaut, white spacesuit helmet, nebula, stars, NASA" },
+  { id: "royal", label: "皇家肖像", icon: "👑", color: "from-amber-800 via-red-900 to-amber-900", preview: "奢华宫廷 · 贵族气质", prompt: "" },
+  { id: "oil-painting", label: "古典油画", icon: "🎨", color: "from-yellow-800 via-amber-700 to-yellow-900", preview: "伦勃朗光影 · 古典笔触", prompt: "" },
+  { id: "disney", label: "迪士尼", icon: "🏰", color: "from-blue-700 via-indigo-600 to-purple-700", preview: "手绘动画 · 童话魔法", prompt: "" },
+  { id: "anime", label: "吉卜力", icon: "✨", color: "from-emerald-600 via-teal-500 to-cyan-600", preview: "治愈魔法 · 温暖细腻", prompt: "" },
+  { id: "vangogh", label: "梵高风格", icon: "🌻", color: "from-blue-800 via-yellow-600 to-blue-900", preview: "漩涡笔触 · 浓烈色彩", prompt: "" },
+  { id: "pop-art", label: "波普艺术", icon: "🎯", color: "from-pink-600 via-yellow-400 to-cyan-500", preview: "饱和色彩 · 漫画风格", prompt: "" },
+  { id: "cyberpunk", label: "赛博朋克", icon: "🤖", color: "from-purple-900 via-fuchsia-700 to-cyan-800", preview: "霓虹未来 · 科幻都市", prompt: "" },
+  { id: "neon", label: "霓虹灯牌", icon: "💡", color: "from-gray-900 via-pink-600 to-purple-700", preview: "发光灯管 · 复古招牌", prompt: "" },
+  { id: "watercolor", label: "清新水彩", icon: "🖌️", color: "from-rose-300 via-sky-300 to-violet-300", preview: "柔和色彩 · 轻盈通透", prompt: "" },
+  { id: "pencil", label: "铅笔素描", icon: "✏️", color: "from-stone-400 via-stone-300 to-stone-500", preview: "细腻线条 · 艺术质感", prompt: "" },
+  { id: "baroque", label: "巴洛克", icon: "🏛️", color: "from-red-900 via-amber-700 to-yellow-900", preview: "戏剧光影 · 华丽金红", prompt: "" },
+  { id: "ukiyo-e", label: "浮世绘", icon: "🗾", color: "from-amber-50 via-red-200 to-amber-100", preview: "和风木版 · 传统美学", prompt: "" },
+  { id: "stained-glass", label: "彩色玻璃", icon: "🌈", color: "from-blue-700 via-red-600 via-yellow-500 to-green-600", preview: "宝石色块 · 教堂光芒", prompt: "" },
+  { id: "pixel", label: "像素游戏", icon: "👾", color: "from-green-800 via-lime-600 to-emerald-700", preview: "16-bit 复古 · 颗粒美学", prompt: "" },
+  { id: "egyptian", label: "埃及法老", icon: "🔱", color: "from-yellow-700 via-amber-600 to-orange-800", preview: "黄金青金石 · 古老壁画", prompt: "" },
+  { id: "astronaut", label: "太空宇航员", icon: "🚀", color: "from-indigo-900 via-blue-800 to-violet-900", preview: "太空头盔 · 深空星云", prompt: "" },
 ];
 
 const MODELS = [
