@@ -30,7 +30,7 @@ async function nanobananaBlend(
     numImages: 1,
   };
 
-  console.log(`[bg-worker] NanoBanana: POST ${endpoint} (${isPro ? "pro" : "2"})`);
+  console.log(`[bg-worker] NanoBanana: POST ${endpoint}`);
   let resp = await fetch(endpoint, {
     method: "POST",
     headers: {
