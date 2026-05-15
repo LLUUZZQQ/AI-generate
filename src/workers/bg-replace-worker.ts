@@ -28,21 +28,36 @@ async function aiBlendBackground(
       "bg", bgMeta.width + "x" + bgMeta.height);
 
     const model = aiModel || "google/gemini-3.1-flash-image-preview";
+    const isGemini = model.includes("gemini");
 
-    const universalPrompt = customPrompt || `Task: Seamlessly composite the object from Image 1 into the scene of Image 2. Output a single, authentic photograph — as if a professional photographer shot the object on location in that exact scene.
+    // Gemini: concise, visual, result-oriented
+    const geminiPrompt = customPrompt || `Image 1 is a product photo. Image 2 is a background scene. Generate a single photograph where the product from Image 1 has been photographed in the location from Image 2 — as if the photographer brought the product there and shot it in that exact environment.
 
-Image 1 — OBJECT: The product or object to be placed into the scene. Keep every detail exactly as it appears — colors, textures, materials, stitching, logos, labels, packaging, accessories. Do not alter, discard, or add anything.
+- The product must appear naturally sized for the scene — neither too large nor too small. If the scene is a room, the product should occupy a realistic portion of the frame for a product shot taken in that room.
+- The product rests on a visible surface in the scene with realistic shadows underneath it.
+- The product's lighting matches the scene's light direction, color, and intensity.
+- The product's colors, textures, materials, logos, and fine details stay exactly as they are — sharp, clear, unaltered.
+- No visible seams, edges, or cutout artifacts around the product.
+- Output looks like a real photograph. No text or watermark.`;
 
-Image 2 — SCENE: The target environment with its lighting, surfaces, depth, and atmosphere. The object should look like it naturally belongs here.
+    // GPT: structured, rule-based, precise
+    const gptPrompt = customPrompt || `Generate a single photorealistic image. The product from the first photo must appear naturally photographed in the scene from the second photo.
 
-INTEGRATION RULES:
-1. PERSPECTIVE: The object's scale, angle, and depth must align with the floor plane and perspective of the scene. Place the object on a natural surface (floor, ground, table, desk) within the scene.
-2. LIGHTING: Re-light the object to match the scene's light source direction, color temperature, and intensity. The object must share the same lighting conditions as the scene.
-3. SHADOWS: Generate a sharp contact shadow directly beneath the object where it meets the surface. Generate a soft cast shadow consistent with the scene's light direction and shadow softness.
-4. EDGES: The transition between object and background must be seamless — no visible cutout line, no halo. The object should appear to have always been in the scene.
-5. ATMOSPHERE: Apply matching ambient occlusion, depth haze, and color grading so the object shares the scene's atmosphere.
-6. DETAILS: Every texture, material, label, and logo on the object must remain razor-sharp and 100% true to the original. No blur, no noise, no alteration.
-7. OUTPUT: A single photorealistic image. No added text, watermark, or logo.`;
+OBJECT (Image 1): The product to feature in the final image. Preserve it completely — every color, texture, material, logo, label, stitch, and surface detail stays exactly as-is. Do not modify, discard, or add any part of the product.
+
+SCENE (Image 2): The location. The product belongs in this environment. The scene provides the lighting reference, perspective reference, scale reference, and atmosphere reference for the final image.
+
+RULES:
+1. SCALE: The product must look naturally sized within the scene. Judge the appropriate size from the scene's depth cues — furniture, architecture, objects in the frame.
+2. PLACEMENT: Position the product on the most natural surface in the scene — floor, ground, tabletop, desk, bed. It should look deliberately placed, not floating.
+3. LIGHTING: Match the scene's dominant light source. If the scene has window light from the left, the product is lit from the left. Match color temperature exactly.
+4. SHADOWS: Contact shadow at the base of the product — sharp and dark where it touches. Cast shadow extending away — soft and matching the scene's ambient light.
+5. PERSPECTIVE: The product's angle and vanishing point must align with the scene's geometry. If the scene is shot from above, view the product from above.
+6. EDGES: Zero visible outline or halo around the product. The product edge transitions naturally into the background.
+7. DETAIL: The product must be sharp. Every texture, logo, and label clearly visible. No artificial blur, grain, or noise.
+8. OUTPUT: One image. Looks like a real photograph taken by a product photographer. Clean. No text, watermark, or logo.`;
+
+    const prompt = isGemini ? geminiPrompt : gptPrompt;
 
     const apiKey = process.env.OPENAI_API_KEY!;
     const baseUrl = "https://openrouter.ai/api/v1/chat/completions";
